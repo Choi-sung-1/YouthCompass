@@ -14,11 +14,11 @@ public class MemberVO {
 //    회원 pwd    (필수)
     private String memberPassword;
 //    회원 주소 (필수)
-    private String memberAddress;
+    private String memberRegion;
 //    회원 나이 (필수)
     private LocalDate memberAge;
-//    회원 권한--- Admin or User
-    private String memberRole;
+//    회원 권한--- ROLE_USER or ROLE_ADMIN
+    private MemberRole memberRole;
 //    회원 성별 (필수)
     private String memberGender;
 //    회원 전화번호   (선택)
