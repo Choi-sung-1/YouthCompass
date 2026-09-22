@@ -16,6 +16,7 @@ public class MemberServiceImpl implements MemberService {
     public void join(MemberJoinRequestDTO member) {
 //        비밀번호 암호화
         member.setMemberPassword(passwordEncoder.encode(member.getMemberPassword()));
+        member.setMemberProvider("local");
         memberDAO.saveMember(member);
     }
 }
