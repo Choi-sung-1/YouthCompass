@@ -28,15 +28,15 @@ public enum Region {
         this.regionCode = regionCode;
         this.regionName = regionName;
     }
-
-    public static String getRegionByCode(String regionCode) {
-        for (Region region : Region.values()) {
-            if (region.getRegionCode().equals(regionCode)) {
-//                찾았을 경우 지역 이름 반환
-                return region.getRegionName();
-            }
-        }
-//        찾지 못했을경우 지역번호 그대로 반환
-        return regionCode;
-    }
+//      수정필요 필요에따라
+//    public static String getRegionByCode(String regionCode) {
+//        for (Region region : Region.values()) {
+//            if (region.getRegionCode().equals(regionCode)) {
+////                찾았을 경우 지역 이름 반환
+//                return region.getRegionName();
+//            }
+//        }
+////        찾지 못했을경우 지역번호 그대로 반환
+//        return regionCode;
+//    }
 }

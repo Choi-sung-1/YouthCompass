@@ -15,8 +15,8 @@ public class MemberVO {
     private String memberPassword;
 //    회원 주소 (필수)
     private String memberRegion;
-//    회원 나이 (필수)
-    private LocalDate memberAge;
+//    회원 생년월일 (필수)
+    private LocalDate memberBirth;
 //    회원 권한--- ROLE_USER or ROLE_ADMIN
     private MemberRole memberRole;
 //    회원 성별 (필수)
