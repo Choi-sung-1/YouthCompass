@@ -1,7 +1,10 @@
 package com.app.YouthCompass.domain.vo.member;
 
+import lombok.Data;
+
 import java.time.LocalDate;
 
+@Data
 public class MemberVO {
 //    pk
     private Long memberId;
