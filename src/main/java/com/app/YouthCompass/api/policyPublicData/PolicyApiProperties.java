@@ -3,6 +3,7 @@ package com.app.YouthCompass.api.policyPublicData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+//application-secret.properties 와 연결하여 apiKey, baseUrl 연결해주는 클래스
 @Component
 public class PolicyApiProperties {
 

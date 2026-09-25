@@ -1,26 +1,25 @@
 package com.app.YouthCompass.controller.policy;
-
-import com.app.YouthCompass.api.policyPublicData.PolicyApiClient;
-import com.app.YouthCompass.api.policyPublicData.dto.PolicyApiResponse;
+import com.app.YouthCompass.api.policyPublicData.dto.YouthPolicyDTO;
+import com.app.YouthCompass.service.api.policyPublicData.PolicySyncService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 @RestController
 public class PolicyTestController {
-    private final PolicyApiClient policyApiClient;
-//  역 직렬화  JSON 문자열 -->JAVA 객체
-    private final ObjectMapper objectMapper;
 
-    public PolicyTestController(PolicyApiClient policyApiClient, ObjectMapper objectMapper) {
-        this.policyApiClient = policyApiClient;
-        this.objectMapper = objectMapper;
+    private final PolicySyncService policySyncService;
+
+    public PolicyTestController(
+            PolicySyncService policySyncService
+    ) {
+        this.policySyncService = policySyncService;
     }
 
+    @GetMapping("/api/test/policies/all")
+    public List<YouthPolicyDTO> getAllPolicies() {
 
-    @GetMapping("/api/test/policies")
-    public PolicyApiResponse getPolicies()throws Exception{
-        return policyApiClient.getPolicies();
+        return policySyncService.getAllPolicies();
     }
 }
