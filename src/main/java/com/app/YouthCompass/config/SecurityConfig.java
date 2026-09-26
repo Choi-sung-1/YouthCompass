@@ -22,7 +22,7 @@ public class SecurityConfig {
                 .csrf(csrf->csrf.disable())
 //                URL별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/","/member/join").permitAll()
+                        .requestMatchers("/","/member/join","/api/**").permitAll()
 //                        위의 경로를 제외한 모든 요청은 로그인 사용자만 가능
                         .anyRequest().authenticated()
                 )

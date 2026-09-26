@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.app.YouthCompass.mapper.policy.PolicyMapper">
+
+    <insert id="upsertPolicy">
+        MERGE INTO TBL_POLICY (
+                               POLICY_SOURCE,
+                               POLICY_EXTERNAL_ID,
+                               POLICY_NAME,
+                               POLICY_DESCRIPTION,
+                               POLICY_KEYWORDS,
+                               POLICY_LARGE_CATEGORY,
+                               POLICY_MEDIUM_CATEGORY,
+                               POLICY_SUPPORT_CONTENT,
+                               POLICY_ORGANIZATION_NAME,
+                               POLICY_APPLICATION_METHOD,
+                               POLICY_APPLICATION_URL,
+                               POLICY_SUBMISSION_DOCUMENTS,
+                               POLICY_REFERENCE_URL,
+                               POLICY_MIN_AGE,
+                               POLICY_MAX_AGE,
+                               POLICY_ADDITIONAL_CONDITION,
+                               POLICY_REGION_CODES,
+                               POLICY_STATUS
+            )
+            KEY (POLICY_SOURCE, POLICY_EXTERNAL_ID)
+            VALUES (
+                       #{policySource},
+                       #{policyExternalId},
+                       #{policyName},
+                       #{policyDescription},
+                       #{policyKeywords},
+                       #{policyLargeCategory},
+                       #{policyMediumCategory},
+                       #{policySupportContent},
+                       #{policyOrganizationName},
+                       #{policyApplicationMethod},
+                       #{policyApplicationUrl},
+                       #{policySubmissionDocuments},
+                       #{policyReferenceUrl},
+                       #{policyMinAge},
+                       #{policyMaxAge},
+                       #{policyAdditionalCondition},
+                       #{policyRegionCodes},
+                       #{policyStatus}
+                   )
+    </insert>
+</mapper>
