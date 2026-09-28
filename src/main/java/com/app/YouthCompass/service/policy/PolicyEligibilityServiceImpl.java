@@ -5,8 +5,7 @@ import com.app.YouthCompass.domain.vo.policy.PolicyVO;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PolicyEligibilityServiceImpl
-        implements PolicyEligibilityService {
+public class PolicyEligibilityServiceImpl implements PolicyEligibilityService {
 
 //  나이 조건 판단
     @Override
@@ -20,9 +19,7 @@ public class PolicyEligibilityServiceImpl
         // 정책에 나이 제한 자체가 없는 경우
         if (minAge == null && maxAge == null) {return EligibilityStatus.MATCH;}
 
-
-        // 정책에는 나이 조건이 있는데
-        // 사용자 나이 정보가 없는 경우
+        // 정책에는 나이 조건이 있는데 사용자 나이 정보가 없는 경우
         if (userAge == null) {return EligibilityStatus.UNKNOWN;}
 
         // 최소 나이 미달
@@ -33,5 +30,10 @@ public class PolicyEligibilityServiceImpl
 
         // 모든 나이 조건 통과
         return EligibilityStatus.MATCH;
+    }
+//  지역조건 판단
+    @Override
+    public EligibilityStatus checkRegion(UserPolicyProfileVO user, PolicyVO policy) {
+        return null;
     }
 }

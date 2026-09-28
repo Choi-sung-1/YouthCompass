@@ -7,4 +7,7 @@ import com.app.YouthCompass.domain.vo.policy.PolicyVO;
 public interface PolicyEligibilityService {
 //    나이 조건 판단
     EligibilityStatus checkAge(UserPolicyProfileVO user, PolicyVO policy);
+//    지역 조건 판정
+    EligibilityStatus checkRegion(UserPolicyProfileVO user, PolicyVO policy);
+
 }
