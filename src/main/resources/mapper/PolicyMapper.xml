@@ -17,13 +17,29 @@
                                POLICY_APPLICATION_URL,
                                POLICY_SUBMISSION_DOCUMENTS,
                                POLICY_REFERENCE_URL,
+
                                POLICY_MIN_AGE,
                                POLICY_MAX_AGE,
-                               POLICY_ADDITIONAL_CONDITION,
+                               POLICY_SCHOOL_CODES,
+                               POLICY_JOB_CODES,
+                               POLICY_MARRIAGE_STATUS_CODES,
+
+                               POLICY_INCOME_CONDITION_CODE,
+                               POLICY_INCOME_MIN_AMOUNT,
+                               POLICY_INCOME_MAX_AMOUNT,
+                               POLICY_INCOME_ETC_CONDITION,
+
+                               POLICY_MAJOR_CODES,
+                               POLICY_SPECIAL_TARGET_CODES,
                                POLICY_REGION_CODES,
+                               POLICY_ADDITIONAL_CONDITION,
+
                                POLICY_STATUS
             )
-            KEY (POLICY_SOURCE, POLICY_EXTERNAL_ID)
+            KEY (
+                 POLICY_SOURCE,
+                 POLICY_EXTERNAL_ID
+                )
             VALUES (
                        #{policySource},
                        #{policyExternalId},
@@ -38,10 +54,23 @@
                        #{policyApplicationUrl},
                        #{policySubmissionDocuments},
                        #{policyReferenceUrl},
+
                        #{policyMinAge},
                        #{policyMaxAge},
-                       #{policyAdditionalCondition},
+                       #{policySchoolCodes},
+                       #{policyJobCodes},
+                       #{policyMarriageStatusCodes},
+
+                       #{policyIncomeConditionCode},
+                       #{policyIncomeMinAmount},
+                       #{policyIncomeMaxAmount},
+                       #{policyIncomeEtcCondition},
+
+                       #{policyMajorCodes},
+                       #{policySpecialTargetCodes},
                        #{policyRegionCodes},
+                       #{policyAdditionalCondition},
+
                        #{policyStatus}
                    )
     </insert>

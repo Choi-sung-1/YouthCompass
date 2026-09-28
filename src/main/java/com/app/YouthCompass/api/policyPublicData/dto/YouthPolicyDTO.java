@@ -45,11 +45,28 @@ public class YouthPolicyDTO {
     // 참고 URL
     private String refUrlAddr1;
 
+
+    // ================================
+    // 자격 조건
+    // ================================
+
     // 최소 나이
     private String sprtTrgtMinAge;
 
     // 최대 나이
     private String sprtTrgtMaxAge;
+
+    // 학력 조건 코드
+    private String schoolCd;
+
+    // 취업 상태 코드
+    private String jobCd;
+
+    // 혼인 상태 코드
+    private String mrgSttsCd;
+
+    // 소득 조건 구분 코드
+    private String earnCndSeCd;
 
     // 소득 최소
     private String earnMinAmt;
@@ -57,11 +74,25 @@ public class YouthPolicyDTO {
     // 소득 최대
     private String earnMaxAmt;
 
-    // 추가 신청 자격조건
-    private String addAplyQlfcCndCn;
+    // 소득 기타 조건
+    private String earnEtcCn;
+
+    // 전공 코드
+    private String plcyMajorCd;
+
+    // 특화 대상 코드
+    private String sbizCd;
 
     // 지역 코드
     private String zipCd;
+
+    // 추가 신청 자격조건
+    private String addAplyQlfcCndCn;
+
+
+    // ================================
+    // 등록/수정 정보
+    // ================================
 
     // 최초 등록일
     private String frstRegDt;

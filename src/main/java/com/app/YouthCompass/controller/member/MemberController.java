@@ -1,7 +1,7 @@
 package com.app.YouthCompass.controller.member;
 
 import com.app.YouthCompass.domain.dto.member.MemberJoinRequestDTO;
-import com.app.YouthCompass.domain.vo.Region;
+import com.app.YouthCompass.domain.vo.policy.Region;
 import com.app.YouthCompass.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
