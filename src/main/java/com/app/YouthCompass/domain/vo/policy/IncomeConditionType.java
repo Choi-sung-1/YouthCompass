@@ -9,7 +9,7 @@ public enum IncomeConditionType {
 
     NO_RESTRICTION("0043001", "무관"),
     ANNUAL_INCOME("0043002", "연소득"),
-    OTHER("0043003", "기타"),
+    ETC("0043003", "기타"),
 
     UNKNOWN(null, "알 수 없음");
 

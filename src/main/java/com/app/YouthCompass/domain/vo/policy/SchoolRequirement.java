@@ -17,7 +17,6 @@ public enum SchoolRequirement {
     MASTER_OR_DOCTOR("0049008", "석·박사"),
     OTHER("0049009", "기타"),
     NO_RESTRICTION("0049010", "제한없음"),
-
     UNKNOWN(null, "알 수 없음");
 
     private final String code;

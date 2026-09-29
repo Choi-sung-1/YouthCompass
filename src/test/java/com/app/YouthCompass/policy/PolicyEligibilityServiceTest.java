@@ -3,6 +3,7 @@ package com.app.YouthCompass.policy;
 import com.app.YouthCompass.domain.vo.member.UserPolicyProfileVO;
 import com.app.YouthCompass.domain.vo.policy.EligibilityStatus;
 import com.app.YouthCompass.domain.vo.policy.PolicyVO;
+import com.app.YouthCompass.domain.vo.policy.Region;
 import com.app.YouthCompass.service.policy.PolicyEligibilityService;
 import com.app.YouthCompass.service.policy.PolicyEligibilityServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -47,5 +48,116 @@ class PolicyEligibilityServiceImplTest {
 
         assertEquals(EligibilityStatus.UNKNOWN, result);
         System.out.println(result.toString());
+    }
+    @Test
+    void 사용자지역과_정책지역이_같으면_MATCH() {
+
+        UserPolicyProfileVO user =
+                UserPolicyProfileVO.builder()
+                        .region(Region.GYEONGGI)
+                        .build();
+
+        PolicyVO policy =
+                PolicyVO.builder()
+                        .policyRegionCodes("41")
+                        .build();
+
+        EligibilityStatus result =
+                service.checkRegion(user, policy);
+
+        assertEquals(
+                EligibilityStatus.MATCH,
+                result
+        );
+    }
+
+
+    @Test
+    void 사용자지역과_정책지역이_다르면_NOT_MATCH() {
+
+        UserPolicyProfileVO user =
+                UserPolicyProfileVO.builder()
+                        .region(Region.GYEONGGI)
+                        .build();
+
+        PolicyVO policy =
+                PolicyVO.builder()
+                        .policyRegionCodes("11")
+                        .build();
+
+        EligibilityStatus result =
+                service.checkRegion(user, policy);
+
+        assertEquals(
+                EligibilityStatus.NOT_MATCH,
+                result
+        );
+    }
+
+
+    @Test
+    void 여러지역중_사용자지역이_있으면_MATCH() {
+
+        UserPolicyProfileVO user =
+                UserPolicyProfileVO.builder()
+                        .region(Region.GYEONGGI)
+                        .build();
+
+        PolicyVO policy =
+                PolicyVO.builder()
+                        .policyRegionCodes("11,41,28")
+                        .build();
+
+        EligibilityStatus result =
+                service.checkRegion(user, policy);
+
+        assertEquals(
+                EligibilityStatus.MATCH,
+                result
+        );
+    }
+
+
+    @Test
+    void 사용자지역정보가_없으면_UNKNOWN() {
+
+        UserPolicyProfileVO user =
+                UserPolicyProfileVO.builder()
+                        .build();
+
+        PolicyVO policy =
+                PolicyVO.builder()
+                        .policyRegionCodes("41")
+                        .build();
+
+        EligibilityStatus result =
+                service.checkRegion(user, policy);
+
+        assertEquals(
+                EligibilityStatus.UNKNOWN,
+                result
+        );
+    }
+
+
+    @Test
+    void 정책에_지역제한이_없으면_MATCH() {
+
+        UserPolicyProfileVO user =
+                UserPolicyProfileVO.builder()
+                        .region(Region.GYEONGGI)
+                        .build();
+
+        PolicyVO policy =
+                PolicyVO.builder()
+                        .build();
+
+        EligibilityStatus result =
+                service.checkRegion(user, policy);
+
+        assertEquals(
+                EligibilityStatus.MATCH,
+                result
+        );
     }
 }
