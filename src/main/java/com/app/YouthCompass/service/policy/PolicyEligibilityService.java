@@ -21,4 +21,7 @@ public interface PolicyEligibilityService {
     EligibilityStatus checkMajor(UserPolicyProfileVO user, PolicyVO policy);
 //    특화 대상 조건 판정
     EligibilityStatus checkSpecialTarget(UserPolicyProfileVO user, PolicyVO policy);
+
+//    **최종 조건 판정**
+    EligibilityStatus evaluate(UserPolicyProfileVO user, PolicyVO policy);
 }

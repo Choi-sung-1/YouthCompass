@@ -445,4 +445,40 @@ public class PolicyEligibilityServiceImpl implements PolicyEligibilityService {
         return EligibilityStatus.NOT_MATCH;
     }
 
+    //  최종 조건 판정 ***
+    @Override
+    public EligibilityStatus evaluate(UserPolicyProfileVO user, PolicyVO policy) {
+        EligibilityStatus[] results = {
+                checkAge(user, policy),
+                checkRegion(user, policy),
+                checkSchool(user, policy),
+                checkJob(user, policy),
+                checkMarriage(user, policy),
+                checkIncome(user, policy),
+                checkMajor(user, policy),
+                checkSpecialTarget(user, policy)
+        };
+
+        boolean hasUnknown = false;
+
+        for (EligibilityStatus result : results) {
+
+//          하나라도 조건이 충족하지 않으면 NOT_MATCH
+            if (result == EligibilityStatus.NOT_MATCH) {
+                return EligibilityStatus.NOT_MATCH;
+            }
+//          하나라도 확실하지않은 조건이있다면 UNKNOWN
+            if (result == EligibilityStatus.UNKNOWN) {
+                hasUnknown = true;
+            }
+        }
+
+//          하나라도 확실하지않은 조건이있다면 UNKNOWN
+        if (hasUnknown) {
+            return EligibilityStatus.UNKNOWN;
+        }
+//      모든 조건이 충족하면 MATCH
+        return EligibilityStatus.MATCH;
+    }
+
 }
