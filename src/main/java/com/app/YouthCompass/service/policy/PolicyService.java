@@ -1,7 +1,9 @@
 package com.app.YouthCompass.service.policy;
 
-import org.springframework.stereotype.Service;
+import com.app.YouthCompass.domain.vo.policy.PolicyVO;
 
-@Service
+import java.util.List;
+
 public interface PolicyService {
+    public List<PolicyVO> findAllPolicies();
 }

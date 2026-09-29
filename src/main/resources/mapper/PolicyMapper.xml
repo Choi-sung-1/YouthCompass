@@ -74,4 +74,49 @@
                        #{policyStatus}
                    )
     </insert>
+    <select id="findAllPolicies" resultType="com.app.YouthCompass.domain.vo.policy.PolicyVO">
+
+        SELECT
+            POLICY_ID,
+            POLICY_SOURCE,
+            POLICY_EXTERNAL_ID,
+            POLICY_NAME,
+            POLICY_DESCRIPTION,
+            POLICY_KEYWORDS,
+            POLICY_LARGE_CATEGORY,
+            POLICY_MEDIUM_CATEGORY,
+            POLICY_SUPPORT_CONTENT,
+            POLICY_ORGANIZATION_NAME,
+            POLICY_APPLICATION_METHOD,
+            POLICY_APPLICATION_URL,
+            POLICY_SUBMISSION_DOCUMENTS,
+            POLICY_REFERENCE_URL,
+
+            POLICY_MIN_AGE,
+            POLICY_MAX_AGE,
+
+            POLICY_SCHOOL_CODES,
+            POLICY_JOB_CODES,
+            POLICY_MARRIAGE_STATUS_CODES,
+
+            POLICY_INCOME_CONDITION_CODE,
+            POLICY_INCOME_MIN_AMOUNT,
+            POLICY_INCOME_MAX_AMOUNT,
+            POLICY_INCOME_ETC_CONDITION,
+
+            POLICY_MAJOR_CODES,
+            POLICY_SPECIAL_TARGET_CODES,
+
+            POLICY_REGION_CODES,
+            POLICY_ADDITIONAL_CONDITION,
+
+            POLICY_STATUS,
+            POLICY_CREATED_AT,
+            POLICY_UPDATED_AT
+
+        FROM TBL_POLICY
+
+        WHERE POLICY_STATUS = 'ACTIVE'
+
+    </select>
 </mapper>
