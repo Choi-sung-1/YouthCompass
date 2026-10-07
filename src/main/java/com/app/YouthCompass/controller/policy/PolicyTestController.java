@@ -35,13 +35,10 @@ public class PolicyTestController {
     @ResponseBody
     public String testPolicies() {
 
-        List<PolicyVO> policies =
-                policyService.findAllPolicies();
-
+        List<PolicyVO> policies = policyService.findAllPolicies();
         if (policies.isEmpty()) {
             return "정책 없음";
         }
-
         PolicyVO policy = policies.get(0);
 
         return """
