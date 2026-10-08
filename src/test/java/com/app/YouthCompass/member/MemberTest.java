@@ -1,7 +1,6 @@
 package com.app.YouthCompass.member;
 
-import com.app.YouthCompass.domain.dto.member.MemberJoinRequestDTO;
-import com.app.YouthCompass.service.member.MemberService;
+import com.app.YouthCompass.member.dto.MemberJoinRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

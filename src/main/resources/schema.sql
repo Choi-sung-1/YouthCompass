@@ -13,57 +13,57 @@ CREATE TABLE TBL_MEMBER (
     MEMBER_PROVIDER    VARCHAR(20)  NOT NULL DEFAULT 'LOCAL' COMMENT '로그인 방식 (local, kakao)',
     MEMBER_CREATED_AT  DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '가입일자'
 );
-
 CREATE TABLE TBL_POLICY (
-    POLICY_ID                    BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '정책 PK',
-    POLICY_SOURCE                VARCHAR(50) NOT NULL COMMENT '정책 데이터 출처',
-    POLICY_EXTERNAL_ID           VARCHAR(50) NOT NULL COMMENT '외부 정책 고유번호',
-    POLICY_NAME                  VARCHAR(255) NOT NULL COMMENT '정책명',
-    POLICY_DESCRIPTION           TEXT COMMENT '정책 설명',
-    POLICY_KEYWORDS              VARCHAR(500) COMMENT '정책 키워드',
-    POLICY_LARGE_CATEGORY        VARCHAR(100) COMMENT '정책 대분류',
-    POLICY_MEDIUM_CATEGORY       VARCHAR(100) COMMENT '정책 중분류',
-    POLICY_SUPPORT_CONTENT       TEXT COMMENT '정책 지원 내용',
-    POLICY_ORGANIZATION_NAME     VARCHAR(255) COMMENT '주관 기관명',
-    POLICY_APPLICATION_METHOD    TEXT COMMENT '정책 신청 방법',
-    POLICY_APPLICATION_URL       VARCHAR(1000) COMMENT '정책 신청 URL',
-    POLICY_SUBMISSION_DOCUMENTS  TEXT COMMENT '제출 서류',
-    POLICY_REFERENCE_URL         VARCHAR(1000) COMMENT '참고 URL',
-    POLICY_MIN_AGE               INT COMMENT '지원 최소 나이',
-    POLICY_MAX_AGE               INT COMMENT '지원 최대 나이',
-    POLICY_ADDITIONAL_CONDITION  TEXT COMMENT '추가 신청 자격조건',
-    POLICY_REGION_CODES          TEXT COMMENT '지원 지역 코드 목록',
-    POLICY_STATUS                VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '정책 상태',
-    POLICY_CREATED_AT            DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '정책 DB 등록일',
-    POLICY_UPDATED_AT            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '정책 DB 수정일',
+                            POLICY_ID  BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '정책 PK',
+                            POLICY_SOURCE                VARCHAR(50) NOT NULL COMMENT '정책 데이터 출처',
+                            POLICY_EXTERNAL_ID            VARCHAR(50) NOT NULL COMMENT '외부 정책 고유번호',
+                            POLICY_NAME                   VARCHAR(255) NOT NULL COMMENT '정책명',
+                            POLICY_DESCRIPTION            TEXT COMMENT '정책 설명',
+                            POLICY_KEYWORDS               VARCHAR(500) COMMENT '정책 키워드',
+                            POLICY_LARGE_CATEGORY         VARCHAR(100) COMMENT '정책 대분류',
+                            POLICY_MEDIUM_CATEGORY        VARCHAR(100) COMMENT '정책 중분류',
+                            POLICY_SUPPORT_CONTENT        TEXT COMMENT '정책 지원 내용',
+                            POLICY_ORGANIZATION_NAME      VARCHAR(255) COMMENT '주관 기관명',
+                            POLICY_APPLICATION_METHOD     TEXT COMMENT '정책 신청 방법',
+                            POLICY_APPLICATION_URL        VARCHAR(1000)COMMENT '정책 신청 URL',
+                            POLICY_SUBMISSION_DOCUMENTS   TEXT COMMENT '제출 서류',
+                            POLICY_REFERENCE_URL          VARCHAR(1000) COMMENT '참고 URL',
 
-    CONSTRAINT UK_POLICY_SOURCE_EXTERNAL
-        UNIQUE (
-                POLICY_SOURCE,
-                POLICY_EXTERNAL_ID
-            )
+    -- ================================
+    -- 정책 자격 조건
+    -- ================================
+                            POLICY_MIN_AGE                INT COMMENT '지원 최소 나이',
+                            POLICY_MAX_AGE                INT COMMENT '지원 최대 나이',
+                            POLICY_SCHOOL_CODES           VARCHAR(500) COMMENT '학력 조건 코드',
+                            POLICY_JOB_CODES              VARCHAR(500) COMMENT '취업 상태 코드',
+                            POLICY_MARRIAGE_STATUS_CODES  VARCHAR(500) COMMENT '혼인 상태 코드',
+                            POLICY_INCOME_CONDITION_CODE  VARCHAR(50) COMMENT '소득 조건 구분 코드',
+                            POLICY_INCOME_MIN_AMOUNT      BIGINT COMMENT '최소 소득 금액',
+                            POLICY_INCOME_MAX_AMOUNT      BIGINT COMMENT '최대 소득 금액',
+                            POLICY_INCOME_ETC_CONDITION   TEXT COMMENT '기타 소득 조건',
+                            POLICY_MAJOR_CODES            VARCHAR(500) COMMENT '전공 조건 코드',
+                            POLICY_SPECIAL_TARGET_CODES   VARCHAR(500) COMMENT '특화 대상 코드',
+                            POLICY_REGION_CODES           TEXT COMMENT '지원 지역 코드 목록',
+                            POLICY_ADDITIONAL_CONDITION   TEXT COMMENT '추가 신청 자격조건',
+
+    -- ================================
+    -- 관리 정보
+    -- ================================
+                            POLICY_STATUS                 VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'COMMENT '정책 상태',
+                            POLICY_CREATED_AT             TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '정책 DB 등록일',
+                            POLICY_UPDATED_AT             TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '정책 DB 수정일',
+                            CONSTRAINT UK_POLICY_SOURCE_EXTERNAL
+                                UNIQUE (
+                                        POLICY_SOURCE,
+                                        POLICY_EXTERNAL_ID
+                                    )
 );
 
------------------------SELECT TABLE
 SELECT * FROM TBL_MEMBER;
 SELECT * FROM TBL_POLICY;
+
+-----------------------SELECT TABLE
+DROP TABLE TBL_MEMBER;
 -----------------------DROP TABLE
-DROP TABLE TBL_MEMBER;
 DROP TABLE TBL_POLICY;
-
-
-
-
-
-
-
-
--------------------------DROP TABLE
 DROP TABLE TBL_MEMBER;
-
-
-
-
-
-
-
