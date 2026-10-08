@@ -1,11 +1,10 @@
 package com.app.YouthCompass.policy;
 
-import com.app.YouthCompass.domain.vo.member.UserPolicyProfileVO;
-import com.app.YouthCompass.domain.vo.policy.EligibilityStatus;
-import com.app.YouthCompass.domain.vo.policy.PolicyVO;
-import com.app.YouthCompass.domain.vo.policy.Region;
-import com.app.YouthCompass.service.policy.PolicyEligibilityService;
-import com.app.YouthCompass.service.policy.PolicyEligibilityServiceImpl;
+import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
+import com.app.YouthCompass.policy.domain.eligibility.EligibilityStatus;
+import com.app.YouthCompass.policy.domain.model.PolicyVO;
+import com.app.YouthCompass.policy.domain.eligibility.Region;
+import com.app.YouthCompass.policy.eligibility.PolicyEligibilityService;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PolicyEligibilityServiceImplTest {
 
     private final PolicyEligibilityService service =
-            new PolicyEligibilityServiceImpl();
+            new PolicyEligibilityService();
 
 //    나이 조건이 충족하면 MATCH
     @Test
