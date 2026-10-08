@@ -11,8 +11,8 @@ import java.util.List;
 public class PolicyService {
     private final PolicyMapper policyMapper;
 //    모든 정책 조회
-    public List<PolicyVO> findAllPolicies(){
-        return policyMapper.findAllPolicies();
-    }
+public List<PolicyVO> findAllPolicies() {
+    return policyMapper.findAllPolicies();
+}
 
 }

@@ -24,6 +24,6 @@ public class PolicyEvaluationResult {
     private int notMatchCount;
     private int unknownCount;
 
-    // 추천 점수
-    private double score;
+    // 자격조건 적합도 점수
+    private int specificMatchScore;
 }
