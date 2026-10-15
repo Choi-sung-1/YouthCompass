@@ -1,34 +1,42 @@
 package com.app.YouthCompass.policy.domain.eligibility;
+
 import lombok.Getter;
+
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Getter
 public enum Region {
 
-    GANGWON("51", "강원특별자치도"),
-    GYEONGGI("41", "경기도"),
-    SOUTHGYEONGSANG("48", "경상남도"),
-    NORTHGYEONGSANG("47", "경상북도"),
-    GWANGJU("29", "광주광역시"),
-    DAEGU("27", "대구광역시"),
-    DAEJEON("30", "대전광역시"),
-    BUSAN("26", "부산광역시"),
-    SEOUL("11", "서울특별시"),
-    SEJONG("36", "세종특별자치시"),
-    ULSAN("31", "울산광역시"),
-    INCHEON("28", "인천광역시"),
-    SOUTHJEOLLA("46", "전라남도"),
-    NORTHJEOLLA("52", "전북특별자치도"),
-    JEJU("50", "제주특별자치도"),
-    SOUTHCHUNGCHEONG("44", "충청남도"),
-    NORTHCHUNGCHEONG("43", "충청북도");
+    GANGWON(List.of("51"), "강원특별자치도"),
+    GYEONGGI(List.of("41"), "경기도"),
+    SOUTHGYEONGSANG(List.of("48"), "경상남도"),
+    NORTHGYEONGSANG(List.of("47"), "경상북도"),
 
-    private final String regionCode;
+    // 기존 코드 + 현재 데이터 코드 대응은 확인된 것부터 추가
+    GWANGJU(List.of("29"), "광주광역시"),
+    DAEGU(List.of("27"), "대구광역시"),
+    DAEJEON(List.of("30"), "대전광역시"),
+    BUSAN(List.of("26"), "부산광역시"),
+    SEOUL(List.of("11"), "서울특별시"),
+    SEJONG(List.of("36"), "세종특별자치시"),
+    ULSAN(List.of("31"), "울산광역시"),
+    INCHEON(List.of("28"), "인천광역시"),
+
+    // 12xxx가 전남광주 통합 코드로 현재 데이터에서 사용됨
+    SOUTHJEOLLA(List.of("12", "46"), "전라남도"),
+
+    NORTHJEOLLA(List.of("52"), "전북특별자치도"),
+    JEJU(List.of("50"), "제주특별자치도"),
+    SOUTHCHUNGCHEONG(List.of("44"), "충청남도"),
+    NORTHCHUNGCHEONG(List.of("43"), "충청북도");
+
+    private final List<String> regionCodes;
     private final String regionName;
 
-    Region(String regionCode, String regionName) {
-        this.regionCode = regionCode;
+    Region(List<String> regionCodes, String regionName) {
+        this.regionCodes = regionCodes;
         this.regionName = regionName;
     }
 
@@ -42,7 +50,9 @@ public enum Region {
 
         return Arrays.stream(values())
                 .filter(region ->
-                        normalizedCode.startsWith(region.regionCode))
+                        region.regionCodes.stream()
+                                .anyMatch(normalizedCode::startsWith)
+                )
                 .findFirst();
     }
 }

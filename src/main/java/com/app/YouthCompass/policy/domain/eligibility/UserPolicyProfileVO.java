@@ -26,8 +26,9 @@ public class UserPolicyProfileVO {
     // 혼인 상태
     private MarriageRequirement marriage;
 
-    // 연소득
-    private Long annualIncome;
+    // 연소득 (단위: 만원)
+    // ex) 연소득 2,400만원 → 2400L
+     private Long annualIncome;
 
     // 전공
     private MajorRequirement major;

@@ -7,6 +7,8 @@ import java.util.List;
 
 @Mapper
 public interface PolicyMapper {
+
     int upsertPolicy(PolicyVO policyVO);
+
     List<PolicyVO> findAllPolicies();
 }
