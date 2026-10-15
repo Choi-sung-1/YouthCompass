@@ -1,14 +1,18 @@
 package com.app.YouthCompass.policy.domain.eligibility;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
 @Data
 @Builder
-
+@NoArgsConstructor
+@AllArgsConstructor
 // 사용자 현 상태 조건 코드
+// 이걸로 정책 추천
 public class UserPolicyProfileVO {
 
     // 사용자 나이
