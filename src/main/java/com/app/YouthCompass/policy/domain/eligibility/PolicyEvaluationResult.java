@@ -24,6 +24,9 @@ public class PolicyEvaluationResult {
     private int notMatchCount;
     private int unknownCount;
 
-    // 추천 점수
-    private double score;
+//    → 이 사용자의 구체적인 자격조건과 얼마나 잘 맞는가에 대한 점수
+    private int specificMatchScore;
+
+//    → 사용자가 찾는 분야와 얼마나 관련 있는가에 대한 점수
+    private int relevanceScore;
 }

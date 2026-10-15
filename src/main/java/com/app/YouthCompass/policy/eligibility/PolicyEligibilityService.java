@@ -4,6 +4,7 @@ import com.app.YouthCompass.policy.domain.eligibility.*;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 @Service
@@ -311,17 +312,16 @@ public class PolicyEligibilityService {
         if (userAnnualIncome == null) {
             return EligibilityStatus.UNKNOWN;
         }
-
-        // 6. 최소소득 조건
-        if (minIncome != null && userAnnualIncome < minIncome) {
+        // 6. 최소 소득 조건
+        if (minIncome != null && minIncome > 0
+                && userAnnualIncome < minIncome) {
             return EligibilityStatus.NOT_MATCH;
         }
-
-        // 7. 최대소득 조건
-        if (maxIncome != null && userAnnualIncome > maxIncome) {
+        // 7. 최대 소득 조건
+        if (maxIncome != null && maxIncome > 0
+                && userAnnualIncome > maxIncome) {
             return EligibilityStatus.NOT_MATCH;
         }
-
         // 8. 연소득 조건인데
         // 비교할 최소/최대 금액이 하나도 없음
         if (minIncome == null && maxIncome == null) {
@@ -439,6 +439,99 @@ public class PolicyEligibilityService {
         return EligibilityStatus.NOT_MATCH;
     }
 
+    //  판정 결과 개수 count
+    private int countStatus(EligibilityStatus target,EligibilityStatus... results){
+        int count = 0;
+        for (EligibilityStatus result : results) {
+            if (result ==target){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    //  조건을 만족하였을때 점수 증가
+    private int calculateSpecificMatchScore(PolicyVO policy, PolicyEvaluationResult result) {
+
+        int score = 0;
+
+        // =========================
+        // 1. 나이
+        // =========================
+        boolean hasAgeCondition =
+                (policy.getPolicyMinAge() != null && policy.getPolicyMinAge() > 0)
+                        || (policy.getPolicyMaxAge() != null && policy.getPolicyMaxAge() > 0);
+
+        if (hasAgeCondition
+                && result.getAgeResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+
+
+        // =========================
+        // 2. 지역
+        // =========================
+        if (hasRealRegionCondition(policy.getPolicyRegionCodes())
+                && result.getRegionResult() == EligibilityStatus.MATCH) {
+            score += 2;
+        }
+
+
+        // =========================
+        // 3. 학력
+        // =========================
+        if (hasRealSchoolCondition(policy.getPolicySchoolCodes())
+                && result.getSchoolResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+
+
+        // =========================
+        // 4. 취업
+        // =========================
+        // JobRequirement 확인 후 다음에 정확하게 수정
+        if (hasRealJobCondition(policy.getPolicyJobCodes())
+                && result.getJobResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+        // =========================
+        // 5. 혼인
+        // =========================
+        if (hasRealMarriageCondition(policy.getPolicyMarriageStatusCodes())
+                && result.getMarriageResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+
+
+        // =========================
+        // 6. 소득
+        // =========================
+        if (hasRealIncomeCondition(policy)
+                && result.getIncomeResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+
+
+        // =========================
+        // 7. 전공
+        // =========================
+        if (hasRealMajorCondition(policy.getPolicyMajorCodes())
+                && result.getMajorResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+
+
+        // =========================
+        // 8. 특화대상
+        // =========================
+        if (hasRealSpecialTargetCondition(policy.getPolicySpecialTargetCodes())
+                && result.getSpecialTargetResult() == EligibilityStatus.MATCH) {
+            score += 1;
+        }
+
+        return score;
+    }
+
     //  최종 조건 판정 ***
     public PolicyEvaluationResult evaluate(UserPolicyProfileVO user, PolicyVO policy) {
         PolicyEvaluationResult result = new PolicyEvaluationResult();
@@ -488,17 +581,113 @@ public class PolicyEligibilityService {
         result.setUnknownCount(UnknownCount);
         result.setNotMatchCount(NotMatchCount);
 
+//       점수 계산
+        int specificMatchScore = calculateSpecificMatchScore(policy,result);
+        result.setSpecificMatchScore(specificMatchScore);
         return  result;
     }
 
-//    Match 개수 count
-    private int countStatus(EligibilityStatus target,EligibilityStatus... results){
-        int count = 0;
-        for (EligibilityStatus result : results) {
-            if (result ==target){
-                count++;
-            }
+//    ========================================================================
+//    사용자가 입력한 값에 대한 판정
+//    각각 조건에대한 사용자가 입력한 값에 적합도를 판단하여 일치할 경우
+    private boolean hasRealSchoolCondition(String codes) {
+
+        if (codes == null || codes.isBlank()) {
+            return false;
         }
-        return count;
+
+        return Arrays.stream(codes.split(","))
+                .map(String::trim)
+                .map(SchoolRequirement::fromCode)
+                .anyMatch(requirement ->
+                        requirement != SchoolRequirement.NO_RESTRICTION
+                                && requirement != SchoolRequirement.UNKNOWN
+                );
+    }
+    private boolean hasRealMarriageCondition(String codes) {
+
+        if (codes == null || codes.isBlank()) {
+            return false;
+        }
+
+        return Arrays.stream(codes.split(","))
+                .map(String::trim)
+                .map(MarriageRequirement::fromCode)
+                .anyMatch(requirement ->
+                        requirement != MarriageRequirement.NO_RESTRICTION
+                                && requirement != MarriageRequirement.UNKNOWN
+                );
+    }
+    private boolean hasRealMajorCondition(String codes) {
+
+        if (codes == null || codes.isBlank()) {
+            return false;
+        }
+
+        return Arrays.stream(codes.split(","))
+                .map(String::trim)
+                .map(MajorRequirement::fromCode)
+                .anyMatch(requirement ->
+                        requirement != MajorRequirement.NO_RESTRICTION
+                                && requirement != MajorRequirement.UNKNOWN
+                );
+    }
+    private boolean hasRealSpecialTargetCondition(String codes) {
+
+        if (codes == null || codes.isBlank()) {
+            return false;
+        }
+
+        return Arrays.stream(codes.split(","))
+                .map(String::trim)
+                .map(SpecialTargetRequirement::fromCode)
+                .anyMatch(requirement ->
+                        requirement != SpecialTargetRequirement.NO_RESTRICTION
+                                && requirement != SpecialTargetRequirement.UNKNOWN
+                );
+    }
+    private boolean hasRealIncomeCondition(PolicyVO policy) {
+
+        String code = policy.getPolicyIncomeConditionCode();
+
+        if (code == null || code.isBlank()) {
+            return false;
+        }
+
+        IncomeConditionType type =
+                IncomeConditionType.fromCode(code);
+
+        return type != IncomeConditionType.NO_RESTRICTION
+                && type != IncomeConditionType.UNKNOWN;
+    }
+    private boolean hasRealRegionCondition(String regionCodes) {
+
+        if (regionCodes == null || regionCodes.isBlank()) {
+            return false;
+        }
+
+        String[] codes = regionCodes.split(",");
+
+        // 전국의 수많은 시군구 코드가 들어있는 경우
+        // 특정 지역 제한으로 보지 않음
+        if (codes.length > 100) {
+            return false;
+        }
+
+        return true;
+    }
+    private boolean hasRealJobCondition(String codes) {
+
+        if (codes == null || codes.isBlank()) {
+            return false;
+        }
+
+        return Arrays.stream(codes.split(","))
+                .map(String::trim)
+                .map(JobRequirement::fromCode)
+                .anyMatch(requirement ->
+                        requirement != JobRequirement.NO_RESTRICTION
+                                && requirement != JobRequirement.UNKNOWN
+                );
     }
 }

@@ -1,162 +1,89 @@
 package com.app.YouthCompass.policy;
 
-import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
-import com.app.YouthCompass.policy.domain.eligibility.EligibilityStatus;
-import com.app.YouthCompass.policy.domain.model.PolicyVO;
-import com.app.YouthCompass.policy.domain.eligibility.Region;
-import com.app.YouthCompass.policy.eligibility.PolicyEligibilityService;
+import com.app.YouthCompass.policy.domain.eligibility.*;
+import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
+import com.app.YouthCompass.policy.recommendation.PolicyRecommendationService;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.List;
+import java.util.Set;
 
-class PolicyEligibilityServiceImplTest {
+@SpringBootTest
+class PolicyEligibilityServiceTest {
 
-    private final PolicyEligibilityService service =
-            new PolicyEligibilityService();
+    @Autowired
+    private PolicyService policyService;
 
-//    나이 조건이 충족하면 MATCH
-    @Test
-    void age_Match() {
-
-        UserPolicyProfileVO user = UserPolicyProfileVO.builder().age(25).build();
-        PolicyVO policy = PolicyVO.builder().policyMinAge(19).policyMaxAge(34).build();
-        EligibilityStatus result = service.checkAge(user, policy);
-
-        assertEquals(EligibilityStatus.MATCH, result);
-        System.out.println(result.toString());
-        
-    }
-
-    //    최소 나이보다 어리면 NOT MATCH
-    @Test
-    void minAge_Match() {
-        UserPolicyProfileVO user = UserPolicyProfileVO.builder().age(18).build();
-        PolicyVO policy = PolicyVO.builder().policyMinAge(19).policyMaxAge(34).build();
-        EligibilityStatus result = service.checkAge(user, policy);
-
-        assertEquals(EligibilityStatus.NOT_MATCH, result);
-        System.out.println(result.toString());
-
-    }
-    //    사용자 나이 미입력 시 UNKNOWN
-    @Test
-    void noneAgeMatch() {
-        UserPolicyProfileVO user = UserPolicyProfileVO.builder().build();
-        PolicyVO policy = PolicyVO.builder().policyMinAge(19).policyMaxAge(34).build();
-        EligibilityStatus result = service.checkAge(user, policy);
-
-        assertEquals(EligibilityStatus.UNKNOWN, result);
-        System.out.println(result.toString());
-    }
-    @Test
-    void 사용자지역과_정책지역이_같으면_MATCH() {
-
-        UserPolicyProfileVO user =
-                UserPolicyProfileVO.builder()
-                        .region(Region.GYEONGGI)
-                        .build();
-
-        PolicyVO policy =
-                PolicyVO.builder()
-                        .policyRegionCodes("41")
-                        .build();
-
-        EligibilityStatus result =
-                service.checkRegion(user, policy);
-
-        assertEquals(
-                EligibilityStatus.MATCH,
-                result
-        );
-    }
-
+    @Autowired
+    private PolicyRecommendationService policyRecommendationService;
 
     @Test
-    void 사용자지역과_정책지역이_다르면_NOT_MATCH() {
+    void 정책_추천_후보_조회() {
 
-        UserPolicyProfileVO user =
-                UserPolicyProfileVO.builder()
-                        .region(Region.GYEONGGI)
-                        .build();
-
-        PolicyVO policy =
-                PolicyVO.builder()
-                        .policyRegionCodes("11")
-                        .build();
-
-        EligibilityStatus result =
-                service.checkRegion(user, policy);
-
-        assertEquals(
-                EligibilityStatus.NOT_MATCH,
-                result
-        );
-    }
+        // =========================
+        // 1. 사용자 조건
+        // =========================
+        UserPolicyProfileVO user = UserPolicyProfileVO.builder()
+                .age(25)
+                .region(Region.SEOUL)
+                .school(SchoolRequirement.UNIVERSITY_STUDENT)
+                .job(JobRequirement.UNEMPLOYED)
+                .marriage(MarriageRequirement.SINGLE)
+                .annualIncome(2400L)
+                .major(MajorRequirement.ENGINEERING)
+                .specialTargets(Set.of())
+                .build();
 
 
-    @Test
-    void 여러지역중_사용자지역이_있으면_MATCH() {
-
-        UserPolicyProfileVO user =
-                UserPolicyProfileVO.builder()
-                        .region(Region.GYEONGGI)
-                        .build();
-
-        PolicyVO policy =
-                PolicyVO.builder()
-                        .policyRegionCodes("11,41,28")
-                        .build();
-
-        EligibilityStatus result =
-                service.checkRegion(user, policy);
-
-        assertEquals(
-                EligibilityStatus.MATCH,
-                result
-        );
-    }
+        // =========================
+        // 2. 사용자가 원하는 정책
+        // "주거 분야에서 월세 관련 정책"
+        // =========================
+        PolicySearchIntent intent = PolicySearchIntent.builder()
+                .category("일자리")
+                .build();
 
 
-    @Test
-    void 사용자지역정보가_없으면_UNKNOWN() {
-
-        UserPolicyProfileVO user =
-                UserPolicyProfileVO.builder()
-                        .build();
-
-        PolicyVO policy =
-                PolicyVO.builder()
-                        .policyRegionCodes("41")
-                        .build();
-
-        EligibilityStatus result =
-                service.checkRegion(user, policy);
-
-        assertEquals(
-                EligibilityStatus.UNKNOWN,
-                result
-        );
-    }
+        // =========================
+        // 3. 추천 실행
+        // =========================
+        List<PolicyEvaluationResult> candidates =
+                policyRecommendationService.recommend(user, intent);
 
 
-    @Test
-    void 정책에_지역제한이_없으면_MATCH() {
+        // =========================
+        // 4. 기본 결과
+        // =========================
+        System.out.println("\n==============================");
+        System.out.println("사용자 지역 = " + user.getRegion());
+        System.out.println("전체 정책 = " + policyService.findAllPolicies().size());
+        System.out.println("1차 필터 후 후보 = " + candidates.size());
+        System.out.println("==============================\n");
 
-        UserPolicyProfileVO user =
-                UserPolicyProfileVO.builder()
-                        .region(Region.GYEONGGI)
-                        .build();
 
-        PolicyVO policy =
-                PolicyVO.builder()
-                        .build();
+        // =========================
+        // 5. TOP 10 출력
+        // =========================
+        int limit = Math.min(10, candidates.size());
 
-        EligibilityStatus result =
-                service.checkRegion(user, policy);
-
-        assertEquals(
-                EligibilityStatus.MATCH,
-                result
-        );
+        for (int i = 0; i < limit; i++) {
+            PolicyEvaluationResult result = candidates.get(i);
+            System.out.println(
+                    (i + 1) + "위"
+                            + " | ID=" + result.getPolicy().getPolicyExternalId()
+                            + " | 관련도=" + result.getRelevanceScore()
+                            + " | 자격점수=" + result.getSpecificMatchScore()
+                            + " | UNKNOWN=" + result.getUnknownCount()
+                            + " | 지역판정=" + result.getRegionResult()
+//                            + " | 지역코드=" + result.getPolicy().getPolicyRegionCodes()
+                            + " | 대분류=" + result.getPolicy().getPolicyLargeCategory()
+                            + " | 중분류=" + result.getPolicy().getPolicyMediumCategory()
+                            + " | 키워드=" + result.getPolicy().getPolicyKeywords()
+                            + " | 기관=" + result.getPolicy().getPolicyOrganizationName()
+                            + " | 정책명=" + result.getPolicy().getPolicyName()
+            );
+        }
     }
 }
