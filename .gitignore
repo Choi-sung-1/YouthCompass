@@ -42,3 +42,6 @@ src/main/resources/application-secret.properties
 # H2 File Database
 /db/
 *.db
+
+
+.DS_Store
