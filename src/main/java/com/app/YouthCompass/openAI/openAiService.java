@@ -2,6 +2,7 @@ package com.app.YouthCompass.openAI;
 
 import com.app.YouthCompass.policy.domain.eligibility.*;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -9,9 +10,11 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 public class openAiService {
 
@@ -57,9 +60,9 @@ public class openAiService {
                 .school(normalize(data.school()))
                 .job(normalize(data.job()))
                 .marriage(normalize(data.marriage()))
-                .annualIncome(toManwon(data.annualIncome()))
+                .annualIncome(toManwon(checkZeroIncome(data.annualIncome(), text)))
                 .major(normalize(data.major()))
-                .specialTargets(normalizeTargets(data.specialTargets()))
+                .specialTargets(checkEmptyTargets(normalizeTargets(data.specialTargets()), text))
                 .build();
 
         PolicySearchIntent intent = PolicySearchIntent.builder()
@@ -114,7 +117,8 @@ public class openAiService {
                 annualIncome:
                 개인 연소득이며 원 단위입니다.
                 연소득 2천만원은 20000000.
-                명시된 개인 연소득 없음은 0.
+                소득을 언급하지 않았으면 반드시 null. 0을 넣지 마세요.
+                "소득이 없다", "수입 0원"처럼 소득이 없다고 직접 말한 경우만 0.
                 미취업만으로 소득을 0으로 넣지 마세요.
                 월소득·가구소득·소득 범위만 있으면 null.
 
@@ -128,7 +132,7 @@ public class openAiService {
                 명시된 해당 대상을 모두 배열에 넣으세요.
                 중소기업 현재 재직은 SME. 취업 희망은 제외하세요.
                 지역 거주만으로 LOCAL_TALENT를 추측하지 마세요.
-                미언급 또는 일부 부정만 있으면 null.
+                미언급 또는 일부 부정만 있으면 반드시 null. 빈 배열을 넣지 마세요.
                 모든 특화 대상에 해당하지 않는다고 명시한 경우만
                 빈 배열로 반환하세요.
                 
@@ -203,6 +207,42 @@ public class openAiService {
         String sidoCode = (region != null) ? region.getRegionCodes().get(0) : null;
 
         return SigunguRegistry.findByName(sidoCode, name);
+    }
+
+    // =========================
+    // AI가 "모름"을 0 / 빈 배열로 채우는 경우 바로잡기
+    // 프롬프트로 null을 요구해도 AI가 값을 채우는 경우가 있어,
+    // 사용자가 문장에서 직접 말했는지 한 번 더 확인한다
+    // =========================
+
+    // 소득이 없다고 직접 말한 표현 ex) "소득이 없어요", "수입 0원", "무소득"
+    private static final Pattern NO_INCOME = Pattern.compile(
+            "무소득|(소득|수입|벌이|연봉|월급|급여)[^.!?\\n]{0,8}(없|0\\s*원)");
+
+    // 지원 대상에 모두 해당하지 않는다고 직접 말한 표현 ex) "해당 사항 없어요"
+    private static final Pattern NO_SPECIAL_TARGET = Pattern.compile(
+            "해당[^.!?\\n]{0,6}없");
+
+    // AI가 소득 0을 줬는데 문장에 "소득 없음" 표현이 없으면 → 모름(null)
+    private Long checkZeroIncome(Long income, String text) {
+
+        if (income != null && income == 0 && !NO_INCOME.matcher(text).find()) {
+            log.info("AI가 소득 0을 반환했지만 문장에 소득 없음 표현이 없어 모름(null)으로 처리");
+            return null;
+        }
+        return income;
+    }
+
+    // AI가 빈 배열을 줬는데 문장에 "해당 없음" 표현이 없으면 → 모름(null)
+    private Set<SpecialTargetRequirement> checkEmptyTargets(
+            Set<SpecialTargetRequirement> targets,
+            String text) {
+
+        if (targets != null && targets.isEmpty() && !NO_SPECIAL_TARGET.matcher(text).find()) {
+            log.info("AI가 지원 대상 빈 배열을 반환했지만 문장에 해당 없음 표현이 없어 모름(null)으로 처리");
+            return null;
+        }
+        return targets;
     }
 
     private void validate(ProfileData data) {
