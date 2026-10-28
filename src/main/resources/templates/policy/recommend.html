@@ -2,61 +2,385 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI 정책 추천</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+            font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+        .page {
+            max-width: 760px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .home-link {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        h1 {
+            margin: 12px 0 6px;
+            font-size: 26px;
+        }
+
+        .subtitle {
+            margin: 0 0 24px;
+            color: #666;
+        }
+
+        /* 흰 카드 공통 (로그인·회원가입 화면과 같은 모양) */
+        .box {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .box h2 {
+            margin: 0 0 14px;
+            font-size: 18px;
+        }
+
+        /* 1. 입력창 */
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .hint {
+            margin: 8px 0 14px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 5px;
+            background: #1976d2;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1565c0;
+        }
+
+        button:disabled {
+            background: #90b8e0;
+            cursor: wait;
+        }
+
+        .error {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 5px;
+            background: #fdecea;
+            color: #b3261e;
+            font-size: 14px;
+        }
+
+        /* 2. AI가 이해한 조건 */
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #e3f0fc;
+            font-size: 14px;
+        }
+
+        .chip .label {
+            color: #555;
+            margin-right: 4px;
+        }
+
+        .chip.empty {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        .chip.empty .label {
+            color: #999;
+        }
+
+        .chips-note {
+            margin: 12px 0 0;
+            color: #888;
+            font-size: 13px;
+        }
+
+        /* 3. 정책 카드 */
+        .result-title {
+            margin: 28px 0 12px;
+            font-size: 18px;
+        }
+
+        .policy {
+            position: relative;
+        }
+
+        .rank {
+            display: inline-block;
+            width: 26px;
+            height: 26px;
+            line-height: 26px;
+            border-radius: 50%;
+            background: #1976d2;
+            color: white;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .policy-name {
+            font-size: 18px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+        .org {
+            margin: 6px 0 0 34px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .reasons {
+            list-style: none;
+            margin: 16px 0 0;
+            padding: 0;
+        }
+
+        .reasons li {
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .reasons .ok::before {
+            content: "✔ ";
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .reasons .check {
+            color: #b26a00;
+        }
+
+        .reasons .check::before {
+            content: "？ ";
+            font-weight: bold;
+        }
+
+        details {
+            margin-top: 14px;
+            font-size: 14px;
+        }
+
+        summary {
+            color: #1976d2;
+            cursor: pointer;
+        }
+
+        .support {
+            margin: 8px 0 0;
+            padding: 12px;
+            border-radius: 5px;
+            background: #f7f9fb;
+            white-space: pre-line;  /* 공공데이터 원문의 줄바꿈 유지 */
+            line-height: 1.5;
+        }
+
+        .apply-btn {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 18px;
+            border-radius: 5px;
+            background: #1976d2;
+            color: white;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .apply-btn:hover {
+            background: #1565c0;
+        }
+
+        .no-link {
+            margin-top: 16px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .empty-result {
+            text-align: center;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
 
-<!-- 9번 동작 확인용 임시 화면. 11번에서 화면 구성을 새로 만든다. -->
+<div class="page">
 
-<h1>AI 정책 추천</h1>
+    <a class="home-link" th:href="@{/}">← 홈으로</a>
+    <h1>AI 정책 추천</h1>
+    <p class="subtitle">내 상황을 편하게 적어주시면, 받을 수 있는 청년 정책을 찾아드려요.</p>
 
-<form th:action="@{/policy/recommend}" th:object="${request}" method="post">
-    <textarea th:field="*{sentence}" rows="4" cols="60"
-              placeholder="예) 수원 사는 25살 대학생이고 월세 지원을 찾고 있어요"></textarea>
-    <br>
-    <button type="submit">추천 받기</button>
-</form>
+    <!-- =========================
+         1. 입력창
+         ========================= -->
+    <div class="box">
+        <form id="recommend-form" th:action="@{/policy/recommend}" th:object="${request}" method="post">
+            <textarea th:field="*{sentence}"
+                      placeholder="예) 수원 사는 25살 대학생이에요. 연봉은 2400만원이고 월세 지원을 찾고 있어요."></textarea>
+            <p class="hint">나이, 사는 곳, 학교·직장, 연소득, 찾는 지원을 적을수록 정확해져요.</p>
+            <button type="submit" id="submit-btn">추천 받기</button>
+        </form>
 
-<p th:if="${errorMessage}" th:text="${errorMessage}" style="color: red;"></p>
+        <div class="error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    </div>
 
-<div th:if="${result}">
+    <th:block th:if="${result}" th:with="p=${result.profile}, i=${result.intent}">
 
-    <h2>AI가 이해한 조건</h2>
-    <ul>
-        <li>나이: <span th:text="${result.profile.age}"></span></li>
-        <li>지역: <span th:text="${result.profile.region}"></span></li>
-        <li>학력: <span th:text="${result.profile.school}"></span></li>
-        <li>취업: <span th:text="${result.profile.job}"></span></li>
-        <li>혼인: <span th:text="${result.profile.marriage}"></span></li>
-        <li>연소득(만원): <span th:text="${result.profile.annualIncome}"></span></li>
-        <li>전공: <span th:text="${result.profile.major}"></span></li>
-        <li>특화대상: <span th:text="${result.profile.specialTargets}"></span></li>
-        <li>찾는 분야: <span th:text="${result.intent.category}"></span></li>
-        <li>키워드: <span th:text="${result.intent.keyword}"></span></li>
-    </ul>
+        <!-- =========================
+             2. AI가 이해한 내 조건
+             ========================= -->
+        <div class="box">
+            <h2>AI가 이해한 내 조건</h2>
 
-    <h2>추천 정책 (<span th:text="${#lists.size(result.policies)}"></span>개)</h2>
+            <div class="chips">
+                <span class="chip" th:classappend="${p.age == null} ? 'empty'">
+                    <span class="label">나이</span>
+                    <b th:text="${p.age != null} ? ${p.age} + '세' : '모름'"></b>
+                </span>
 
-    <p th:if="${#lists.isEmpty(result.policies)}">조건에 맞는 정책을 찾지 못했어요.</p>
+                <span class="chip" th:classappend="${p.region == null} ? 'empty'">
+                    <span class="label">사는 곳</span>
+                    <b th:text="${p.region != null} ? ${p.region.regionName} : '모름'"></b>
+                </span>
 
-    <ol>
-        <li th:each="policy : ${result.policies}">
-            <strong th:text="${policy.policyName}"></strong>
-            (<span th:text="${policy.organizationName}"></span>)
-            <br>
-            관련도 <span th:text="${policy.relevanceScore}"></span>
-            / 조건 일치 <span th:text="${policy.matchScore}"></span>
-            <ul>
-                <li th:each="reason : ${policy.reasons}"
-                    th:text="'✔ ' + ${reason}"></li>
-                <li th:each="reason : ${policy.unknownReasons}"
-                    th:text="'？ ' + ${reason}" style="color: #b26a00;"></li>
+                <span class="chip" th:classappend="${p.school == null} ? 'empty'">
+                    <span class="label">학력</span>
+                    <b th:text="${p.school != null} ? ${p.school.description} : '모름'"></b>
+                </span>
+
+                <span class="chip" th:classappend="${p.job == null} ? 'empty'">
+                    <span class="label">취업</span>
+                    <b th:text="${p.job != null} ? ${p.job.description} : '모름'"></b>
+                </span>
+
+                <span class="chip" th:classappend="${p.marriage == null} ? 'empty'">
+                    <span class="label">혼인</span>
+                    <b th:text="${p.marriage != null} ? ${p.marriage.description} : '모름'"></b>
+                </span>
+
+                <span class="chip" th:classappend="${p.annualIncome == null} ? 'empty'">
+                    <span class="label">연소득</span>
+                    <b th:text="${p.annualIncome != null}
+                                ? ${#numbers.formatInteger(p.annualIncome, 1, 'COMMA')} + '만원'
+                                : '모름'"></b>
+                </span>
+
+                <span class="chip" th:classappend="${p.major == null} ? 'empty'">
+                    <span class="label">전공</span>
+                    <b th:text="${p.major != null} ? ${p.major.description} : '모름'"></b>
+                </span>
+
+                <!-- 지원 대상: null = 언급 없음, 빈 목록 = 해당 없음이라고 말함 -->
+                <span class="chip" th:classappend="${p.specialTargets == null} ? 'empty'">
+                    <span class="label">지원 대상</span>
+                    <b th:if="${p.specialTargets == null}">모름</b>
+                    <b th:if="${p.specialTargets != null and #sets.isEmpty(p.specialTargets)}">해당 없음</b>
+                    <b th:if="${p.specialTargets != null and !#sets.isEmpty(p.specialTargets)}">
+                        <th:block th:each="t, st : ${p.specialTargets}">
+                            <span th:text="${t.description}"></span><span th:unless="${st.last}">, </span>
+                        </th:block>
+                    </b>
+                </span>
+
+                <span class="chip" th:classappend="${i?.category == null} ? 'empty'">
+                    <span class="label">찾는 분야</span>
+                    <b th:text="${i?.category} ?: '모름'"></b>
+                </span>
+
+                <span class="chip" th:classappend="${i?.keyword == null} ? 'empty'">
+                    <span class="label">찾는 지원</span>
+                    <b th:text="${i?.keyword} ?: '모름'"></b>
+                </span>
+            </div>
+
+            <p class="chips-note">회색으로 표시된 항목은 문장에서 찾지 못한 정보예요. 더 적어주시면 추천이 정확해져요.</p>
+        </div>
+
+        <!-- =========================
+             3. 추천 정책 카드
+             ========================= -->
+        <h2 class="result-title" th:if="${!#lists.isEmpty(result.policies)}">
+            추천 정책 <span th:text="${#lists.size(result.policies)}"></span>개
+        </h2>
+
+        <div class="box empty-result" th:if="${#lists.isEmpty(result.policies)}">
+            조건에 맞는 정책을 찾지 못했어요. 조건을 바꿔서 다시 적어보세요.
+        </div>
+
+        <div class="box policy" th:each="policy, st : ${result.policies}">
+
+            <span class="rank" th:text="${st.count}"></span>
+            <span class="policy-name" th:text="${policy.policyName}"></span>
+            <p class="org" th:if="${policy.organizationName}" th:text="${policy.organizationName}"></p>
+
+            <ul class="reasons"
+                th:if="${!#lists.isEmpty(policy.reasons) or !#lists.isEmpty(policy.unknownReasons)}">
+                <li class="ok" th:each="reason : ${policy.reasons}" th:text="${reason}"></li>
+                <li class="check" th:each="reason : ${policy.unknownReasons}" th:text="${reason}"></li>
             </ul>
-            <a th:if="${policy.applicationUrl}" th:href="${policy.applicationUrl}"
-               target="_blank" rel="noopener">신청 링크</a>
-        </li>
-    </ol>
+
+            <details th:if="${policy.supportContent}">
+                <summary>지원 내용 보기</summary>
+                <p class="support" th:text="${policy.supportContent}"></p>
+            </details>
+
+            <a class="apply-btn"
+               th:if="${policy.applicationUrl}"
+               th:href="${policy.applicationUrl}"
+               target="_blank" rel="noopener noreferrer">신청하러 가기 →</a>
+            <p class="no-link" th:unless="${policy.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
+        </div>
+
+    </th:block>
 </div>
+
+<script>
+    // AI 분석은 몇 초 걸리므로, 누른 뒤에는 버튼을 막고 진행 중임을 보여준다 (중복 요청 방지)
+    document.getElementById("recommend-form").addEventListener("submit", function () {
+        const btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        btn.textContent = "AI가 조건을 분석하고 있어요...";
+    });
+</script>
 
 </body>
 </html>
