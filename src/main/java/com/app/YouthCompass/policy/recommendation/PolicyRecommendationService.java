@@ -24,7 +24,7 @@ public class PolicyRecommendationService {
    public List<PolicyEvaluationResult> recommend(UserPolicyProfileVO user,PolicySearchIntent intent) {
 
 //       DB 전체 정책 조회
-       List<PolicyVO> policies = policyService.findAllPolicies();
+       List<PolicyVO> policies = policyService.findOpenPolicies();
 //       추천 후보 저장
        List<PolicyEvaluationResult> candidates = new ArrayList<>();
 

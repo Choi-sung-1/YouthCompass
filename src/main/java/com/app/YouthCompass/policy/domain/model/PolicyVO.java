@@ -1,11 +1,16 @@
 package com.app.YouthCompass.policy.domain.model;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PolicyVO {
 
     // 정책 PK
@@ -94,6 +99,18 @@ public class PolicyVO {
     // 추가 신청 자격조건
     private String policyAdditionalCondition;
 
+    // ================================
+    // 신청기간
+    // ================================
+
+    // 신청기간 구분 코드 (0057001 특정기간 / 0057002 상시 / 0057003 마감)
+    private String policyApplyPeriodCode;
+
+    // 신청 시작일 (aplyYmd 앞쪽, 상시면 null)
+    private LocalDate policyApplyStartDate;
+
+    // 신청 마감일 (aplyYmd 뒤쪽, 상시면 null) → 오늘보다 이전이면 추천 제외
+    private LocalDate policyApplyEndDate;
 
     // ================================
     // 정책 관리 정보
