@@ -81,7 +81,7 @@
                        #{policyApplyEndDate},
 
                        #{policyStatus},
-                       CURRENT_TIMESTAMP
+                       #{policyUpdatedAt}
                    )
     </insert>
 
@@ -149,4 +149,14 @@
         AND (POLICY_APPLY_END_DATE IS NULL
         OR POLICY_APPLY_END_DATE &gt;= CURRENT_DATE)
     </select>
+
+    <!-- 이번 동기화에서 갱신되지 않은 정책 = API에서 사라진 정책 → INACTIVE -->
+    <update id="deactivateNotSyncedPolicies">
+        UPDATE TBL_POLICY
+        SET POLICY_STATUS = 'INACTIVE'
+        WHERE POLICY_SOURCE = 'YOUTH_CENTER'
+          AND POLICY_STATUS = 'ACTIVE'
+          AND (POLICY_UPDATED_AT IS NULL
+            OR POLICY_UPDATED_AT &lt; #{syncStartedAt})
+    </update>
 </mapper>
