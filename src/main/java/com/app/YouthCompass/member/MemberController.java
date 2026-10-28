@@ -21,7 +21,7 @@ public class MemberController {
     public String join(Model model){
         model.addAttribute("member", new MemberJoinRequestDTO());
         model.addAttribute("regions", Region.values());
-        return "/member/join";
+        return "member/join";
     }
     @PostMapping("/join")
     public String join(@ModelAttribute("member") MemberJoinRequestDTO member){
@@ -30,6 +30,6 @@ public class MemberController {
     }
     @GetMapping("/login")
     public String login(){
-        return "/member/login";
+        return "member/login";
     }
 }

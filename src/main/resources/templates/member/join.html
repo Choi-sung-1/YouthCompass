@@ -144,10 +144,9 @@
                 <option value="">지역을 선택하세요</option>
 
                 <option th:each="region : ${regions}"
-                        th:value="${region.regionCode}"
+                        th:value="${region.regionCodes[0]}"
                         th:text="${region.regionName}"
                 >
-                </option>
 
             </select>
         </div>
