@@ -21,6 +21,10 @@ public class UserPolicyProfileVO {
     // 거주 지역
     private Region region;
 
+    // 거주 시·군 단위코드 (SigunguRegistry의 unitCode, 예: 평택 "41220")
+    // null이면 시·도까지만 아는 상태 → 특정 시 대상 정책은 UNKNOWN 처리
+    private String sigunguCode;
+
     // 학력 상태
     private SchoolRequirement school;
 

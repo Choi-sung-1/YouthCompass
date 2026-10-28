@@ -34,4 +34,36 @@ class IncomeCheckTest {
         assertThat(service.checkIncome(user, policyWithMax(2000)))
                 .isEqualTo(EligibilityStatus.NOT_MATCH);
     }
+    private PolicyVO policyWithRange(Long min, Long max) {
+        return PolicyVO.builder()
+                .policyIncomeConditionCode("0043002")
+                .policyIncomeMinAmount(min)
+                .policyIncomeMaxAmount(max)
+                .build();
+    }
+
+    @Test
+    void 금액_0_0이면_UNKNOWN() {
+        assertThat(service.checkIncome(user, policyWithRange(0L, 0L)))
+                .isEqualTo(EligibilityStatus.UNKNOWN);
+    }
+
+    @Test
+    void 금액_null_null이면_UNKNOWN() {
+        assertThat(service.checkIncome(user, policyWithRange(null, null)))
+                .isEqualTo(EligibilityStatus.UNKNOWN);
+    }
+
+    @Test
+    void 최소_0_최대_3000이면_최대만_검사해서_MATCH() {
+        assertThat(service.checkIncome(user, policyWithRange(0L, 3000L)))
+                .isEqualTo(EligibilityStatus.MATCH);
+    }
+
+    @Test
+    void 사용자_소득_모르면_UNKNOWN() {
+        UserPolicyProfileVO noIncome = UserPolicyProfileVO.builder().build();
+        assertThat(service.checkIncome(noIncome, policyWithRange(0L, 3000L)))
+                .isEqualTo(EligibilityStatus.UNKNOWN);
+    }
 }
