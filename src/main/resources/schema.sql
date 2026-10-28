@@ -47,6 +47,13 @@ CREATE TABLE TBL_POLICY (
                             POLICY_ADDITIONAL_CONDITION   TEXT COMMENT '추가 신청 자격조건',
 
     -- ================================
+    -- 신청기간
+    -- ================================
+                            POLICY_APPLY_PERIOD_CODE      VARCHAR(20) COMMENT '신청기간 구분 코드',
+                            POLICY_APPLY_START_DATE       DATE COMMENT '신청 시작일',
+                            POLICY_APPLY_END_DATE         DATE COMMENT '신청 마감일',
+
+    -- ================================
     -- 관리 정보
     -- ================================
                             POLICY_STATUS                 VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'COMMENT '정책 상태',
@@ -69,3 +76,15 @@ DROP TABLE TBL_MEMBER;
 DROP TABLE TBL_POLICY;
 DROP TABLE TBL_MEMBER;
 
+SELECT COUNT(*) AS 추천후보
+FROM TBL_POLICY
+WHERE POLICY_STATUS = 'ACTIVE'
+  AND (POLICY_APPLY_PERIOD_CODE IS NULL OR POLICY_APPLY_PERIOD_CODE <> '0057003')
+  AND (POLICY_APPLY_END_DATE IS NULL OR POLICY_APPLY_END_DATE >= CURRENT_DATE);
+
+SELECT FORMATDATETIME(POLICY_APPLY_END_DATE, 'yyyy-MM') AS 마감월,
+       COUNT(*) AS 정책수
+FROM TBL_POLICY
+WHERE POLICY_APPLY_END_DATE IS NOT NULL
+GROUP BY 마감월
+ORDER BY 마감월;

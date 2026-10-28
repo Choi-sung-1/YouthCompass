@@ -89,6 +89,15 @@ public class YouthPolicyDTO {
     // 추가 신청 자격조건
     private String addAplyQlfcCndCn;
 
+    // ================================
+    // 신청기간
+    // ================================
+
+    // 신청기간 구분 코드 (0057001 = 특정기간 …)
+    private String aplyPrdSeCd;
+
+    // 신청기간 원문 ("20261030 ~ 20261031", 상시면 빈 값)
+    private String aplyYmd;
 
     // ================================
     // 등록/수정 정보

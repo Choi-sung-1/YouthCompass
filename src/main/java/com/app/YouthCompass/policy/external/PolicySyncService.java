@@ -30,7 +30,7 @@ public class PolicySyncService {
         List<YouthPolicyDTO> allPolicies = new ArrayList<>();
 
         while (true){
-            PolicyApiResponse response = policyApiClient.getPolicies(pageNum, pageSize);
+            PolicyApiResponse response = fetchWithRetry(pageNum, pageSize);
             List<YouthPolicyDTO> policies = response.getResult().getYouthPolicyList();
 
             if (policies ==null || policies.isEmpty()){
@@ -59,5 +59,37 @@ public class PolicySyncService {
             count++;
         }
         return count;
+    }
+    // API 호출: 페이지 사이 0.5초 쉬고, 실패하면 최대 3번까지 재시도
+    private PolicyApiResponse fetchWithRetry(int pageNum, int pageSize) {
+
+        int maxAttempts = 5;
+
+        for (int attempt = 1; ; attempt++) {
+            try {
+                Thread.sleep(500);   // 연속 호출로 차단되지 않게 간격 두기
+                return policyApiClient.getPolicies(pageNum, pageSize);
+
+            } catch (org.springframework.web.client.RestClientException e) {
+                System.out.println("페이지 " + pageNum + " 호출 실패 (" + attempt + "/" + maxAttempts + "): "
+                        + e.getClass().getSimpleName());
+                if (attempt >= maxAttempts) {
+                    throw e;   // 3번 다 실패하면 원래대로 에러
+                }
+                sleepQuietly(2000L * attempt);   // 2초, 4초 쉬고 재시도
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("동기화 중단됨", e);
+            }
+        }
+    }
+
+    private void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
