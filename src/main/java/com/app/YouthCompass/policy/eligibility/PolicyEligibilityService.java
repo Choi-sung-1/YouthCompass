@@ -17,8 +17,9 @@ public class PolicyEligibilityService {
 
         Integer userAge = user.getAge();
 
-        Integer minAge = policy.getPolicyMinAge();
-        Integer maxAge = policy.getPolicyMaxAge();
+        // API는 나이 제한 없음을 0으로 내려줌 → 0 이하는 "제한 없음(null)"으로 취급
+        Integer minAge = positiveOrNull(policy.getPolicyMinAge());
+        Integer maxAge = positiveOrNull(policy.getPolicyMaxAge());
 
         // 정책에 나이 제한 자체가 없는 경우
         if (minAge == null && maxAge == null) {return EligibilityStatus.MATCH;}
@@ -34,6 +35,10 @@ public class PolicyEligibilityService {
 
         // 모든 나이 조건 통과
         return EligibilityStatus.MATCH;
+    }
+    // 나이가 0 이하 값은 "조건 없음"으로 본다 (공공데이터 API 관례)
+    private Integer positiveOrNull(Integer value) {
+        return (value == null || value <= 0) ? null : value;
     }
 
     //  지역조건 판단
