@@ -15,7 +15,7 @@ public class MemberTest {
     public final MemberJoinRequestDTO memberJoinRequestDTO = new MemberJoinRequestDTO();
 
     @Test
-    public void joiTest(){
+    public void joinTest(){
         memberJoinRequestDTO.setMemberName("김성원");
         memberJoinRequestDTO.setMemberEmail("span@naver.com");
         memberJoinRequestDTO.setMemberLoginId("test2");

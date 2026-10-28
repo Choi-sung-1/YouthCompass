@@ -20,6 +20,8 @@ public class MemberService {
         member.setMemberPassword(
                 passwordEncoder.encode(member.getMemberPassword())
         );
+        // 일반 회원가입은 항상 LOCAL (카카오 로그인은 별도 흐름에서 세팅)
+        member.setMemberProvider("LOCAL");
 
         memberMapper.insertMember(member);
     }

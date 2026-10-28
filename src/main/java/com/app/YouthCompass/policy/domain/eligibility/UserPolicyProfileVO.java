@@ -30,8 +30,7 @@ public class UserPolicyProfileVO {
     // 혼인 상태
     private MarriageRequirement marriage;
 
-    // 연소득 (단위: 만원)
-    // ex) 연소득 2,400만원 → 2400L
+    // 개인 연소득 (단위: 만원) - 정책 earnMin/MaxAmt와 동일 단위
      private Long annualIncome;
 
     // 전공
