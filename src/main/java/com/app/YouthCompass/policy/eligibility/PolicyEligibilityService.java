@@ -5,6 +5,7 @@ import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 @Service
@@ -17,8 +18,9 @@ public class PolicyEligibilityService {
 
         Integer userAge = user.getAge();
 
-        Integer minAge = policy.getPolicyMinAge();
-        Integer maxAge = policy.getPolicyMaxAge();
+        // API는 나이 제한 없음을 0으로 내려줌 → 0 이하는 "제한 없음(null)"으로 취급
+        Integer minAge = positiveOrNull(policy.getPolicyMinAge());
+        Integer maxAge = positiveOrNull(policy.getPolicyMaxAge());
 
         // 정책에 나이 제한 자체가 없는 경우
         if (minAge == null && maxAge == null) {return EligibilityStatus.MATCH;}
@@ -35,49 +37,93 @@ public class PolicyEligibilityService {
         // 모든 나이 조건 통과
         return EligibilityStatus.MATCH;
     }
+    // 나이가 0 이하 값은 "조건 없음"으로 본다 (공공데이터 API 관례)
+    private Integer positiveOrNull(Integer value) {
+        return (value == null || value <= 0) ? null : value;
+    }
 
     //  지역조건 판단
+    //  매개변수 사용자가 입력한 조건, 데이터베이스에 저장된 정책
+    //  지역조건 판단 (시·도 → 시·군 단위)
     //  매개변수 사용자가 입력한 조건, 데이터베이스에 저장된 정책
     public EligibilityStatus checkRegion(UserPolicyProfileVO user, PolicyVO policy) {
 
         Region userRegion = user.getRegion();
+        String userSigunguCode = user.getSigunguCode();
         String policyRegionCodes = policy.getPolicyRegionCodes();
 
         // 1. 정책에 지역 제한이 없음
-        if(policyRegionCodes ==null || policyRegionCodes.isBlank()){
+        if (policyRegionCodes == null || policyRegionCodes.isBlank()) {
             return EligibilityStatus.MATCH;
         }
 
+        // 시·군만 알고 시·도를 모르면 시·군 코드에서 시·도를 복원
+        if (userRegion == null && userSigunguCode != null) {
+            userRegion = Region.fromCode(userSigunguCode).orElse(null);
+        }
+
         // 2. 정책에는 지역 제한이 있지만 사용자 지역 정보가 없음
-        if (userRegion ==null){
+        if (userRegion == null) {
             return EligibilityStatus.UNKNOWN;
         }
-        String [] codes = policyRegionCodes.split(",");
-        boolean validRegionCodeExists = false;
 
-        for (String code : codes){
-            if (code ==null || code.isBlank()){
+        boolean validRegionCodeExists = false;     // 해석 가능한 코드가 하나라도 있었나
+        boolean sameSidoExists = false;            // 사용자와 같은 시·도 코드가 있었나
+        boolean wholeSido = false;                 // 시·도 전체 코드(41000 등)가 있었나
+        Set<String> policyUnits = new HashSet<>(); // 사용자 시·도 안에서 정책이 대상으로 하는 시·군
+
+        for (String code : policyRegionCodes.split(",")) {
+            if (code == null || code.isBlank()) {
                 continue;
             }
             Optional<Region> policyRegion = Region.fromCode(code.trim());
-            //            알 수 없는 지역 코드
-            if (policyRegion.isEmpty()){
+            // 알 수 없는 지역 코드
+            if (policyRegion.isEmpty()) {
                 continue;
             }
             validRegionCodeExists = true;
 
-//                하나라도 사용자 지역과 같으면 MATCH
-            if(policyRegion.get() == userRegion){
-                return EligibilityStatus.MATCH;
+            // 다른 시·도 코드는 건너뜀
+            if (policyRegion.get() != userRegion) {
+                continue;
+            }
+            sameSidoExists = true;
+
+            Optional<SigunguRegistry.Unit> unit = SigunguRegistry.fromCode(code.trim());
+            if (unit.isEmpty()) {
+                // 41000처럼 시·군을 특정하지 않는 코드 → 시·도 전체 대상
+                wholeSido = true;
+            } else {
+                policyUnits.add(unit.get().unitCode());
             }
         }
 
-//            정책에 지역코드는 있는데 하나도 해석하지 못할경우
-        if (!validRegionCodeExists){
+        // 3. 정책에 지역코드는 있는데 하나도 해석하지 못함
+        if (!validRegionCodeExists) {
             return EligibilityStatus.UNKNOWN;
         }
-//            정상적인 지역코드는 있지만 사용자 지역과 일치하지 않았을경우
-        return EligibilityStatus.NOT_MATCH;
+
+        // 4. 사용자 시·도가 정책 대상에 없음
+        if (!sameSidoExists) {
+            return EligibilityStatus.NOT_MATCH;
+        }
+
+        // 5. 시·도 전체 대상 정책 (전체 코드 or 그 시·도의 모든 시·군 포함)
+        //    서울·세종처럼 시 전체가 1단위인 곳은 구 하나만 있어도 여기서 MATCH
+        String sidoCode = userRegion.getRegionCodes().get(0);
+        if (wholeSido || policyUnits.size() >= SigunguRegistry.unitCount(sidoCode)) {
+            return EligibilityStatus.MATCH;
+        }
+
+        // 6. 특정 시·군만 대상인데 사용자 시·군을 모름 → 확인 필요
+        if (userSigunguCode == null) {
+            return EligibilityStatus.UNKNOWN;
+        }
+
+        // 7. 사용자 시·군이 대상에 있으면 MATCH, 같은 도의 다른 시·군만 있으면 NOT_MATCH
+        return policyUnits.contains(userSigunguCode)
+                ? EligibilityStatus.MATCH
+                : EligibilityStatus.NOT_MATCH;
     }
 
     //  학력조건 판단
@@ -307,28 +353,36 @@ public class PolicyEligibilityService {
             return EligibilityStatus.UNKNOWN;
         }
 
-        // 5. 연소득 조건
-        // 정책에는 조건이 있는데 사용자 소득을 모름
-        if (userAnnualIncome == null) {
-            return EligibilityStatus.UNKNOWN;
-        }
-        // 6. 최소 소득 조건
-        if (minIncome != null && minIncome > 0
-                && userAnnualIncome < minIncome) {
-            return EligibilityStatus.NOT_MATCH;
-        }
-        // 7. 최대 소득 조건
-        if (maxIncome != null && maxIncome > 0
-                && userAnnualIncome > maxIncome) {
-            return EligibilityStatus.NOT_MATCH;
-        }
-        // 8. 연소득 조건인데
-        // 비교할 최소/최대 금액이 하나도 없음
-        if (minIncome == null && maxIncome == null) {
+        // 5. 연소득 조건: 0 이하 금액은 "기준 없음"으로 정리
+        Long min = positiveOrNull(minIncome);
+        Long max = positiveOrNull(maxIncome);
+
+        // 6. 연소득 조건인데 비교할 금액이 하나도 없음 (0/0, null/null 모두)
+        //    → 실제 기준은 기타 소득조건 텍스트에 있는 경우가 많아 판정 불가
+        if (min == null && max == null) {
             return EligibilityStatus.UNKNOWN;
         }
 
+        // 7. 정책 기준은 있는데 사용자 소득을 모름
+        if (userAnnualIncome == null) {
+            return EligibilityStatus.UNKNOWN;
+        }
+
+        // 8. 최소 소득 미달
+        if (min != null && userAnnualIncome < min) {
+            return EligibilityStatus.NOT_MATCH;
+        }
+
+        // 9. 최대 소득 초과
+        if (max != null && userAnnualIncome > max) {
+            return EligibilityStatus.NOT_MATCH;
+        }
+
         return EligibilityStatus.MATCH;
+    }
+
+    private Long positiveOrNull(Long value) {
+        return (value == null || value <= 0) ? null : value;
     }
 
     //  전공 조건 판정

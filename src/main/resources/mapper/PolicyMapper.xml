@@ -34,7 +34,12 @@
                                POLICY_REGION_CODES,
                                POLICY_ADDITIONAL_CONDITION,
 
-                               POLICY_STATUS
+                               POLICY_APPLY_PERIOD_CODE,
+                               POLICY_APPLY_START_DATE,
+                               POLICY_APPLY_END_DATE,
+
+                               POLICY_STATUS,
+                               POLICY_UPDATED_AT
             )
             KEY (
                  POLICY_SOURCE,
@@ -71,52 +76,87 @@
                        #{policyRegionCodes},
                        #{policyAdditionalCondition},
 
-                       #{policyStatus}
+                       #{policyApplyPeriodCode},
+                       #{policyApplyStartDate},
+                       #{policyApplyEndDate},
+
+                       #{policyStatus},
+                       #{policyUpdatedAt}
                    )
     </insert>
+
+    <!-- 조회 컬럼 공통 목록 (두 SELECT가 같이 사용) -->
+    <sql id="policyColumns">
+        POLICY_ID,
+        POLICY_SOURCE,
+        POLICY_EXTERNAL_ID,
+        POLICY_NAME,
+        POLICY_DESCRIPTION,
+        POLICY_KEYWORDS,
+        POLICY_LARGE_CATEGORY,
+        POLICY_MEDIUM_CATEGORY,
+        POLICY_SUPPORT_CONTENT,
+        POLICY_ORGANIZATION_NAME,
+        POLICY_APPLICATION_METHOD,
+        POLICY_APPLICATION_URL,
+        POLICY_SUBMISSION_DOCUMENTS,
+        POLICY_REFERENCE_URL,
+
+        POLICY_MIN_AGE,
+        POLICY_MAX_AGE,
+
+        POLICY_SCHOOL_CODES,
+        POLICY_JOB_CODES,
+        POLICY_MARRIAGE_STATUS_CODES,
+
+        POLICY_INCOME_CONDITION_CODE,
+        POLICY_INCOME_MIN_AMOUNT,
+        POLICY_INCOME_MAX_AMOUNT,
+        POLICY_INCOME_ETC_CONDITION,
+
+        POLICY_MAJOR_CODES,
+        POLICY_SPECIAL_TARGET_CODES,
+
+        POLICY_REGION_CODES,
+        POLICY_ADDITIONAL_CONDITION,
+
+        POLICY_APPLY_PERIOD_CODE,
+        POLICY_APPLY_START_DATE,
+        POLICY_APPLY_END_DATE,
+
+        POLICY_STATUS,
+        POLICY_CREATED_AT,
+        POLICY_UPDATED_AT
+    </sql>
+
+    <!-- 전체 정책 (마감 포함) -->
     <select id="findAllPolicies" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
-
-        SELECT
-            POLICY_ID,
-            POLICY_SOURCE,
-            POLICY_EXTERNAL_ID,
-            POLICY_NAME,
-            POLICY_DESCRIPTION,
-            POLICY_KEYWORDS,
-            POLICY_LARGE_CATEGORY,
-            POLICY_MEDIUM_CATEGORY,
-            POLICY_SUPPORT_CONTENT,
-            POLICY_ORGANIZATION_NAME,
-            POLICY_APPLICATION_METHOD,
-            POLICY_APPLICATION_URL,
-            POLICY_SUBMISSION_DOCUMENTS,
-            POLICY_REFERENCE_URL,
-
-            POLICY_MIN_AGE,
-            POLICY_MAX_AGE,
-
-            POLICY_SCHOOL_CODES,
-            POLICY_JOB_CODES,
-            POLICY_MARRIAGE_STATUS_CODES,
-
-            POLICY_INCOME_CONDITION_CODE,
-            POLICY_INCOME_MIN_AMOUNT,
-            POLICY_INCOME_MAX_AMOUNT,
-            POLICY_INCOME_ETC_CONDITION,
-
-            POLICY_MAJOR_CODES,
-            POLICY_SPECIAL_TARGET_CODES,
-
-            POLICY_REGION_CODES,
-            POLICY_ADDITIONAL_CONDITION,
-
-            POLICY_STATUS,
-            POLICY_CREATED_AT,
-            POLICY_UPDATED_AT
-
+        SELECT <include refid="policyColumns"/>
         FROM TBL_POLICY
-
         WHERE POLICY_STATUS = 'ACTIVE'
-
     </select>
+
+    <!-- 모집 중인 정책만
+         - 0057003(마감) 제외 : 날짜 없이 마감 처리된 정책
+         - 마감일이 지난 특정기간 정책 제외
+         - 상시(0057002)·정보없음은 포함 -->
+    <select id="findOpenPolicies" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
+        SELECT <include refid="policyColumns"/>
+        FROM TBL_POLICY
+        WHERE POLICY_STATUS = 'ACTIVE'
+        AND (POLICY_APPLY_PERIOD_CODE IS NULL
+        OR POLICY_APPLY_PERIOD_CODE &lt;&gt; '0057003')
+        AND (POLICY_APPLY_END_DATE IS NULL
+        OR POLICY_APPLY_END_DATE &gt;= CURRENT_DATE)
+    </select>
+
+    <!-- 이번 동기화에서 갱신되지 않은 정책 = API에서 사라진 정책 → INACTIVE -->
+    <update id="deactivateNotSyncedPolicies">
+        UPDATE TBL_POLICY
+        SET POLICY_STATUS = 'INACTIVE'
+        WHERE POLICY_SOURCE = 'YOUTH_CENTER'
+          AND POLICY_STATUS = 'ACTIVE'
+          AND (POLICY_UPDATED_AT IS NULL
+            OR POLICY_UPDATED_AT &lt; #{syncStartedAt})
+    </update>
 </mapper>

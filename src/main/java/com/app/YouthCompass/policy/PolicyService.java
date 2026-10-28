@@ -10,9 +10,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PolicyService {
     private final PolicyMapper policyMapper;
-//    모든 정책 조회
-public List<PolicyVO> findAllPolicies() {
-    return policyMapper.findAllPolicies();
-}
+    //    모든 정책 조회 (마감 포함)
+    public List<PolicyVO> findAllPolicies() {
+        return policyMapper.findAllPolicies();
+    }
+
+    //    모집 중인 정책만 조회 (추천용)
+    public List<PolicyVO> findOpenPolicies() {
+        return policyMapper.findOpenPolicies();
+    }
 
 }

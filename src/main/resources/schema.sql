@@ -47,6 +47,13 @@ CREATE TABLE TBL_POLICY (
                             POLICY_ADDITIONAL_CONDITION   TEXT COMMENT '추가 신청 자격조건',
 
     -- ================================
+    -- 신청기간
+    -- ================================
+                            POLICY_APPLY_PERIOD_CODE      VARCHAR(20) COMMENT '신청기간 구분 코드',
+                            POLICY_APPLY_START_DATE       DATE COMMENT '신청 시작일',
+                            POLICY_APPLY_END_DATE         DATE COMMENT '신청 마감일',
+
+    -- ================================
     -- 관리 정보
     -- ================================
                             POLICY_STATUS                 VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'COMMENT '정책 상태',
@@ -69,11 +76,7 @@ DROP TABLE TBL_MEMBER;
 DROP TABLE TBL_POLICY;
 DROP TABLE TBL_MEMBER;
 
-SELECT POLICY_NAME,
-       POLICY_INCOME_MIN_AMOUNT,
-       POLICY_INCOME_MAX_AMOUNT,
-       POLICY_INCOME_ETC_CONDITION
-FROM TBL_POLICY
-WHERE POLICY_INCOME_CONDITION_CODE = '0043002'
-  AND POLICY_INCOME_MAX_AMOUNT > 0
-LIMIT 20;
+
+-- 갱신 시각이 이번 동기화로 찍혔는지
+SELECT POLICY_STATUS, MIN(POLICY_UPDATED_AT), MAX(POLICY_UPDATED_AT)
+FROM TBL_POLICY GROUP BY POLICY_STATUS;

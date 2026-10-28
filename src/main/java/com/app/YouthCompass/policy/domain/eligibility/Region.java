@@ -15,7 +15,6 @@ public enum Region {
     NORTHGYEONGSANG(List.of("47"), "경상북도"),
 
     // 기존 코드 + 현재 데이터 코드 대응은 확인된 것부터 추가
-    GWANGJU(List.of("29"), "광주광역시"),
     DAEGU(List.of("27"), "대구광역시"),
     DAEJEON(List.of("30"), "대전광역시"),
     BUSAN(List.of("26"), "부산광역시"),
@@ -23,10 +22,7 @@ public enum Region {
     SEJONG(List.of("36"), "세종특별자치시"),
     ULSAN(List.of("31"), "울산광역시"),
     INCHEON(List.of("28"), "인천광역시"),
-
-    // 12xxx가 전남광주 통합 코드로 현재 데이터에서 사용됨
-    SOUTHJEOLLA(List.of("12", "46"), "전라남도"),
-
+    JEONNAM_GWANGJU(List.of("12", "29", "46"), "전남광주통합특별시(광주·전남)"),
     NORTHJEOLLA(List.of("52"), "전북특별자치도"),
     JEJU(List.of("50"), "제주특별자치도"),
     SOUTHCHUNGCHEONG(List.of("44"), "충청남도"),
