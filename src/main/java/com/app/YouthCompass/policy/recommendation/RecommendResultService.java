@@ -1,6 +1,7 @@
 package com.app.YouthCompass.policy.recommendation;
 
 import com.app.YouthCompass.openAI.openAiService;
+import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
@@ -21,6 +22,7 @@ public class RecommendResultService {
 
     private final openAiService aiService;
     private final PolicyRecommendationService policyRecommendationService;
+    private final RecommendReasonBuilder reasonBuilder;
 
     // 사용자 문장으로 추천 (AI 호출 O)
     public RecommendResponseDTO recommendFromSentence(String sentence) {
@@ -41,9 +43,23 @@ public class RecommendResultService {
                 policyRecommendationService.recommend(profile, intent)
                         .stream()
                         .limit(TOP_N)
-                        .map(RecommendedPolicyDTO::from)
+                        .map(result -> toDto(result, profile, intent))
                         .toList();
 
         return new RecommendResponseDTO(profile, intent, policies);
+    }
+
+    // 판정 결과 → 카드 DTO + 추천 이유 / 확인 필요 조건
+    private RecommendedPolicyDTO toDto(
+            PolicyEvaluationResult result,
+            UserPolicyProfileVO profile,
+            PolicySearchIntent intent
+    ) {
+
+        RecommendedPolicyDTO dto = RecommendedPolicyDTO.from(result);
+        dto.setReasons(reasonBuilder.reasons(result, profile, intent));
+        dto.setUnknownReasons(reasonBuilder.unknownReasons(result, profile));
+
+        return dto;
     }
 }

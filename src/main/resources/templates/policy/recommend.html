@@ -46,7 +46,12 @@
             <br>
             관련도 <span th:text="${policy.relevanceScore}"></span>
             / 조건 일치 <span th:text="${policy.matchScore}"></span>
-            <br>
+            <ul>
+                <li th:each="reason : ${policy.reasons}"
+                    th:text="'✔ ' + ${reason}"></li>
+                <li th:each="reason : ${policy.unknownReasons}"
+                    th:text="'？ ' + ${reason}" style="color: #b26a00;"></li>
+            </ul>
             <a th:if="${policy.applicationUrl}" th:href="${policy.applicationUrl}"
                target="_blank" rel="noopener">신청 링크</a>
         </li>
