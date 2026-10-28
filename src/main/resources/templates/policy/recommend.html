@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 정책 추천</title>
+</head>
+<body>
+
+<!-- 9번 동작 확인용 임시 화면. 11번에서 화면 구성을 새로 만든다. -->
+
+<h1>AI 정책 추천</h1>
+
+<form th:action="@{/policy/recommend}" th:object="${request}" method="post">
+    <textarea th:field="*{sentence}" rows="4" cols="60"
+              placeholder="예) 수원 사는 25살 대학생이고 월세 지원을 찾고 있어요"></textarea>
+    <br>
+    <button type="submit">추천 받기</button>
+</form>
+
+<p th:if="${errorMessage}" th:text="${errorMessage}" style="color: red;"></p>
+
+<div th:if="${result}">
+
+    <h2>AI가 이해한 조건</h2>
+    <ul>
+        <li>나이: <span th:text="${result.profile.age}"></span></li>
+        <li>지역: <span th:text="${result.profile.region}"></span></li>
+        <li>학력: <span th:text="${result.profile.school}"></span></li>
+        <li>취업: <span th:text="${result.profile.job}"></span></li>
+        <li>혼인: <span th:text="${result.profile.marriage}"></span></li>
+        <li>연소득(만원): <span th:text="${result.profile.annualIncome}"></span></li>
+        <li>전공: <span th:text="${result.profile.major}"></span></li>
+        <li>특화대상: <span th:text="${result.profile.specialTargets}"></span></li>
+        <li>찾는 분야: <span th:text="${result.intent.category}"></span></li>
+        <li>키워드: <span th:text="${result.intent.keyword}"></span></li>
+    </ul>
+
+    <h2>추천 정책 (<span th:text="${#lists.size(result.policies)}"></span>개)</h2>
+
+    <p th:if="${#lists.isEmpty(result.policies)}">조건에 맞는 정책을 찾지 못했어요.</p>
+
+    <ol>
+        <li th:each="policy : ${result.policies}">
+            <strong th:text="${policy.policyName}"></strong>
+            (<span th:text="${policy.organizationName}"></span>)
+            <br>
+            관련도 <span th:text="${policy.relevanceScore}"></span>
+            / 조건 일치 <span th:text="${policy.matchScore}"></span>
+            <br>
+            <a th:if="${policy.applicationUrl}" th:href="${policy.applicationUrl}"
+               target="_blank" rel="noopener">신청 링크</a>
+        </li>
+    </ol>
+</div>
+
+</body>
+</html>
