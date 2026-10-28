@@ -46,7 +46,7 @@ public class openAiService {
                 .school(normalize(data.school()))
                 .job(normalize(data.job()))
                 .marriage(normalize(data.marriage()))
-                .annualIncome(data.annualIncome())
+                .annualIncome(toManwon(data.annualIncome()))
                 .major(normalize(data.major()))
                 .specialTargets(normalizeTargets(data.specialTargets()))
                 .build();
@@ -235,5 +235,12 @@ public class openAiService {
         return values.stream()
                 .filter(value -> value != null && isUserValue(value))
                 .collect(Collectors.toSet());
+    }
+    // AI는 원 단위로 추출 → 정책 데이터(만원 단위)에 맞춰 변환
+    private Long toManwon(Long won) {
+        if (won == null) {
+            return null;
+        }
+        return won / 10_000;
     }
 }
