@@ -235,6 +235,87 @@
             font-size: 13px;
         }
 
+        /* 조건 직접 고치기 (12번) */
+        .notice {
+            margin: 0 0 14px;
+            padding: 10px 12px;
+            border-radius: 5px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 14px;
+        }
+
+        .notice.warn {
+            background: #fff4e5;
+            color: #b26a00;
+        }
+
+        .edit-box summary {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .edit-help {
+            margin: 10px 0 16px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .edit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 16px;
+        }
+
+        .edit-grid .wide {
+            grid-column: 1 / -1;
+        }
+
+        .edit-grid label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .edit-grid input[type="text"],
+        .edit-grid input[type="number"],
+        .edit-grid select {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .checks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+            font-size: 14px;
+        }
+
+        .checks label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            font-weight: normal;
+            color: #222;
+        }
+
+        .edit-box button {
+            margin-top: 18px;
+        }
+
+        @media (max-width: 560px) {
+            .edit-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .empty-result {
             text-align: center;
             color: #666;
@@ -280,6 +361,8 @@
                 <span class="chip" th:classappend="${p.region == null} ? 'empty'">
                     <span class="label">사는 곳</span>
                     <b th:text="${p.region != null} ? ${p.region.regionName} : '모름'"></b>
+                    <b th:if="${conditions != null and conditions.sigungu != null}"
+                       th:text="${conditions.sigungu}"></b>
                 </span>
 
                 <span class="chip" th:classappend="${p.school == null} ? 'empty'">
@@ -332,11 +415,117 @@
                 </span>
             </div>
 
-            <p class="chips-note">회색으로 표시된 항목은 문장에서 찾지 못한 정보예요. 더 적어주시면 추천이 정확해져요.</p>
+            <p class="chips-note">회색으로 표시된 항목은 문장에서 찾지 못한 정보예요.
+                아래 "조건 직접 고치기"에서 채우거나 고칠 수 있어요.</p>
         </div>
+    </th:block>
+
+    <!-- =========================
+         3. 조건 직접 고치기 (12번)
+         AI가 뽑은 조건이 미리 채워져 있고, 고쳐서 보내면 AI 없이 바로 다시 추천
+         ========================= -->
+    <div class="box edit-box" th:if="${conditions}">
+
+        <p class="notice" th:if="${edited}">고친 조건으로 다시 추천했어요.</p>
+        <p class="notice warn" th:if="${conditionNotice}" th:text="${conditionNotice}"></p>
+        <p class="error" th:if="${conditionError}" th:text="${conditionError}"></p>
+
+        <details th:open="${edited != null or conditionError != null}">
+            <summary>조건 직접 고치기</summary>
+            <p class="edit-help">AI가 잘못 이해했거나 빠진 조건을 고쳐주세요. 빈 칸은 "모름"으로 추천해요.</p>
+
+            <form th:action="@{/policy/recommend/conditions}" th:object="${conditions}" method="post">
+                <input type="hidden" th:field="*{sentence}">
+
+                <div class="edit-grid">
+                    <div>
+                        <label for="age">나이 (만)</label>
+                        <input type="number" id="age" th:field="*{age}" min="0" max="120" placeholder="모름">
+                    </div>
+
+                    <div>
+                        <label for="annualIncome">개인 연소득 (만원)</label>
+                        <input type="number" id="annualIncome" th:field="*{annualIncome}" min="0" placeholder="모름 (예: 2400)">
+                    </div>
+
+                    <div>
+                        <label for="region">사는 시·도</label>
+                        <select id="region" th:field="*{region}">
+                            <option value="">모름</option>
+                            <option th:each="o : ${regionOptions}" th:value="${o.name()}" th:text="${o.regionName}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="sigungu">사는 시·군·구</label>
+                        <input type="text" id="sigungu" th:field="*{sigungu}" placeholder="모름 (예: 안양시)">
+                    </div>
+
+                    <div>
+                        <label for="school">학력</label>
+                        <select id="school" th:field="*{school}">
+                            <option value="">모름</option>
+                            <option th:each="o : ${schoolOptions}" th:value="${o.name()}" th:text="${o.description}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="job">취업 상태</label>
+                        <select id="job" th:field="*{job}">
+                            <option value="">모름</option>
+                            <option th:each="o : ${jobOptions}" th:value="${o.name()}" th:text="${o.description}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="marriage">혼인</label>
+                        <select id="marriage" th:field="*{marriage}">
+                            <option value="">모름</option>
+                            <option th:each="o : ${marriageOptions}" th:value="${o.name()}" th:text="${o.description}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="major">전공 계열</label>
+                        <select id="major" th:field="*{major}">
+                            <option value="">모름</option>
+                            <option th:each="o : ${majorOptions}" th:value="${o.name()}" th:text="${o.description}"></option>
+                        </select>
+                    </div>
+
+                    <div class="wide">
+                        <label>해당하는 지원 대상 (없으면 비워두세요)</label>
+                        <div class="checks">
+                            <label th:each="o : ${specialTargetOptions}">
+                                <input type="checkbox" th:field="*{specialTargets}" th:value="${o.name()}">
+                                <span th:text="${o.description}"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="category">찾는 분야</label>
+                        <select id="category" th:field="*{category}">
+                            <option value="">모름</option>
+                            <option th:each="o : ${categoryOptions}" th:value="${o}" th:text="${o}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="keyword">찾는 지원</label>
+                        <input type="text" id="keyword" th:field="*{keyword}" placeholder="모름 (예: 월세)">
+                    </div>
+                </div>
+
+                <button type="submit">이 조건으로 다시 추천 받기</button>
+            </form>
+        </details>
+    </div>
+
+    <th:block th:if="${result}">
 
         <!-- =========================
-             3. 추천 정책 카드
+             4. 추천 정책 카드
              ========================= -->
         <h2 class="result-title" th:if="${!#lists.isEmpty(result.policies)}">
             추천 정책 <span th:text="${#lists.size(result.policies)}"></span>개
