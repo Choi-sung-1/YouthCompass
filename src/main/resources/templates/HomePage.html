@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>정책지원 서비스</title>
@@ -17,8 +16,20 @@
     <a href="/policy/recommend" th:href="@{/policy/recommend}" class="cta-btn">AI 정책 추천 받기</a>
 </div>
 <ul>
-    <li><a href="/member/join" th:href="@{/member/join}">회원가입</a></li>
-    <li><a href="/member/login" th:href="@{/member/login}">로그인</a></li>
+    <!-- 로그인 안 한 사람에게만 (loginId는 HomeController가 넘겨줌) -->
+    <li th:if="${loginId == null}"><a href="/member/join" th:href="@{/member/join}">회원가입</a></li>
+    <li th:if="${loginId == null}"><a href="/member/login" th:href="@{/member/login}">로그인</a></li>
+
+    <!-- 로그인한 사람에게만 -->
+    <li th:if="${loginId != null}">
+        <span th:text="${loginId}"></span>님 환영해요
+    </li>
+    <li th:if="${loginId != null}">
+        <!-- 로그아웃은 POST로 보내야 Spring Security 설정과 상관없이 확실히 동작함 -->
+        <form th:action="@{/member/logout}" method="post" style="display: inline;">
+            <button type="submit">로그아웃</button>
+        </form>
+    </li>
 </ul>
 <!-- 서비스 소개 -->
 <div class="section">
