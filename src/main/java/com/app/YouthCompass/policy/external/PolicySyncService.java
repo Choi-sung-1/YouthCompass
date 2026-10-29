@@ -35,11 +35,6 @@ public class PolicySyncService {
     // complete = API가 알려준 전체 개수만큼 다 받았는지 (비활성화 실행 여부 판단용)
     private record FetchResult(List<YouthPolicyDTO> policies, int totalCount, boolean complete) {}
 
-    //  정책 데이터 받아오기 (테스트 엔드포인트용, 기존과 동일하게 List 반환)
-    public List<YouthPolicyDTO> getAllPolicies() {
-        return fetchAll().policies();
-    }
-
     //  정책 동기화
     //  1) 전부 받아서 저장(upsert)
     //  2) 전부 받았고 저장 실패가 없을 때만 → 이번에 안 받아진 정책을 INACTIVE 처리

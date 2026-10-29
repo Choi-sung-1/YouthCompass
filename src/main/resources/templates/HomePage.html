@@ -30,6 +30,14 @@
             <button type="submit">로그아웃</button>
         </form>
     </li>
+
+    <!-- 관리자에게만: 온통청년 API에서 정책을 다시 받아와 DB에 저장 (몇십 초 걸림) -->
+    <li th:if="${isAdmin}">
+        <form th:action="@{/admin/policies/sync}" method="post" style="display: inline;"
+              onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = '동기화 중...';">
+            <button type="submit">정책 동기화 (관리자)</button>
+        </form>
+    </li>
 </ul>
 <!-- 서비스 소개 -->
 <div class="section">
