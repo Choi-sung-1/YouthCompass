@@ -22,4 +22,10 @@ public class RecommendResponseDTO {
 
     // 추천 정책 목록 (최대 10개)
     private List<RecommendedPolicyDTO> policies;
+
+    // 문장에 없어서 로그인 회원정보로 채운 항목 ex) ["나이", "지역"]
+    private List<String> memberFilled;
+
+    // AI가 개인 맞춤으로 다시 고른 결과인지 (false면 규칙 기반 순서 + 기본 문장)
+    private boolean personalized;
 }
