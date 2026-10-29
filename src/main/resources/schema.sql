@@ -1,4 +1,6 @@
------------------------CREATE TABLE
+-- YouthCompass 테이블 정의 (H2, MySQL 모드)
+-- 테이블 생성 전용 파일. 조회·삭제 쿼리는 넣지 마세요 (sql.init.mode를 켜면 그대로 실행됨)
+
 CREATE TABLE TBL_MEMBER (
     MEMBER_ID          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '회원 PK',
     MEMBER_NAME        VARCHAR(50)  NOT NULL COMMENT '회원 이름',
@@ -65,18 +67,3 @@ CREATE TABLE TBL_POLICY (
                                         POLICY_EXTERNAL_ID
                                     )
 );
-
-SELECT * FROM TBL_MEMBER;
-SELECT * FROM TBL_POLICY;
-
-
------------------------SELECT TABLE
-DROP TABLE TBL_MEMBER;
------------------------DROP TABLE
-DROP TABLE TBL_POLICY;
-DROP TABLE TBL_MEMBER;
-
-
--- 갱신 시각이 이번 동기화로 찍혔는지
-SELECT POLICY_STATUS, MIN(POLICY_UPDATED_AT), MAX(POLICY_UPDATED_AT)
-FROM TBL_POLICY GROUP BY POLICY_STATUS;
