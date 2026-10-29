@@ -169,9 +169,64 @@
             font-size: 14px;
         }
 
+        /* 추천 이유 · 기대 효과 (AI 맞춤) */
+        .insight {
+            margin: 16px 0 0;
+            padding: 12px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .insight.why {
+            background: #eef4ff;
+            border-left: 4px solid #1976d2;
+        }
+
+        .insight.effect {
+            margin-top: 8px;
+            background: #eefaf0;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .insight .title {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .insight.why .title { color: #1565c0; }
+        .insight.effect .title { color: #2e7d32; }
+
+        .ai-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 7px;
+            border-radius: 9px;
+            background: #ede7f6;
+            color: #5e35b1;
+            font-size: 11px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+        .section-label {
+            margin: 16px 0 6px;
+            color: #555;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .result-note {
+            margin: -6px 0 14px;
+            color: #777;
+            font-size: 13px;
+        }
+
         .reasons {
             list-style: none;
-            margin: 16px 0 0;
+            margin: 0;
             padding: 0;
         }
 
@@ -417,6 +472,11 @@
 
             <p class="chips-note">회색으로 표시된 항목은 문장에서 찾지 못한 정보예요.
                 아래 "조건 직접 고치기"에서 채우거나 고칠 수 있어요.</p>
+            <p class="chips-note"
+               th:if="${result.memberFilled != null and !#lists.isEmpty(result.memberFilled)}">
+                <b th:text="${#strings.listJoin(result.memberFilled, '·')}"></b>은(는) 문장에 없어서 회원정보에서 가져왔어요.
+                다르면 아래에서 고쳐 주세요.
+            </p>
         </div>
     </th:block>
 
@@ -434,7 +494,7 @@
             <summary>조건 직접 고치기</summary>
             <p class="edit-help">AI가 잘못 이해했거나 빠진 조건을 고쳐주세요. 빈 칸은 "모름"으로 추천해요.</p>
 
-            <form th:action="@{/policy/recommend/conditions}" th:object="${conditions}" method="post">
+            <form id="condition-form" th:action="@{/policy/recommend/conditions}" th:object="${conditions}" method="post">
                 <input type="hidden" th:field="*{sentence}">
 
                 <div class="edit-grid">
@@ -517,7 +577,7 @@
                     </div>
                 </div>
 
-                <button type="submit">이 조건으로 다시 추천 받기</button>
+                <button type="submit" id="condition-btn">이 조건으로 다시 추천 받기</button>
             </form>
         </details>
     </div>
@@ -530,6 +590,10 @@
         <h2 class="result-title" th:if="${!#lists.isEmpty(result.policies)}">
             추천 정책 <span th:text="${#lists.size(result.policies)}"></span>개
         </h2>
+        <p class="result-note" th:if="${!#lists.isEmpty(result.policies)}"
+           th:text="${result.personalized}
+                ? '자격이 되는 정책 중에서 AI가 내 상황에 가장 도움이 될 순서로 골랐어요.'
+                : 'AI 맞춤 분석을 하지 못해 조건 일치 순서로 보여드려요.'"></p>
 
         <div class="box empty-result" th:if="${#lists.isEmpty(result.policies)}">
             조건에 맞는 정책을 찾지 못했어요. 조건을 바꿔서 다시 적어보세요.
@@ -541,14 +605,29 @@
             <span class="policy-name" th:text="${policy.policyName}"></span>
             <p class="org" th:if="${policy.organizationName}" th:text="${policy.organizationName}"></p>
 
-            <ul class="reasons"
-                th:if="${!#lists.isEmpty(policy.reasons) or !#lists.isEmpty(policy.unknownReasons)}">
-                <li class="ok" th:each="reason : ${policy.reasons}" th:text="${reason}"></li>
-                <li class="check" th:each="reason : ${policy.unknownReasons}" th:text="${reason}"></li>
-            </ul>
+            <!-- 추천 이유: 왜 나에게 맞는지 -->
+            <div class="insight why" th:if="${policy.recommendReason}">
+                <span class="title">💡 추천 이유<span class="ai-badge" th:if="${policy.personalized}">AI 맞춤</span></span>
+                <span th:text="${policy.recommendReason}"></span>
+            </div>
+
+            <!-- 기대 효과: 받으면 뭐가 좋아지는지 -->
+            <div class="insight effect" th:if="${policy.expectedEffect}">
+                <span class="title">🎯 기대 효과</span>
+                <span th:text="${policy.expectedEffect}"></span>
+            </div>
+
+            <!-- 자격 조건 충족 / 확인 필요 -->
+            <th:block th:if="${!#lists.isEmpty(policy.reasons) or !#lists.isEmpty(policy.unknownReasons)}">
+                <p class="section-label">자격 조건</p>
+                <ul class="reasons">
+                    <li class="ok" th:each="reason : ${policy.reasons}" th:text="${reason}"></li>
+                    <li class="check" th:each="reason : ${policy.unknownReasons}" th:text="${reason}"></li>
+                </ul>
+            </th:block>
 
             <details th:if="${policy.supportContent}">
-                <summary>지원 내용 보기</summary>
+                <summary>지원 내용 원문 보기</summary>
                 <p class="support" th:text="${policy.supportContent}"></p>
             </details>
 
@@ -564,11 +643,20 @@
 
 <script>
     // AI 분석은 몇 초 걸리므로, 누른 뒤에는 버튼을 막고 진행 중임을 보여준다 (중복 요청 방지)
-    document.getElementById("recommend-form").addEventListener("submit", function () {
-        const btn = document.getElementById("submit-btn");
-        btn.disabled = true;
-        btn.textContent = "AI가 조건을 분석하고 있어요...";
-    });
+    function lockOnSubmit(formId, buttonId, message) {
+        const form = document.getElementById(formId);
+        if (!form) {
+            return;
+        }
+        form.addEventListener("submit", function () {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = true;
+            btn.textContent = message;
+        });
+    }
+
+    lockOnSubmit("recommend-form", "submit-btn", "AI가 내 상황에 맞는 정책을 고르고 있어요...");
+    lockOnSubmit("condition-form", "condition-btn", "고친 조건으로 다시 고르고 있어요...");
 </script>
 
 </body>

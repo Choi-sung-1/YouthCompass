@@ -1,5 +1,7 @@
 package com.app.YouthCompass.policy;
 
+import com.app.YouthCompass.member.MemberService;
+import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.JobRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.MajorRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.MarriageRequirement;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +38,7 @@ public class PolicyController {
             List.of("일자리", "주거", "교육", "복지문화", "참여권리");
 
     private final RecommendResultService recommendResultService;
+    private final MemberService memberService;
 
     // 추천 페이지 (입력창만 있는 처음 화면)
     @GetMapping("/recommend")
@@ -49,12 +53,14 @@ public class PolicyController {
     @PostMapping("/recommend")
     public String recommend(
             @ModelAttribute("request") RecommendRequestDTO request,
+            Principal principal,
             Model model
     ) {
 
         try {
+            // 로그인 회원이면 문장에 없는 나이·지역을 회원정보로 채움
             RecommendResponseDTO result =
-                    recommendResultService.recommendFromSentence(request.getSentence());
+                    recommendResultService.recommendFromSentence(request.getSentence(), loginMember(principal));
 
             model.addAttribute("result", result);
 
@@ -103,7 +109,8 @@ public class PolicyController {
         try {
             model.addAttribute(
                     "result",
-                    recommendResultService.recommendFromProfile(conditions.toProfile(), conditions.toIntent())
+                    recommendResultService.recommendFromProfile(
+                            conditions.getSentence(), conditions.toProfile(), conditions.toIntent())
             );
             model.addAttribute("edited", true);
 
@@ -125,6 +132,15 @@ public class PolicyController {
 
         addConditionForm(model, conditions);
         return "policy/recommend";
+    }
+
+    // 로그인한 회원 (비로그인이거나 조회 실패면 null → 회원정보 없이 추천)
+    private MemberVO loginMember(Principal principal) {
+
+        if (principal == null) {
+            return null;
+        }
+        return memberService.findMember(principal.getName()).orElse(null);
     }
 
     // 숫자 칸에 숫자가 아닌 값, 말이 안 되는 나이·소득 → 안내 문구

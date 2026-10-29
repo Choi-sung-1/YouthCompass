@@ -38,11 +38,20 @@ public class RecommendedPolicyDTO {
     // 사용자 자격조건과 구체적으로 맞는 정도
     private int matchScore;
 
-    // 추천 이유 ex) "나이 조건 충족" → 10번에서 채움
+    // 추천 이유: 왜 이 사용자에게 맞는지 (AI가 사용자 상황과 연결해 생성, 실패 시 규칙 문장)
+    private String recommendReason;
+
+    // 기대 효과: 받으면 이 사용자에게 무엇이 좋아지는지 (지원내용 숫자만 사용, 실패 시 지원내용 앞부분)
+    private String expectedEffect;
+
+    // AI 맞춤 문장인지 (화면 배지 표시용)
+    private boolean personalized;
+
+    // 충족한 자격 조건 ex) "나이 조건(만 19~34세)에 맞아요"
     @Builder.Default
     private List<String> reasons = new ArrayList<>();
 
-    // 확인이 필요한 조건 ex) "소득 조건은 공고 확인 필요" → 10번에서 채움
+    // 확인이 필요한 조건 ex) "소득 조건은 공고에서 확인이 필요해요"
     @Builder.Default
     private List<String> unknownReasons = new ArrayList<>();
 
