@@ -8,6 +8,7 @@ import com.app.YouthCompass.policy.domain.eligibility.MarriageRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.Region;
 import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.dto.ConditionRequestDTO;
 import com.app.YouthCompass.policy.dto.RecommendRequestDTO;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,10 +32,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/policy")
 public class PolicyController {
-
-    // AI 프롬프트에 준 대분류 목록과 같음
-    private static final List<String> CATEGORIES =
-            List.of("일자리", "주거", "교육", "복지문화", "참여권리");
 
     private final RecommendResultService recommendResultService;
     private final MemberService memberService;
@@ -176,13 +172,8 @@ public class PolicyController {
         model.addAttribute("majorOptions", userChoices(MajorRequirement.values()));
         model.addAttribute("specialTargetOptions", userChoices(SpecialTargetRequirement.values()));
 
-        // AI가 목록에 없는 분야를 골랐어도 선택지에 남겨서, 다시 추천할 때 사라지지 않게 함
-        List<String> categories = new ArrayList<>(CATEGORIES);
-        String current = conditions.getCategory();
-        if (current != null && !current.isBlank() && !categories.contains(current)) {
-            categories.add(current);
-        }
-        model.addAttribute("categoryOptions", categories);
+        // 선택지는 DB 대분류 한글 이름만 (AI 응답은 openAiService에서 이미 한글로 정리됨)
+        model.addAttribute("categoryOptions", PolicyCategories.ALL);
     }
 
     // 사용자가 고를 수 있는 값만 (알 수 없음·제한없음 제외 — AI 프롬프트와 같은 기준)

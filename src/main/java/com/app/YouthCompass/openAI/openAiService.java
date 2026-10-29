@@ -1,6 +1,7 @@
 package com.app.YouthCompass.openAI;
 
 import com.app.YouthCompass.policy.domain.eligibility.*;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -66,7 +67,7 @@ public class openAiService {
                 .build();
 
         PolicySearchIntent intent = PolicySearchIntent.builder()
-                .category(data.category())
+                .category(normalizeCategory(data.category()))
                 .keyword(data.keyword())
                 .build();
 
@@ -138,8 +139,11 @@ public class openAiService {
                 
                 category:
                 사용자가 찾는 정책의 큰 분야입니다.
-                DB 정책 대분류 명칭과 동일한 표현을 사용하세요.
-                검색 목적이 없으면 null로 두세요.
+                category는 enum이 아닙니다. 영문으로 바꾸지 말고
+                아래 한글 값 중 하나를 글자 그대로 반환하세요:
+                일자리, 주거, 교육, 복지문화, 참여권리
+                예: 장학금·학자금·교육비 → 교육, 월세·전세 → 주거, 취업·창업 → 일자리
+                해당하는 분야가 없거나 검색 목적이 없으면 null로 두세요.
                 
                 keyword:
                 사용자가 찾는 구체적인 지원 내용을 짧은 핵심어로 추출하세요.
@@ -308,6 +312,17 @@ public class openAiService {
                 .filter(value -> value != null && isUserValue(value))
                 .collect(Collectors.toSet());
     }
+    // AI가 분야를 영문(EDUCATION 등)이나 비슷한 말로 줘도 DB 대분류 한글 이름으로 맞춤
+    private String normalizeCategory(String category) {
+
+        String normalized = PolicyCategories.normalize(category);
+
+        if (category != null && !category.isBlank() && normalized == null) {
+            log.info("AI가 알 수 없는 분야를 반환해서 분야 없음으로 처리: {}", category);
+        }
+        return normalized;
+    }
+
     // AI는 원 단위로 추출 → 정책 데이터(만원 단위)에 맞춰 변환
     private Long toManwon(Long won) {
         if (won == null) {

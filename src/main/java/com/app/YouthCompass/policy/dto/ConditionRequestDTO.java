@@ -8,6 +8,7 @@ import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import lombok.Data;
 
@@ -81,7 +82,7 @@ public class ConditionRequestDTO {
         }
 
         if (intent != null) {
-            dto.setCategory(intent.getCategory());
+            dto.setCategory(PolicyCategories.normalize(intent.getCategory()));
             dto.setKeyword(intent.getKeyword());
         }
 
@@ -117,7 +118,7 @@ public class ConditionRequestDTO {
     public PolicySearchIntent toIntent() {
 
         return PolicySearchIntent.builder()
-                .category(blankToNull(category))
+                .category(PolicyCategories.normalize(category))
                 .keyword(blankToNull(keyword))
                 .build();
     }
