@@ -220,4 +220,27 @@
         FROM TBL_POLICY
         WHERE POLICY_ID = #{policyId}
     </select>
+    <!-- ===================== 홈 위젯 ===================== -->
+    <!-- 마감 임박: 마감 처리(0057003) 안 된 정책 중 오늘~until 사이 마감 -->
+    <select id="findClosingSoon" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
+        SELECT <include refid="policyColumns"/>
+        FROM TBL_POLICY
+        WHERE POLICY_STATUS = 'ACTIVE'
+        AND (POLICY_APPLY_PERIOD_CODE IS NULL OR POLICY_APPLY_PERIOD_CODE &lt;&gt; '0057003')
+        AND POLICY_APPLY_END_DATE BETWEEN #{today} AND #{until}
+        ORDER BY POLICY_APPLY_END_DATE ASC, POLICY_ID DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 최근 모집 시작: from~today 사이 시작 + 아직 마감 안 됨 -->
+    <select id="findRecentlyOpened" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
+        SELECT <include refid="policyColumns"/>
+        FROM TBL_POLICY
+        WHERE POLICY_STATUS = 'ACTIVE'
+        AND (POLICY_APPLY_PERIOD_CODE IS NULL OR POLICY_APPLY_PERIOD_CODE &lt;&gt; '0057003')
+        AND POLICY_APPLY_START_DATE BETWEEN #{from} AND #{today}
+        AND (POLICY_APPLY_END_DATE IS NULL OR POLICY_APPLY_END_DATE &gt;= #{today})
+        ORDER BY POLICY_APPLY_START_DATE DESC, POLICY_ID DESC
+        LIMIT #{limit}
+    </select>
 </mapper>

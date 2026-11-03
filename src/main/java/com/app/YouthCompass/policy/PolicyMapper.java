@@ -3,7 +3,9 @@ package com.app.YouthCompass.policy;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.dto.PolicyListRequestDTO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,4 +31,14 @@ public interface PolicyMapper {
 
     // 정책 하나 (상세 화면, 비활성 정책도 조회)
     PolicyVO findPolicyById(Long policyId);
+
+    // 홈: 마감 임박 (today ~ until 사이에 마감, 마감 빠른 순)
+    List<PolicyVO> findClosingSoon(@Param("today") LocalDate today,
+                                   @Param("until") LocalDate until,
+                                   @Param("limit") int limit);
+
+    // 홈: 최근 모집 시작 (from ~ today 사이에 신청 시작, 최신순)
+    List<PolicyVO> findRecentlyOpened(@Param("from") LocalDate from,
+                                      @Param("today") LocalDate today,
+                                      @Param("limit") int limit);
 }
