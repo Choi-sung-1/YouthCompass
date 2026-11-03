@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정책 목록 | YouthCompass</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <style>
+        .filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+        .filter select, .filter input[type=text] {
+            padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px;
+        }
+        .filter input[type=text] { flex: 1; min-width: 180px; }
+        .result-count { color: var(--color-muted); font-size: 14px; margin: 8px 0 16px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .policy-card { display: flex; flex-direction: column; gap: 8px; }
+        .policy-card h3 { margin: 0; font-size: 16px; line-height: 1.4; }
+        .policy-card h3 a { color: var(--color-text); }
+        .policy-card .meta { color: var(--color-muted); font-size: 13px; }
+        .policy-card .summary { font-size: 14px; margin: 0; flex: 1; }
+        .card-top { display: flex; justify-content: space-between; gap: 8px; }
+        .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 28px; }
+        .pagination .current { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+        .empty { text-align: center; color: var(--color-muted); padding: 60px 0; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container page">
+    <h1>청년정책 목록</h1>
+
+    <!-- 필터 (GET → 주소에 조건이 남아서 새로고침·공유 가능) -->
+    <form class="filter" th:action="@{/policies}" th:object="${condition}" method="get">
+        <select th:field="*{category}">
+            <option value="">전체 분야</option>
+            <option th:each="c : ${categoryOptions}" th:value="${c}" th:text="${c}"></option>
+        </select>
+
+        <select th:field="*{region}">
+            <option value="">전체 지역</option>
+            <option th:each="r : ${regionOptions}" th:value="${r.name()}" th:text="${r.regionName}"></option>
+        </select>
+
+        <input type="text" th:field="*{keyword}" placeholder="정책명·키워드 검색 (예: 월세, 보안)">
+
+        <label><input type="checkbox" th:field="*{openOnly}"> 신청 가능한 것만</label>
+
+        <button type="submit" class="btn btn-primary">검색</button>
+    </form>
+
+    <p class="result-count">총 <b th:text="${result.totalCount}">0</b>개</p>
+
+    <div class="empty" th:if="${#lists.isEmpty(result.items)}">
+        조건에 맞는 정책이 없어요. 필터를 바꿔 보세요.
+    </div>
+
+    <div class="grid">
+        <div class="card policy-card" th:each="p : ${result.items}">
+            <div class="card-top">
+                <span class="badge" th:text="${p.largeCategory} ?: '기타'">분야</span>
+                <span class="badge"
+                      th:classappend="${p.closed} ? 'badge-no' : (${p.closingSoon} ? 'badge-unknown' : 'badge-ok')"
+                      th:text="${p.deadlineLabel}">D-7</span>
+            </div>
+
+            <h3><a th:href="@{/policies/{id}(id=${p.policyId})}" th:text="${p.policyName}">정책명</a></h3>
+            <div class="meta" th:text="${p.organizationName}">주관 기관</div>
+            <p class="summary" th:text="${p.summary}">설명</p>
+
+            <!-- TODO: B의 찜 버튼 조각 머지 후 연결
+                 <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarkedIds.contains(p.policyId)})}"></div> -->
+        </div>
+    </div>
+
+    <!-- 페이지 번호 (현재 필터 유지) -->
+    <nav class="pagination" th:if="${result.totalPages > 1}">
+        <a class="btn" th:if="${result.hasPrev()}"
+           th:href="@{/policies(category=${condition.category}, region=${condition.region},
+                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${result.startPage - 1})}">이전</a>
+
+        <a class="btn" th:each="n : ${#numbers.sequence(result.startPage, result.endPage)}"
+           th:classappend="${n == result.page} ? 'current'"
+           th:href="@{/policies(category=${condition.category}, region=${condition.region},
+                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${n})}"
+           th:text="${n}">1</a>
+
+        <a class="btn" th:if="${result.hasNext()}"
+           th:href="@{/policies(category=${condition.category}, region=${condition.region},
+                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${result.endPage + 1})}">다음</a>
+    </nav>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
