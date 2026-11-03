@@ -67,3 +67,57 @@ CREATE TABLE TBL_POLICY (
                                         POLICY_EXTERNAL_ID
                                     )
 );
+
+-- 찜
+CREATE TABLE TBL_BOOKMARK (
+                              MEMBER_ID   BIGINT NOT NULL,
+                              POLICY_ID   BIGINT NOT NULL,
+                              CREATED_AT  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                              PRIMARY KEY (MEMBER_ID, POLICY_ID)
+);
+
+-- 추천 기록 (한 번 추천 = 1행)
+CREATE TABLE TBL_RECOMMEND_HISTORY (
+                                       HISTORY_ID   BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                       MEMBER_ID    BIGINT NOT NULL,
+                                       SENTENCE     TEXT,
+                                       PROFILE_JSON TEXT COMMENT 'AI가 추출한 조건 (화면 표시용)',
+                                       CREATED_AT   DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 추천 기록 안의 정책들 (TOP 10)
+CREATE TABLE TBL_RECOMMEND_ITEM (
+                                    ITEM_ID     BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                    HISTORY_ID  BIGINT NOT NULL,
+                                    RANK_NO     INT NOT NULL,
+                                    POLICY_ID   BIGINT NOT NULL,
+                                    REASON      VARCHAR(500),
+                                    EFFECT      VARCHAR(500)
+);
+
+-- 내 조건 프로필 (회원 1:1)
+CREATE TABLE TBL_MEMBER_PROFILE (
+                                    MEMBER_ID       BIGINT PRIMARY KEY,
+                                    SIGUNGU_CODE    VARCHAR(10),
+                                    SCHOOL          VARCHAR(30),
+                                    JOB             VARCHAR(30),
+                                    MARRIAGE        VARCHAR(30),
+                                    MAJOR           VARCHAR(30),
+                                    ANNUAL_INCOME   BIGINT COMMENT '만원',
+                                    UPDATED_AT      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- (선택) 추천 피드백
+CREATE TABLE TBL_RECOMMEND_FEEDBACK (
+                                        ITEM_ID    BIGINT PRIMARY KEY,
+                                        HELPFUL    BOOLEAN NOT NULL,
+                                        CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- (선택) 동기화 이력
+CREATE TABLE TBL_SYNC_LOG (
+                              SYNC_ID      BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              STARTED_AT   DATETIME, FINISHED_AT DATETIME,
+                              SAVED INT, SKIPPED INT, FAILED INT, DEACTIVATED INT,
+                              TOTAL_COUNT  INT
+);
