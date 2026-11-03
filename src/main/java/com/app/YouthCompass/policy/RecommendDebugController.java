@@ -5,6 +5,7 @@ import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.eligibility.PolicyEligibilityService;
 import com.app.YouthCompass.policy.recommendation.PolicyRecommendationService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 //  - 조건을 직접 골라서 추천 결과를 표로 확인
 //  - 조건별로 몇 개 정책이 탈락했는지, 탈락 정책은 왜 빠졌는지 확인
 // ============================================================
+@Profile("dev")
 @RestController
 public class RecommendDebugController {
 
