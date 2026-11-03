@@ -40,9 +40,8 @@ public class openAiService {
                 .call()
                 .entity(ProfileData.class);
 
-        // AI가 실제로 어떤 값을 반환했는지 확인
-        System.out.println("AI 추출 결과: " + data);
-
+        // AI가 실제로 어떤 값을 반환했는지 확인 (개인정보 포함 → debug 레벨에서만 출력)
+        log.debug("AI 추출 결과: {}", data);
         validate(data);
 
         // 시·군 이름 → 시·군 코드 (시·도도 함께 정리)

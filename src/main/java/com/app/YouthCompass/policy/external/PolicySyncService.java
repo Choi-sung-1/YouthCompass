@@ -5,6 +5,7 @@ import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.external.dto.PolicyApiResponse;
 import com.app.YouthCompass.policy.external.dto.PolicyResult;
 import com.app.YouthCompass.policy.external.dto.YouthPolicyDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 // 온통청년 Api 동기화 서비스 로직
 @Service
+@Slf4j
 public class PolicySyncService {
 
     private static final int PAGE_SIZE = 100;
@@ -66,19 +68,19 @@ public class PolicySyncService {
             } catch (RuntimeException e) {
                 // 정책 하나 때문에 전체 동기화가 멈추지 않게 기록만 하고 계속
                 failed++;
-                System.out.println("정책 저장 실패 [" + dto.getPlcyNo() + "] " + e.getMessage());
+                log.warn("정책 저장 실패 [{}] {}", dto.getPlcyNo(), e.getMessage());
             }
         }
 
-        System.out.println("동기화 결과 : 저장 " + success + " / 건너뜀 " + skipped + " / 실패 " + failed
-                + " / 수집 " + fetched.policies().size() + " / 전체 " + fetched.totalCount());
+        log.info("동기화 결과 : 저장 {} / 건너뜀 {} / 실패 {} / 수집 {} / 전체 {}",
+                success, skipped, failed, fetched.policies().size(), fetched.totalCount());
 
         // 일부만 받았거나 저장 실패가 있으면, 멀쩡한 정책까지 꺼버릴 수 있으므로 비활성화 생략
         if (fetched.complete() && failed == 0) {
             int deactivated = policyMapper.deactivateNotSyncedPolicies(syncStartedAt);
-            System.out.println("API에서 사라진 정책 비활성화 : " + deactivated + "건");
+            log.info("API에서 사라진 정책 비활성화 : {}건", deactivated);
         } else {
-            System.out.println("수집이 불완전하거나 저장 실패가 있어 비활성화를 건너뜁니다.");
+            log.warn("수집이 불완전하거나 저장 실패가 있어 비활성화를 건너뜁니다.");
         }
 
         return success;
@@ -112,8 +114,7 @@ public class PolicySyncService {
             if (result.getPagging() != null) {
                 totalCount = result.getPagging().getTotCount();
             }
-            System.out.println("페이지 : " + pageNum + "/ 수집 : " + allPolicies.size() + "/ 전체 :" + totalCount);
-
+            log.debug("페이지 : {} / 수집 : {} / 전체 : {}", pageNum, allPolicies.size(), totalCount);
             if (totalCount > 0 && allPolicies.size() >= totalCount) {
                 break;
             }
@@ -132,8 +133,7 @@ public class PolicySyncService {
                 return policyApiClient.getPolicies(pageNum, pageSize);
 
             } catch (RestClientException e) {
-                System.out.println("페이지 " + pageNum + " 호출 실패 (" + attempt + "/" + MAX_ATTEMPTS + "): "
-                        + e.getClass().getSimpleName());
+                log.warn("페이지 {} 호출 실패 ({}/{}): {}", pageNum, attempt, MAX_ATTEMPTS, e.getClass().getSimpleName());
                 if (attempt >= MAX_ATTEMPTS) {
                     throw e;   // 5번 다 실패하면 원래대로 에러
                 }
