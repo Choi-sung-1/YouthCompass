@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${detail.policy.policyName} + ' | YouthCompass'">정책 상세</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <style>
+        .detail { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+        @media (max-width: 860px) { .detail { grid-template-columns: 1fr; } }
+        .back { display: inline-block; margin-bottom: 12px; font-size: 14px; }
+        .title-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+        h1 { margin: 4px 0 6px; font-size: 24px; line-height: 1.35; }
+        .org { color: var(--color-muted); margin: 0 0 16px; }
+        .info dt { font-weight: 700; margin-top: 18px; }
+        .info dd { margin: 6px 0 0; white-space: pre-line; }
+        .apply-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .apply-box .period { font-size: 14px; color: var(--color-muted); }
+        .apply-box .btn { text-align: center; }
+        .notice { padding: 10px 12px; border-radius: 8px; background: #fee2e2; color: var(--color-no); font-size: 14px; }
+        .eligibility h2 { font-size: 18px; margin: 0 0 12px; }
+        .verdict { display: block; padding: 10px 12px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .cond-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .cond-table td { padding: 8px 4px; border-bottom: 1px solid var(--color-border); }
+        .cond-table td:last-child { text-align: right; }
+        .reason-list { padding-left: 18px; font-size: 14px; margin: 8px 0 0; }
+        .reason-title { font-weight: 700; font-size: 14px; margin-top: 14px; }
+        .hint { font-size: 13px; color: var(--color-muted); margin-top: 12px; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container page" th:with="p=${detail.policy}">
+    <a class="back" th:href="@{/policies}">← 정책 목록</a>
+
+    <div class="detail">
+        <!-- 왼쪽: 정책 정보 -->
+        <section class="card">
+            <div class="title-row">
+                <span class="badge" th:text="${detail.card.largeCategory} ?: '기타'">분야</span>
+                <span class="badge" th:if="${p.policyMediumCategory}" th:text="${p.policyMediumCategory}">중분류</span>
+            </div>
+            <h1 th:text="${p.policyName}">정책명</h1>
+            <p class="org" th:text="${p.policyOrganizationName}">주관 기관</p>
+
+            <p class="notice" th:if="${detail.inactive}">
+                현재 온통청년에서 내려간 정책이에요. 최신 공고를 꼭 확인해 주세요.
+            </p>
+
+            <dl class="info">
+                <dt>정책 설명</dt>
+                <dd th:text="${p.policyDescription} ?: '-'"></dd>
+
+                <dt>지원 내용</dt>
+                <dd th:text="${p.policySupportContent} ?: '-'"></dd>
+
+                <dt>나이</dt>
+                <dd th:text="${detail.ageText}"></dd>
+
+                <dt th:if="${p.policyAdditionalCondition}">추가 자격 조건</dt>
+                <dd th:if="${p.policyAdditionalCondition}" th:text="${p.policyAdditionalCondition}"></dd>
+
+                <dt th:if="${p.policyIncomeEtcCondition}">소득 조건</dt>
+                <dd th:if="${p.policyIncomeEtcCondition}" th:text="${p.policyIncomeEtcCondition}"></dd>
+
+                <dt>신청 방법</dt>
+                <dd th:text="${p.policyApplicationMethod} ?: '-'"></dd>
+
+                <dt th:if="${p.policySubmissionDocuments}">제출 서류</dt>
+                <dd th:if="${p.policySubmissionDocuments}" th:text="${p.policySubmissionDocuments}"></dd>
+            </dl>
+        </section>
+
+        <!-- 오른쪽: 신청 + 나에게 맞는지 -->
+        <aside>
+            <div class="card apply-box">
+                <span class="badge"
+                      th:classappend="${detail.card.closed} ? 'badge-no' : (${detail.card.closingSoon} ? 'badge-unknown' : 'badge-ok')"
+                      th:text="${detail.card.deadlineLabel}">D-7</span>
+
+                <span class="period" th:if="${p.policyApplyEndDate}"
+                      th:text="'신청기간 ' + (${p.policyApplyStartDate} != null ? ${#temporals.format(p.policyApplyStartDate, 'yyyy.MM.dd')} : '') + ' ~ ' + ${#temporals.format(p.policyApplyEndDate, 'yyyy.MM.dd')}">
+                </span>
+
+                <a class="btn btn-primary" th:if="${p.policyApplicationUrl}"
+                   th:href="${p.policyApplicationUrl}" target="_blank" rel="noopener">신청하러 가기</a>
+                <a class="btn" th:if="${p.policyReferenceUrl}"
+                   th:href="${p.policyReferenceUrl}" target="_blank" rel="noopener">공고 원문 보기</a>
+
+                <!-- TODO: B의 찜 버튼 조각 머지 후 연결
+                     <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarked})}"></div> -->
+            </div>
+
+            <div class="card eligibility">
+                <h2>나에게 맞을까?</h2>
+
+                <!-- 비로그인 -->
+                <div th:unless="${detail.evaluated}">
+                    <p>로그인하면 내 정보로 이 정책의 조건을 하나씩 확인해 드려요.</p>
+                    <a class="btn btn-primary" th:href="@{/member/login}">로그인하고 확인하기</a>
+                </div>
+
+                <!-- 로그인 회원 -->
+                <div th:if="${detail.evaluated}">
+                    <span class="verdict badge" th:classappend="${detail.verdictClass()}"
+                          th:text="${detail.verdict()}">결론</span>
+
+                    <table class="cond-table">
+                        <tr th:each="c : ${detail.conditions}">
+                            <td th:text="${c.name()}">나이</td>
+                            <td><span class="badge" th:classappend="${c.badgeClass()}" th:text="${c.label()}">충족</span></td>
+                        </tr>
+                    </table>
+
+                    <div th:unless="${#lists.isEmpty(detail.matchedReasons)}">
+                        <div class="reason-title">✅ 충족한 조건</div>
+                        <ul class="reason-list">
+                            <li th:each="r : ${detail.matchedReasons}" th:text="${r}"></li>
+                        </ul>
+                    </div>
+
+                    <div th:unless="${#lists.isEmpty(detail.unknownReasons)}">
+                        <div class="reason-title">❓ 확인이 필요한 조건</div>
+                        <ul class="reason-list">
+                            <li th:each="r : ${detail.unknownReasons}" th:text="${r}"></li>
+                        </ul>
+                    </div>
+
+                    <p class="hint">
+                        <span th:unless="${#lists.isEmpty(detail.filledFromMember)}"
+                              th:text="${#strings.listJoin(detail.filledFromMember, '·')} + '은(는) 회원정보로 판정했어요. '"></span>
+                        마이페이지에서 학력·취업 상태 등을 저장하면 더 정확하게 확인할 수 있어요.
+                    </p>
+                </div>
+            </div>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

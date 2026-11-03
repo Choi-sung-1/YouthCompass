@@ -26,4 +26,7 @@ public interface PolicyMapper {
 
     // 정책 목록 검색 결과 전체 개수
     int countPolicies(PolicyListRequestDTO condition);
+
+    // 정책 하나 (상세 화면, 비활성 정책도 조회)
+    PolicyVO findPolicyById(Long policyId);
 }

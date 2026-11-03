@@ -214,4 +214,10 @@
         FROM TBL_POLICY
         <include refid="searchWhere"/>
     </select>
+    <!-- 정책 상세 -->
+    <select id="findPolicyById" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
+        SELECT <include refid="policyColumns"/>
+        FROM TBL_POLICY
+        WHERE POLICY_ID = #{policyId}
+    </select>
 </mapper>
