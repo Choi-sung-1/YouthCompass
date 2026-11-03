@@ -1,6 +1,9 @@
 package com.app.YouthCompass.policy;
 
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
+import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
+import com.app.YouthCompass.policy.dto.PolicyListRequestDTO;
+import com.app.YouthCompass.policy.dto.PolicyListResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,4 +23,16 @@ public class PolicyService {
         return policyMapper.findOpenPolicies();
     }
 
+    //    정책 목록 검색 (필터 + 페이징)
+    public PolicyListResponseDTO searchPolicies(PolicyListRequestDTO condition) {
+
+        int totalCount = policyMapper.countPolicies(condition);
+
+        List<PolicyListItemDTO> items = policyMapper.searchPolicies(condition)
+                .stream()
+                .map(PolicyListItemDTO::from)
+                .toList();
+
+        return new PolicyListResponseDTO(items, totalCount, condition.getPage(), PolicyListRequestDTO.PAGE_SIZE);
+    }
 }
