@@ -35,7 +35,7 @@ public class PolicyInsightService {
 
     // 프롬프트에 넣는 정책 설명·지원내용 최대 길이 (토큰 비용 제한)
     private static final int DESCRIPTION_LIMIT = 200;
-    private static final int SUPPORT_LIMIT = 350;
+    private static final int SUPPORT_LIMIT = 250;
 
     // AI가 만든 문장 최대 길이 (화면이 깨지지 않게)
     private static final int SENTENCE_LIMIT = 220;
@@ -105,9 +105,9 @@ public class PolicyInsightService {
                 각 항목:
                 - policyId: 후보 목록에 있는 id 숫자만. 없는 id를 만들지 마세요.
                 - reason (추천 이유): 이 사용자의 상황·조건과 정책을 연결해서 왜 이 사람에게 맞는지
-                  1~2문장으로 쓰세요. "~해요" 말투. 사용자가 말한 사실과 충족 조건만 근거로 쓰세요.
+                  1문장(80자 이내)으로 쓰세요. "~해요" 말투. 사용자가 말한 사실과 충족 조건만 근거로 쓰세요.
                   확인 필요 조건을 충족한다고 단정하지 마세요.
-                - effect (기대 효과): 이 정책을 받으면 이 사용자에게 무엇이 좋아지는지 1~2문장.
+                - effect (기대 효과): 이 정책을 받으면 이 사용자에게 무엇이 좋아지는지 1문장(80자 이내).
                   금액·기간·횟수는 반드시 그 정책의 [지원내용]에 적힌 숫자만 쓰세요. 숫자를 지어내지 마세요.
                   사용자가 자기 상황의 금액(예: 월세 40만원)을 말했다면, 지원내용의 숫자와 비교해서
                   체감되는 효과로 설명해도 됩니다(예: 월세의 절반 정도를 덜 내요).
