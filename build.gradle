@@ -43,5 +43,18 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		excludeTags 'ai'          // 평소 ./gradlew test 는 AI 호출 안 함
+	}
+}
+
+// AI 테스트는 필요할 때만: ./gradlew aiTest
+tasks.register('aiTest', Test) {
+	description = '실제 OpenAI를 호출하는 테스트 (비용 발생)'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'ai'
+	}
 }
