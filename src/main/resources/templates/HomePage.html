@@ -2,12 +2,13 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>정책지원 서비스</title>
+    <title>YouthCompass</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
 </head>
 
 <body>
 
-<div class="space"></div>
+<header th:replace="~{fragments/layout :: header}"></header>
 
 <!-- HERO -->
 <div class="hero">
@@ -15,30 +16,7 @@
     <p>AI가 나에게 맞는 지원금, 장학금, 취업·주거 지원 정보를 한 번에 추천합니다.</p>
     <a href="/policy/recommend" th:href="@{/policy/recommend}" class="cta-btn">AI 정책 추천 받기</a>
 </div>
-<ul>
-    <!-- 로그인 안 한 사람에게만 (loginId는 HomeController가 넘겨줌) -->
-    <li th:if="${loginId == null}"><a href="/member/join" th:href="@{/member/join}">회원가입</a></li>
-    <li th:if="${loginId == null}"><a href="/member/login" th:href="@{/member/login}">로그인</a></li>
 
-    <!-- 로그인한 사람에게만 -->
-    <li th:if="${loginId != null}">
-        <span th:text="${loginId}"></span>님 환영해요
-    </li>
-    <li th:if="${loginId != null}">
-        <!-- 로그아웃은 POST로 보내야 Spring Security 설정과 상관없이 확실히 동작함 -->
-        <form th:action="@{/member/logout}" method="post" style="display: inline;">
-            <button type="submit">로그아웃</button>
-        </form>
-    </li>
-
-    <!-- 관리자에게만: 온통청년 API에서 정책을 다시 받아와 DB에 저장 (몇십 초 걸림) -->
-    <li th:if="${isAdmin}">
-        <form th:action="@{/admin/policies/sync}" method="post" style="display: inline;"
-              onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = '동기화 중...';">
-            <button type="submit">정책 동기화 (관리자)</button>
-        </form>
-    </li>
-</ul>
 <!-- 서비스 소개 -->
 <div class="section">
     <h2>이 서비스, 무엇이 다른가요?</h2>
@@ -88,7 +66,6 @@
     <h2>지금 받을 수 있는 정책이 궁금하다면?</h2>
     <a href="/policy/recommend" th:href="@{/policy/recommend}">AI 맞춤 정책 확인하기</a>
 </div>
-<footer>© 2026 정책지원 서비스</footer>
-
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

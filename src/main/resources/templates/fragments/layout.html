@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 각 페이지 <head> 안에서: <th:block th:replace="~{fragments/layout :: assets}"></th:block> -->
+    <th:block th:fragment="assets">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" th:href="@{/css/common.css}">
+    </th:block>
+</head>
+<body>
+
+<!-- 각 페이지 <body> 맨 위에서: <header th:replace="~{fragments/layout :: header}"></header> -->
+<!-- loginId, isAdmin 은 GlobalModelAdvice 가 모든 화면에 넣어 줌 -->
+<header th:fragment="header" class="site-header">
+    <div class="container header-inner">
+        <a th:href="@{/}" class="logo">YouthCompass</a>
+
+        <nav class="nav">
+            <a th:href="@{/policies}">정책 목록</a>
+            <a th:href="@{/policy/recommend}">AI 추천</a>
+            <a th:if="${loginId != null}" th:href="@{/mypage}">마이페이지</a>
+        </nav>
+
+        <div class="nav-auth">
+            <th:block th:if="${loginId == null}">
+                <a th:href="@{/member/login}" class="btn">로그인</a>
+                <a th:href="@{/member/join}" class="btn btn-primary">회원가입</a>
+            </th:block>
+
+            <th:block th:if="${loginId != null}">
+                <span class="nav-user" th:text="${loginId} + '님'"></span>
+
+                <!-- 관리자: 온통청년 API에서 정책을 다시 받아옴 (몇십 초 걸림) -->
+                <form th:if="${isAdmin}" th:action="@{/admin/policies/sync}" method="post" class="inline"
+                      onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = '동기화 중...';">
+                    <button type="submit" class="btn">정책 동기화</button>
+                </form>
+
+                <!-- 로그아웃은 POST -->
+                <form th:action="@{/member/logout}" method="post" class="inline">
+                    <button type="submit" class="btn">로그아웃</button>
+                </form>
+            </th:block>
+        </div>
+    </div>
+</header>
+
+<!-- 각 페이지 <body> 맨 아래에서: <footer th:replace="~{fragments/layout :: footer}"></footer> -->
+<footer th:fragment="footer" class="site-footer">
+    © 2026 YouthCompass · 청년정책 맞춤 추천
+</footer>
+
+</body>
+</html>
