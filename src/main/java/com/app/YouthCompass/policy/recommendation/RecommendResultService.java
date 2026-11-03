@@ -9,6 +9,7 @@ import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
 import com.app.YouthCompass.policy.dto.RecommendedPolicyDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,13 +23,14 @@ import java.util.Map;
 // → 상위 후보를 AI가 개인 맞춤으로 다시 골라 추천 이유·기대 효과 생성(PolicyInsightService) → 상위 10개 → DTO
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RecommendResultService {
 
     // 화면에 보여줄 추천 정책 개수
     private static final int TOP_N = 10;
 
     // AI 맞춤 재정렬에 넘기는 후보 수 (규칙 기반 상위 N개)
-    private static final int CANDIDATE_POOL = 30;
+    private static final int CANDIDATE_POOL = 20;
 
     // AI가 실패했을 때 지원내용에서 보여줄 길이
     private static final int FALLBACK_EFFECT_LIMIT = 120;
@@ -43,7 +45,9 @@ public class RecommendResultService {
     // member: 로그인 회원 (없으면 null) → 문장에 없는 나이·지역을 회원정보로 채움
     public RecommendResponseDTO recommendFromSentence(String sentence, MemberVO member) {
 
+        long start = System.currentTimeMillis();
         openAiService.ExtractionResult extracted = aiService.extract(sentence);
+        log.info("[추천 시간] AI 조건 추출: {}ms", System.currentTimeMillis() - start);
 
         UserPolicyProfileVO profile = extracted.profile();
         List<String> memberFilled = memberProfileDefaults.fill(profile, member);
@@ -69,11 +73,15 @@ public class RecommendResultService {
     ) {
 
         // 1. 규칙 기반: 자격 통과 + 관련도 순 정렬 → 상위 후보
+        long ruleStart = System.currentTimeMillis();
         List<PolicyEvaluationResult> candidates =
                 policyRecommendationService.recommend(profile, intent)
                         .stream()
                         .limit(CANDIDATE_POOL)
                         .toList();
+        log.info("[추천 시간] 규칙 판정·정렬: {}ms (후보 {}개)",
+                System.currentTimeMillis() - ruleStart, candidates.size());
+
 
         // 2. 후보마다 충족 조건 / 확인 필요 조건 문장 (화면에도 쓰고 AI에도 근거로 넘김)
         Map<Long, List<String>> matched = new HashMap<>();
@@ -88,8 +96,12 @@ public class RecommendResultService {
         }
 
         // 3. AI 개인 맞춤 재정렬 + 추천 이유 + 기대 효과 (실패하면 빈 목록)
+        long aiStart = System.currentTimeMillis();
         List<PolicyInsightService.Insight> insights =
                 insightService.pick(sentence, profile, intent, candidates, matched, unchecked, TOP_N);
+        log.info("[추천 시간] AI 맞춤 재정렬·이유 생성: {}ms (선택 {}개)",
+                System.currentTimeMillis() - aiStart, insights.size());
+
 
         // 4. 최종 목록: AI가 고른 순서 → AI 결과가 없으면 규칙 기반 순서
         List<RecommendedPolicyDTO> policies = new ArrayList<>();

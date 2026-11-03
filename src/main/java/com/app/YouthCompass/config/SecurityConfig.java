@@ -22,9 +22,9 @@ public class SecurityConfig {
                 .csrf(csrf->csrf.disable())
 //                URL별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/","/member/join","/api/**").permitAll()
-//                        정책 동기화 등 관리자 기능은 ROLE_ADMIN만
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/","/member/join").permitAll()
+//                        정책 동기화, 개발용 디버그 페이지는 ROLE_ADMIN만
+                        .requestMatchers("/admin/**", "/api/test/**").hasRole("ADMIN")
 //                        위의 경로를 제외한 모든 요청은 로그인 사용자만 가능
                         .anyRequest().authenticated()
                 )

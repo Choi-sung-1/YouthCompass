@@ -40,9 +40,8 @@ public class openAiService {
                 .call()
                 .entity(ProfileData.class);
 
-        // AI가 실제로 어떤 값을 반환했는지 확인
-        System.out.println("AI 추출 결과: " + data);
-
+        // AI가 실제로 어떤 값을 반환했는지 확인 (개인정보 포함 → debug 레벨에서만 출력)
+        log.debug("AI 추출 결과: {}", data);
         validate(data);
 
         // 시·군 이름 → 시·군 코드 (시·도도 함께 정리)
@@ -90,7 +89,8 @@ public class openAiService {
                 OTHER는 기타 범주라는 근거가 명확할 때만 사용하세요.
 
                 age:
-                명시된 만 나이. 나이 기준이 불명확하면 null.
+                사용자가 숫자로 직접 말한 나이만 (예: "25살", "만 24세"). 나이 기준이 불명확하면 null.
+                학년·학교·졸업 여부·군 복무 등으로 나이를 추측하지 마세요. (예: "대학교 3학년" → null)
 
                 region:
                 현재 거주 시·도. 수원은 GYEONGGI.
