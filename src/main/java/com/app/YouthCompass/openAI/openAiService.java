@@ -3,6 +3,7 @@ package com.app.YouthCompass.openAI;
 import com.app.YouthCompass.policy.domain.eligibility.*;
 import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -268,18 +269,21 @@ public class openAiService {
     }
 
     // AI 답변을 받는 용도. 기존 enum을 그대로 사용함
+    // @Schema(nullable = true): AI에게 넘기는 JSON 스키마에서 각 항목을 "값 또는 null"로 만든다
+    //  - 없으면 스키마가 "age는 반드시 정수"가 되어, 문장에 없는 나이를 지어냄 (예: 3학년 → 21살)
+    //  - @Nullable, @JsonProperty(required = false)는 항목을 생략 가능하게만 할 뿐 null 허용이 아님
     public record ProfileData(
-            Integer age,
-            Region region,
-            String sigungu,
-            SchoolRequirement school,
-            JobRequirement job,
-            MarriageRequirement marriage,
-            Long annualIncome,
-            MajorRequirement major,
-            Set<SpecialTargetRequirement> specialTargets,
-            String category,
-            String keyword
+            @Schema(nullable = true) Integer age,
+            @Schema(nullable = true) Region region,
+            @Schema(nullable = true) String sigungu,
+            @Schema(nullable = true) SchoolRequirement school,
+            @Schema(nullable = true) JobRequirement job,
+            @Schema(nullable = true) MarriageRequirement marriage,
+            @Schema(nullable = true) Long annualIncome,
+            @Schema(nullable = true) MajorRequirement major,
+            @Schema(nullable = true) Set<SpecialTargetRequirement> specialTargets,
+            @Schema(nullable = true) String category,
+            @Schema(nullable = true) String keyword
     ) {}
     public record ExtractionResult(
             UserPolicyProfileVO profile,
