@@ -1,5 +1,7 @@
 package com.app.YouthCompass.history;
 
+import com.app.YouthCompass.history.dto.RecommendHistoryDetailDTO;
+import com.app.YouthCompass.history.dto.RecommendHistoryItemDTO;
 import com.app.YouthCompass.policy.domain.eligibility.Region;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
@@ -11,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,5 +103,55 @@ class RecommendHistoryServiceTest {
     @Test
     void 비로그인이면_기록_목록은_빈_리스트() {
         assertThat(historyService.findHistories(null)).isEmpty();
+    }
+
+    @Test
+    void 기록_상세는_조건과_순위별_카드를_담고_없는_정책도_자리를_남긴다() {
+        // 테스트용 정책: 특정기간(0057001), 마감 3일 뒤
+        LocalDate endDate = LocalDate.now(ZoneId.of("Asia/Seoul")).plusDays(3);
+        jdbcTemplate.update("""
+                INSERT INTO TBL_POLICY (POLICY_SOURCE, POLICY_EXTERNAL_ID, POLICY_NAME, POLICY_ORGANIZATION_NAME,
+                                        POLICY_APPLY_PERIOD_CODE, POLICY_APPLY_END_DATE)
+                VALUES ('TEST', 'HISTORY-TEST-1', '기록 테스트 정책', '테스트 기관', '0057001', ?)
+                """, endDate);
+        Long testPolicyId = jdbcTemplate.queryForObject(
+                "SELECT POLICY_ID FROM TBL_POLICY WHERE POLICY_EXTERNAL_ID = 'HISTORY-TEST-1'", Long.class);
+
+        // 1위: 실제 있는 정책, 2위: TBL_POLICY에 없는 정책
+        Long historyId = historyService.save(MEMBER_ID, "경기도 사는 25살 월세 지원",
+                result(List.of(policy(testPolicyId, "이유 1"), policy(999999L, "이유 2"))));
+
+        RecommendHistoryDetailDTO detail = historyService.findHistoryDetail(historyId, MEMBER_ID).orElseThrow();
+
+        // 조건: 저장 순서 그대로 (나이가 맨 앞)
+        assertThat(detail.getSentence()).isEqualTo("경기도 사는 25살 월세 지원");
+        assertThat(detail.getConditions()).containsEntry("나이", "25세").containsEntry("지역", "경기도");
+        assertThat(detail.getConditions().keySet()).first().isEqualTo("나이");
+
+        // 카드: 순위 순, 1위는 정책 정보 + D-3
+        List<RecommendHistoryItemDTO> items = detail.getItems();
+        assertThat(items).hasSize(2);
+
+        assertThat(items.get(0).getRankNo()).isEqualTo(1);
+        assertThat(items.get(0).getPolicyName()).isEqualTo("기록 테스트 정책");
+        assertThat(items.get(0).getPolicyOrganizationName()).isEqualTo("테스트 기관");
+        assertThat(items.get(0).getReason()).isEqualTo("이유 1");
+        assertThat(items.get(0).getDeadlineLabel()).isEqualTo("D-3");
+        assertThat(items.get(0).isClosingSoon()).isTrue();
+
+        // 2위는 정책을 못 찾아도 자리 유지
+        assertThat(items.get(1).getRankNo()).isEqualTo(2);
+        assertThat(items.get(1).getPolicyId()).isEqualTo(999999L);
+        assertThat(items.get(1).getPolicyName()).isNull();
+        assertThat(items.get(1).getDeadlineLabel()).isEqualTo("정책 정보 없음");
+    }
+
+    @Test
+    void 남의_기록_상세는_조회되지_않는다() {
+        Long historyId = historyService.save(MEMBER_ID, "내 기록",
+                result(List.of(policy(999999L, "이유"))));
+
+        assertThat(historyService.findHistoryDetail(historyId, 999998L)).isEmpty();
+        assertThat(historyService.findHistoryDetail(historyId, null)).isEmpty();
     }
 }
