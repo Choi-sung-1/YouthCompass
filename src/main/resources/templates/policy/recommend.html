@@ -669,6 +669,7 @@
             <p>
                 <span th:text="${policy.deadlineLabel}">D-3</span>
                 <span th:if="${policy.applyEndDate}" th:text="'(' + ${policy.applyEndDate} + ' 마감)'"></span>
+                <span th:if="${policy.supportScale}" th:text="'모집 규모 ' + ${policy.supportScale}"></span>
             </p>
             <!-- 추천 이유: 왜 나에게 맞는지 -->
             <div class="insight why" th:if="${policy.recommendReason}">
@@ -700,8 +701,7 @@
             <details th:if="${!#lists.isEmpty(policy.documents) or policy.applicationMethod != null}">
                 <summary>신청 준비</summary>
                 <p th:if="${policy.applicationMethod}">신청 방법: <span th:text="${policy.applicationMethod}"></span></p>
-                <!-- B-4: 심사 방법 <p th:if="${policy.screeningMethod}">...</p> 자리 -->
-                <ul>
+                <p th:if="${policy.screeningMethod}">심사 방법: <span th:text="${policy.screeningMethod}"></span></p>                <ul>
                     <li th:each="d : ${policy.documents}">
                         <label><input type="checkbox"> <span th:text="${d}"></span></label>
                     </li>
