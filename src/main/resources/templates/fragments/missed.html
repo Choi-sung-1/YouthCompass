@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    조건 하나 차이로 놓친 정책 (A 담당, 약속 ③)
+    사용: <div th:replace="~{fragments/missed :: section(${result.missedPolicies})}"></div>
+    - 목록이 비어 있으면 아무것도 보여주지 않음
+    - 정책 이름은 정책 상세(/policies/{id})로 링크
+-->
+<th:block th:fragment="section(missedPolicies)">
+    <div th:if="${missedPolicies != null and !#lists.isEmpty(missedPolicies)}">
+        <h2>조건 하나 차이로 놓친 정책</h2>
+        <ul>
+            <li th:each="m : ${missedPolicies}">
+                <a th:href="@{/policies/{id}(id=${m.policyId})}" th:text="${m.policyName}">정책명</a>
+                — <span th:text="${m.missedCondition}">소득</span>:
+                <span th:text="${m.hint}">연소득이 3,600만원 이하이면 신청할 수 있어요</span>
+            </li>
+        </ul>
+    </div>
+</th:block>
+
+</body>
+</html>
