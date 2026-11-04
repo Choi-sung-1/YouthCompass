@@ -1,5 +1,6 @@
 package com.app.YouthCompass.policy;
 
+import com.app.YouthCompass.bookmark.BookmarkService;
 import com.app.YouthCompass.member.MemberService;
 import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.Region;
@@ -26,17 +27,19 @@ public class PolicyBrowseController {
 
     private final PolicyService policyService;
     private final PolicyDetailService policyDetailService;
-    private final MemberService memberService;   // B 담당 — findMember 호출만
+    private final MemberService memberService;     // B 담당 — findMember 호출만
+    private final BookmarkService bookmarkService; // B 담당 — 찜 여부 조회만
 
-    // GET /policies?category=&region=&keyword=&openOnly=&page=
     @GetMapping
-    public String list(@ModelAttribute("condition") PolicyListRequestDTO condition, Model model) {
+    public String list(@ModelAttribute("condition") PolicyListRequestDTO condition,
+                       Principal principal,
+                       Model model) {
 
         model.addAttribute("result", policyService.searchPolicies(condition));
 
-        // 필터 선택지
-        model.addAttribute("categoryOptions", PolicyCategories.ALL);
-        model.addAttribute("regionOptions", Region.values());
+        // 카드별 찜 버튼 상태: 찜한 정책 ID를 한 번에 조회 (비로그인이면 빈 Set)
+        model.addAttribute("bookmarkedIds",
+                bookmarkService.findBookmarkedPolicyIds(memberIdOf(loginMember(principal))));
 
         return "policy/list";
     }
@@ -44,14 +47,27 @@ public class PolicyBrowseController {
     @GetMapping("/{id}")
     public String detail(@PathVariable Long id, Principal principal, Model model) {
 
-        MemberVO member = principal == null
-                ? null
-                : memberService.findMember(principal.getName()).orElse(null);
+        MemberVO member = loginMember(principal);
 
         PolicyDetailResponseDTO detail = policyDetailService.getDetail(id, member)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "정책을 찾을 수 없습니다."));
 
         model.addAttribute("detail", detail);
+        // 찜 버튼 상태 (비로그인이면 false → 조각이 "로그인 후 찜하기"로 표시)
+        model.addAttribute("bookmarked", bookmarkService.isBookmarked(memberIdOf(member), id));
         return "policy/detail";
+    }
+
+    // 로그인 회원 (비로그인이거나 조회 실패면 null)
+    private MemberVO loginMember(Principal principal) {
+
+        if (principal == null) {
+            return null;
+        }
+        return memberService.findMember(principal.getName()).orElse(null);
+    }
+
+    private Long memberIdOf(MemberVO member) {
+        return member == null ? null : member.getMemberId();
     }
 }

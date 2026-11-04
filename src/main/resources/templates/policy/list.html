@@ -67,8 +67,8 @@
             <div class="meta" th:text="${p.organizationName}">주관 기관</div>
             <p class="summary" th:text="${p.summary}">설명</p>
 
-            <!-- TODO: B의 찜 버튼 조각 머지 후 연결
-                 <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarkedIds.contains(p.policyId)})}"></div> -->
+            <!-- 찜 버튼 (fragments/bookmark.html, B) — 누르면 토글 후 지금 보던 목록(필터·페이지 그대로)으로 돌아옴 -->
+            <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarkedIds.contains(p.policyId)})}"></div>
         </div>
     </div>
 
@@ -88,6 +88,7 @@
            th:href="@{/policies(category=${condition.category}, region=${condition.region},
                      keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${result.endPage + 1})}">다음</a>
     </nav>
+
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
