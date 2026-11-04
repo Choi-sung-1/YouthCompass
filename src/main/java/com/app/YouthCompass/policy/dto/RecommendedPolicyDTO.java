@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,10 +56,26 @@ public class RecommendedPolicyDTO {
     @Builder.Default
     private List<String> unknownReasons = new ArrayList<>();
 
+    // 마감 표시는 정책 목록·찜 목록·추천 기록과 같은 계산(PolicyListItemDTO.from())을 재사용
+    private LocalDate applyEndDate;      // 신청 마감일 (상시면 null)
+    private String deadlineLabel;        // "D-3", "오늘 마감", "상시", "마감", "기간 확인 필요"
+    private boolean closingSoon;         // 마감 7일 이내
+    private String applicationMethod;    // 신청 방법 원문
+
+    // 제출 서류 체크리스트 (B-2에서 채움)
+    @Builder.Default
+    private List<String> documents = new ArrayList<>();
+
+    private String screeningMethod;      // 심사 방법 (A의 ② 머지 전엔 null)
+    private String supportScale;         // 지원 규모 원문 ex) "300명" (A의 ② 머지 전엔 null)
+
     // 판정 결과(PolicyEvaluationResult)를 카드용 DTO로 변환
     public static RecommendedPolicyDTO from(PolicyEvaluationResult result) {
 
         PolicyVO policy = result.getPolicy();
+
+        // 마감 표시는 정책 목록·찜 목록·추천 기록과 같은 계산을 재사용 (A의 PolicyListItemDTO — 호출만)
+        PolicyListItemDTO card = PolicyListItemDTO.from(policy);
 
         return RecommendedPolicyDTO.builder()
                 .policyId(policy.getPolicyId())
@@ -68,6 +85,10 @@ public class RecommendedPolicyDTO {
                 .applicationUrl(chooseUrl(policy))
                 .relevanceScore(result.getRelevanceScore())
                 .matchScore(result.getSpecificMatchScore())
+                .applyEndDate(policy.getPolicyApplyEndDate())
+                .deadlineLabel(card.getDeadlineLabel())
+                .closingSoon(card.isClosingSoon())
+                .applicationMethod(policy.getPolicyApplicationMethod())
                 .build();
     }
 
