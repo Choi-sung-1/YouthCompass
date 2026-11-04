@@ -2,10 +2,14 @@ package com.app.YouthCompass.history;
 
 import com.app.YouthCompass.history.domain.RecommendHistoryVO;
 import com.app.YouthCompass.history.domain.RecommendItemVO;
+import com.app.YouthCompass.history.dto.RecommendHistoryDetailDTO;
+import com.app.YouthCompass.history.dto.RecommendHistoryItemDTO;
 import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
+import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
+import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
 import com.app.YouthCompass.policy.dto.RecommendedPolicyDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,6 +68,59 @@ public class RecommendHistoryService {
             return List.of();
         }
         return historyMapper.selectHistoriesByMemberId(memberId);
+    }
+
+    //    추천 기록 상세 (내 기록일 때만, 남의 기록이거나 없으면 empty)
+    public Optional<RecommendHistoryDetailDTO> findHistoryDetail(Long historyId, Long memberId) {
+        if (historyId == null || memberId == null) {
+            return Optional.empty();
+        }
+
+        // 1) 본인 기록인지 먼저 확인 → 2) 맞을 때만 항목 조회
+        return historyMapper.selectHistory(historyId, memberId).map(history -> {
+            List<RecommendHistoryItemDTO> items = historyMapper.selectItemsWithPolicy(historyId);
+            items.forEach(this::fillDeadline);
+
+            return new RecommendHistoryDetailDTO(
+                    history.getHistoryId(),
+                    history.getSentence(),
+                    history.getCreatedAt(),
+                    readConditions(history.getProfileJson()),
+                    items
+            );
+        });
+    }
+
+    //    지금 기준 마감 표시 (A의 PolicyListItemDTO 계산을 그대로 사용 → 정책 목록·찜 목록과 같은 표시)
+    private void fillDeadline(RecommendHistoryItemDTO item) {
+        if (item.getPolicyName() == null) {
+            item.setDeadlineLabel("정책 정보 없음");
+            return;
+        }
+        PolicyListItemDTO card = PolicyListItemDTO.from(PolicyVO.builder()
+                .policyId(item.getPolicyId())
+                .policyName(item.getPolicyName())
+                .policyApplyPeriodCode(item.getPolicyApplyPeriodCode())
+                .policyApplyEndDate(item.getPolicyApplyEndDate())
+                .build());
+
+        item.setDeadlineLabel(card.getDeadlineLabel());
+        item.setClosingSoon(card.isClosingSoon());
+        item.setClosed(card.isClosed());
+    }
+
+    //    저장해 둔 조건 JSON → Map (LinkedHashMap이라 저장 순서 유지, 읽기 실패하면 빈 Map)
+    @SuppressWarnings("unchecked")
+    private Map<String, String> readConditions(String profileJson) {
+        if (profileJson == null || profileJson.isBlank()) {
+            return Map.of();
+        }
+        try {
+            return jsonMapper.readValue(profileJson, LinkedHashMap.class);
+        } catch (RuntimeException e) {
+            log.warn("추천 기록 조건 JSON 읽기 실패 (조건 칩 없이 표시)", e);
+            return Map.of();
+        }
     }
 
     //    실제 저장 (transactionTemplate 안에서만 호출)

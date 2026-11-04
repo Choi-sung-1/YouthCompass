@@ -33,4 +33,21 @@
           AND MEMBER_ID = #{memberId}
     </select>
 
+    <!-- 기록 상세용: 항목 + 정책 정보 (LEFT JOIN → 정책이 없어도 순위 자리는 유지) -->
+    <select id="selectItemsWithPolicy" resultType="com.app.YouthCompass.history.dto.RecommendHistoryItemDTO">
+        SELECT I.RANK_NO,
+               I.POLICY_ID,
+               I.REASON,
+               I.EFFECT,
+               P.POLICY_NAME,
+               P.POLICY_ORGANIZATION_NAME,
+               P.POLICY_LARGE_CATEGORY,
+               P.POLICY_APPLY_PERIOD_CODE,
+               P.POLICY_APPLY_END_DATE
+        FROM TBL_RECOMMEND_ITEM I
+                 LEFT JOIN TBL_POLICY P ON P.POLICY_ID = I.POLICY_ID
+        WHERE I.HISTORY_ID = #{historyId}
+        ORDER BY I.RANK_NO
+    </select>
+
 </mapper>
