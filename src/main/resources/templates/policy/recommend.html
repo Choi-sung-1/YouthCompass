@@ -163,6 +163,19 @@
             vertical-align: middle;
         }
 
+        /* 찜 버튼: 카드 오른쪽 위 (.policy 는 이미 position: relative) */
+        .bookmark-corner {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+        }
+
+        /* 정책명이 길어도 찜 버튼과 겹치지 않게 */
+        .policy > .policy-name {
+            display: inline-block;
+            max-width: calc(100% - 90px);
+        }
+
         .org {
             margin: 6px 0 0 34px;
             color: #777;
@@ -601,6 +614,11 @@
 
         <div class="box policy" th:each="policy, st : ${result.policies}">
 
+            <!-- 찜 버튼 (오른쪽 위, 이 화면에서는 아래 스크립트가 페이지 이동 없이 처리) -->
+            <div class="bookmark-corner">
+                <div th:replace="~{fragments/bookmark :: button(${policy.policyId}, ${bookmarkedIds.contains(policy.policyId)})}"></div>
+            </div>
+
             <span class="rank" th:text="${st.count}"></span>
             <span class="policy-name" th:text="${policy.policyName}"></span>
             <p class="org" th:if="${policy.organizationName}" th:text="${policy.organizationName}"></p>
@@ -636,9 +654,6 @@
                th:href="${policy.applicationUrl}"
                target="_blank" rel="noopener noreferrer">신청하러 가기 →</a>
             <p class="no-link" th:unless="${policy.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
-
-            <!-- 찜 버튼 (fragments/bookmark.html) — 이 화면에서는 아래 스크립트가 페이지 이동 없이 처리 -->
-            <div th:replace="~{fragments/bookmark :: button(${policy.policyId}, ${bookmarkedIds.contains(policy.policyId)})}"></div>
         </div>
 
     </th:block>
@@ -675,9 +690,12 @@
                     if (!res.ok || res.url.includes("/member/login")) {
                         throw new Error("찜 실패");
                     }
-                    const nowBookmarked = !btn.classList.contains("btn-primary");
-                    btn.classList.toggle("btn-primary", nowBookmarked);
-                    btn.textContent = nowBookmarked ? "♥ 찜 해제" : "♡ 찜하기";
+                    const nowBookmarked = !btn.classList.contains("on");
+                    btn.classList.toggle("on", nowBookmarked);
+                    btn.textContent = nowBookmarked ? "♥" : "♡";
+                    btn.style.color = nowBookmarked ? "#e11d48" : "#9ca3af";
+                    btn.title = nowBookmarked ? "찜 해제" : "찜하기";
+                    btn.setAttribute("aria-label", btn.title);
                 })
                 .catch(function () {
                     alert("찜 처리에 실패했어요. 다시 로그인한 뒤 시도해 주세요.");

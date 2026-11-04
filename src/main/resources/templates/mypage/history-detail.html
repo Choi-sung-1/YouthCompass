@@ -25,6 +25,10 @@
         .insight { font-size: 14px; background: var(--color-bg); border-radius: 8px; padding: 10px 12px; }
         .insight .title { display: block; font-weight: 700; margin-bottom: 4px; }
         .missing { color: var(--color-muted); }
+        /* 찜 버튼: 카드 오른쪽 위 */
+        .item-card { position: relative; }
+        .item-top { padding-right: 44px; }
+        .bookmark-corner { position: absolute; top: 14px; right: 14px; }
     </style>
 </head>
 <body>
@@ -54,6 +58,11 @@
 
     <div class="items">
         <div class="card item-card" th:each="item : ${detail.items}">
+            <!-- 찜 버튼 (오른쪽 위) — 정책 정보가 없으면 숨김 -->
+            <div class="bookmark-corner" th:if="${item.policyName != null}">
+                <div th:replace="~{fragments/bookmark :: button(${item.policyId}, ${bookmarkedIds.contains(item.policyId)})}"></div>
+            </div>
+
             <div class="item-top">
                 <span class="rank" th:text="${item.rankNo} + '위'">1위</span>
 
@@ -81,10 +90,6 @@
                 <span th:text="${item.effect}">기대 효과</span>
             </div>
 
-            <!-- 찜 버튼 (GET 화면이라 누르면 이 화면으로 그대로 돌아옴) — 정책 정보가 없으면 숨김 -->
-            <div th:if="${item.policyName != null}">
-                <div th:replace="~{fragments/bookmark :: button(${item.policyId}, ${bookmarkedIds.contains(item.policyId)})}"></div>
-            </div>
         </div>
     </div>
 </main>
