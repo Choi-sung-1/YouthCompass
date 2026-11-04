@@ -100,6 +100,22 @@ public class PolicyVO {
     private String policyAdditionalCondition;
 
     // ================================
+    // 신청 방식 정보
+    // ================================
+
+    // 심사 방법 (srngMthdCn)
+    private String policyScreeningMethod;
+
+    // 지원 규모 원문 (sprtSclCnt, "0"·빈 값은 null)
+    private String policySupportScale;
+
+    // 지원 도착순서 여부 원본 (sprtArvlSeqYn, 의미 확인 후 사용)
+    private String policyArrivalOrderYn;
+
+    // 지원 규모 제한 여부 원본 (sprtSclLmtYn, 의미 확인 후 사용)
+    private String policyScaleLimitYn;
+
+    // ================================
     // 신청기간
     // ================================
 
