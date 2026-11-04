@@ -692,6 +692,9 @@
                 </ul>
             </th:block>
 
+            <!-- 확인 필요 조건 다시 판정 (A의 조각) -->
+            <div th:replace="~{fragments/recheck :: buttons(${policy})}"></div>
+
             <details th:if="${policy.supportContent}">
                 <summary>지원 내용 원문 보기</summary>
                 <p class="support" th:text="${policy.supportContent}"></p>
@@ -824,6 +827,9 @@
         });
     });
 </script>
+
+<!-- 확인 필요 조건 다시 판정 (A의 JS) -->
+<script th:src="@{/js/recheck.js}"></script>
 
 </body>
 </html>
