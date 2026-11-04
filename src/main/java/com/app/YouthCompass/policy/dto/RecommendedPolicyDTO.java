@@ -88,8 +88,7 @@ public class RecommendedPolicyDTO {
                 .deadlineLabel(card.getDeadlineLabel())
                 .closingSoon(card.isClosingSoon())
                 .applicationMethod(policy.getPolicyApplicationMethod())
-                .documents(splitDocuments(policy.getPolicySubmissionDocuments()))
-                .screeningMethod(policy.getPolicyScreeningMethod())
+                .documents(chooseDocuments(policy))                .screeningMethod(policy.getPolicyScreeningMethod())
                 .supportScale(policy.getPolicySupportScale())
                 .build();
     }
@@ -104,6 +103,27 @@ public class RecommendedPolicyDTO {
         return policy.getPolicyReferenceUrl();
     }
 
+    // 제출 서류: AI가 정리한 목록(A의 policyDocumentItems)이 있으면 그걸 쓰고, 정리 전(null)이면 원문을 규칙으로 나눔
+    // policyDocumentItems: null = 정리 전, 빈 값 = 서류 없음, 그 외 = 줄바꿈으로 구분된 서류 목록
+    private static List<String> chooseDocuments(PolicyVO policy) {
+
+        String aiItems = policy.getPolicyDocumentItems();
+        if (aiItems == null) {
+            return splitDocuments(policy.getPolicySubmissionDocuments());
+        }
+
+        List<String> items = new ArrayList<>();
+        for (String line : aiItems.split("\n")) {
+            String item = line.trim();
+            if (!item.isEmpty() && !items.contains(item)) {
+                items.add(item);
+            }
+        }
+
+        return items.size() > DOCUMENT_LIMIT
+                ? new ArrayList<>(items.subList(0, DOCUMENT_LIMIT))
+                : items;
+    }
     // 체크리스트에 보여줄 최대 서류 수
     private static final int DOCUMENT_LIMIT = 15;
 
