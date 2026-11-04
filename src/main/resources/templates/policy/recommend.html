@@ -775,7 +775,12 @@
             const btn = form.querySelector("button");
             btn.disabled = true;
 
-            fetch(form.action, { method: "POST" })
+            // 찜 후 돌아갈 곳을 GET으로 열 수 있는 추천 첫 화면으로 고정
+            // (조건 수정 결과 주소 /policy/recommend/conditions 는 POST 전용 → 그대로 돌아가면 405)
+            const url = new URL(form.action);
+            url.searchParams.set("redirect", "/policy/recommend");
+
+            fetch(url, { method: "POST" })
                 .then(function (res) {
                     // 로그인이 풀렸으면 로그인 화면으로 리다이렉트됨 → 실패로 처리
                     if (!res.ok || res.url.includes("/member/login")) {
