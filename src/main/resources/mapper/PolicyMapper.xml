@@ -134,6 +134,8 @@
         POLICY_SUPPORT_SCALE,
         POLICY_ARRIVAL_ORDER_YN,
         POLICY_SCALE_LIMIT_YN,
+        POLICY_DOCUMENT_ITEMS,
+        POLICY_DOCUMENT_SOURCE_HASH,
 
         POLICY_APPLY_PERIOD_CODE,
         POLICY_APPLY_START_DATE,
@@ -258,4 +260,24 @@
         ORDER BY POLICY_APPLY_START_DATE DESC, POLICY_ID DESC
         LIMIT #{limit}
     </select>
+
+    <!-- 서류 정리 대상 후보: 신청 가능(findOpenPolicies와 같은 기준) + 제출서류 원문 있음 -->
+    <select id="findDocumentTargets" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
+        SELECT POLICY_ID, POLICY_SUBMISSION_DOCUMENTS, POLICY_DOCUMENT_SOURCE_HASH
+        FROM TBL_POLICY
+        WHERE POLICY_STATUS = 'ACTIVE'
+          AND (POLICY_APPLY_PERIOD_CODE IS NULL OR POLICY_APPLY_PERIOD_CODE &lt;&gt; '0057003')
+          AND (POLICY_APPLY_END_DATE IS NULL OR POLICY_APPLY_END_DATE &gt;= CURRENT_DATE)
+          AND POLICY_SUBMISSION_DOCUMENTS IS NOT NULL
+          AND TRIM(POLICY_SUBMISSION_DOCUMENTS) &lt;&gt; ''
+        ORDER BY POLICY_ID
+    </select>
+
+    <!-- AI 정리 결과 저장 (동기화 MERGE는 이 두 컬럼을 건드리지 않음) -->
+    <update id="updateDocumentItems">
+        UPDATE TBL_POLICY
+        SET POLICY_DOCUMENT_ITEMS = #{items},
+            POLICY_DOCUMENT_SOURCE_HASH = #{hash}
+        WHERE POLICY_ID = #{policyId}
+    </update>
 </mapper>

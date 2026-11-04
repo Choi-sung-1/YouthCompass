@@ -115,6 +115,11 @@ public class PolicyVO {
     // 지원 규모 제한 여부 원본 (sprtSclLmtYn, 의미 확인 후 사용)
     private String policyScaleLimitYn;
 
+    // AI가 정리한 제출 서류 목록 (줄바꿈 구분 / null = 정리 전·실패 / 빈 값 = 서류 없음)
+    private String policyDocumentItems;
+
+    // 정리할 때 쓴 제출서류 원문의 해시 (원문이 바뀌면 다시 정리)
+    private String policyDocumentSourceHash;
     // ================================
     // 신청기간
     // ================================
