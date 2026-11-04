@@ -720,6 +720,9 @@
             <div th:replace="~{fragments/bookmark :: button(${policy.policyId}, ${bookmarkedIds.contains(policy.policyId)})}"></div>
         </div>
 
+        <!-- 조건 하나 차이로 놓친 정책 (A의 조각) -->
+        <div th:replace="~{fragments/missed :: section(${result.missedPolicies})}"></div>
+
     </th:block>
 </div>
 
