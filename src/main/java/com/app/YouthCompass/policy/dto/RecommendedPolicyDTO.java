@@ -67,8 +67,7 @@ public class RecommendedPolicyDTO {
     private List<String> documents = new ArrayList<>();
 
     private String screeningMethod;      // 심사 방법 (A의 ② 머지 전엔 null)
-    private String supportScale;         // 지원 규모 원문 ex) "300명" (A의 ② 머지 전엔 null)
-
+    private String supportScale;         // 모집 규모 숫자만 ex) "300" (단위가 정책마다 달라 붙이지 않음)
     // 판정 결과(PolicyEvaluationResult)를 카드용 DTO로 변환
     public static RecommendedPolicyDTO from(PolicyEvaluationResult result) {
 
@@ -90,9 +89,10 @@ public class RecommendedPolicyDTO {
                 .closingSoon(card.isClosingSoon())
                 .applicationMethod(policy.getPolicyApplicationMethod())
                 .documents(splitDocuments(policy.getPolicySubmissionDocuments()))
+                .screeningMethod(policy.getPolicyScreeningMethod())
+                .supportScale(policy.getPolicySupportScale())
                 .build();
     }
-
     private static String chooseUrl(PolicyVO policy) {
 
         String url = policy.getPolicyApplicationUrl();
