@@ -1,5 +1,6 @@
 package com.app.YouthCompass.history;
 
+import com.app.YouthCompass.bookmark.BookmarkService;
 import com.app.YouthCompass.history.dto.RecommendHistoryDetailDTO;
 import com.app.YouthCompass.member.MemberService;
 import com.app.YouthCompass.member.domain.MemberVO;
@@ -23,6 +24,7 @@ public class RecommendHistoryController {
 
     private final RecommendHistoryService historyService;
     private final MemberService memberService;
+    private final BookmarkService bookmarkService;
 
     // GET /mypage/history — 내 추천 기록 목록 (최근 순)
     @GetMapping
@@ -37,11 +39,15 @@ public class RecommendHistoryController {
     @GetMapping("/{historyId}")
     public String detail(@PathVariable Long historyId, Principal principal, Model model) {
 
+        Long memberId = loginMemberId(principal);
+
         // 남의 기록 번호이거나 없는 번호면 404
-        RecommendHistoryDetailDTO detail = historyService.findHistoryDetail(historyId, loginMemberId(principal))
+        RecommendHistoryDetailDTO detail = historyService.findHistoryDetail(historyId, memberId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "추천 기록을 찾을 수 없습니다."));
 
         model.addAttribute("detail", detail);
+        // 카드의 찜 버튼 상태용 (찜 목록 화면과 같은 BookmarkService 호출)
+        model.addAttribute("bookmarkedIds", bookmarkService.findBookmarkedPolicyIds(memberId));
         return "mypage/history-detail";
     }
 

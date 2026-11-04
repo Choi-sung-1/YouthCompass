@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>추천 기록 상세 | YouthCompass</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <style>
+        .back { display: inline-block; margin-bottom: 12px; font-size: 14px; }
+        .date { color: var(--color-muted); font-size: 14px; margin: 0 0 12px; }
+        .sentence-box { background: var(--color-surface); border-left: 4px solid var(--color-primary);
+            border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; white-space: pre-line; }
+        .section-title { font-size: 16px; margin: 24px 0 10px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { background: var(--color-surface); border: 1px solid var(--color-border);
+            border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+        .chip .label { color: var(--color-muted); margin-right: 4px; }
+        .note { color: var(--color-muted); font-size: 13px; margin: 8px 0 0; }
+        .items { display: flex; flex-direction: column; gap: 14px; }
+        .item-card { display: flex; flex-direction: column; gap: 8px; }
+        .item-top { display: flex; align-items: center; gap: 8px; }
+        .rank { font-weight: 700; color: var(--color-primary); font-size: 18px; min-width: 32px; }
+        .item-card h3 { margin: 0; font-size: 16px; line-height: 1.4; flex: 1; }
+        .item-card h3 a { color: var(--color-text); }
+        .item-card .meta { color: var(--color-muted); font-size: 13px; }
+        .insight { font-size: 14px; background: var(--color-bg); border-radius: 8px; padding: 10px 12px; }
+        .insight .title { display: block; font-weight: 700; margin-bottom: 4px; }
+        .missing { color: var(--color-muted); }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container page">
+    <a class="back" th:href="@{/mypage/history}">← 추천 기록 목록</a>
+    <h1>추천 기록</h1>
+    <p class="date" th:text="${#temporals.format(detail.createdAt, 'yyyy.MM.dd HH:mm')} + ' 에 받은 추천'">받은 시각</p>
+
+    <!-- 그때 입력한 문장 -->
+    <div class="sentence-box" th:text="${detail.sentence} ?: '(입력 문장 없음)'">입력한 문장</div>
+
+    <!-- 그때 AI가 이해한 조건 (저장된 PROFILE_JSON → 칩) -->
+    <th:block th:if="${!#maps.isEmpty(detail.conditions)}">
+        <h2 class="section-title">그때 AI가 이해한 조건</h2>
+        <div class="chips">
+            <span class="chip" th:each="c : ${detail.conditions}">
+                <span class="label" th:text="${c.key}">나이</span><b th:text="${c.value}">25세</b>
+            </span>
+        </div>
+    </th:block>
+
+    <!-- 그때의 TOP 10 (RecommendHistoryItemDTO) -->
+    <h2 class="section-title">그때 받은 추천 TOP <span th:text="${#lists.size(detail.items)}">10</span></h2>
+    <p class="note">추천 이유·기대 효과는 그때 저장한 내용이고, 마감 표시는 오늘 기준이에요.</p>
+
+    <div class="items">
+        <div class="card item-card" th:each="item : ${detail.items}">
+            <div class="item-top">
+                <span class="rank" th:text="${item.rankNo} + '위'">1위</span>
+
+                <!-- 정책명: 정책 정보가 있으면 A의 상세 화면으로 링크 -->
+                <h3 th:if="${item.policyName != null}">
+                    <a th:href="@{/policies/{id}(id=${item.policyId})}" th:text="${item.policyName}">정책명</a>
+                </h3>
+                <h3 class="missing" th:if="${item.policyName == null}">정책 정보 없음</h3>
+
+                <span class="badge"
+                      th:classappend="${item.closed} ? 'badge-no' : (${item.closingSoon} ? 'badge-unknown' : 'badge-ok')"
+                      th:text="${item.deadlineLabel}">D-7</span>
+            </div>
+
+            <div class="meta" th:if="${item.policyOrganizationName != null}"
+                 th:text="${item.policyOrganizationName}">주관 기관</div>
+
+            <div class="insight" th:if="${item.reason != null}">
+                <span class="title">💡 추천 이유</span>
+                <span th:text="${item.reason}">추천 이유</span>
+            </div>
+
+            <div class="insight" th:if="${item.effect != null}">
+                <span class="title">🎯 기대 효과</span>
+                <span th:text="${item.effect}">기대 효과</span>
+            </div>
+
+            <!-- 찜 버튼 (GET 화면이라 누르면 이 화면으로 그대로 돌아옴) — 정책 정보가 없으면 숨김 -->
+            <div th:if="${item.policyName != null}">
+                <div th:replace="~{fragments/bookmark :: button(${item.policyId}, ${bookmarkedIds.contains(item.policyId)})}"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

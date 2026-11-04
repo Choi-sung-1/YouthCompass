@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>추천 기록 | YouthCompass</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <style>
+        .back { display: inline-block; margin-bottom: 12px; font-size: 14px; }
+        .result-count { color: var(--color-muted); font-size: 14px; margin: 8px 0 16px; }
+        .history-list { display: flex; flex-direction: column; gap: 12px; }
+        .history-card { display: block; color: var(--color-text); }
+        .history-card:hover { text-decoration: none; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); }
+        .history-card .date { color: var(--color-muted); font-size: 13px; }
+        .history-card .sentence { margin: 6px 0 0; font-size: 15px; }
+        .empty { text-align: center; color: var(--color-muted); padding: 60px 0; }
+        .empty .btn { margin-top: 16px; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container page">
+    <a class="back" th:href="@{/mypage}">← 마이페이지</a>
+    <h1>추천 기록</h1>
+
+    <p class="result-count">
+        총 <b th:text="${#lists.size(histories)}">0</b>건 · 최근 순 · 누르면 그때 받은 TOP 10을 다시 볼 수 있어요
+    </p>
+
+    <!-- 기록이 없을 때 -->
+    <div class="empty" th:if="${#lists.isEmpty(histories)}">
+        아직 추천 기록이 없어요.<br>
+        <a class="btn btn-primary" th:href="@{/policy/recommend}">AI 추천 받으러 가기</a>
+    </div>
+
+    <!-- 기록 목록 (RecommendHistoryVO) -->
+    <div class="history-list">
+        <a class="card history-card" th:each="h : ${histories}"
+           th:href="@{/mypage/history/{id}(id=${h.historyId})}">
+            <span class="date" th:text="${#temporals.format(h.createdAt, 'yyyy.MM.dd HH:mm')}">2026.11.04 15:30</span>
+            <p class="sentence"
+               th:text="${h.sentence != null} ? ${#strings.abbreviate(h.sentence, 90)} : '(입력 문장 없음)'">입력한 문장</p>
+        </a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
