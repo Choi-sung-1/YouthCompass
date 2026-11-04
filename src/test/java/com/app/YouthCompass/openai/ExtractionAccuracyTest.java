@@ -4,6 +4,7 @@ import com.app.YouthCompass.openAI.openAiService;
 import com.app.YouthCompass.policy.domain.eligibility.*;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +24,7 @@ import java.util.*;
 //    → 채점에서 빼는 항목은 없다. 규칙과 다르게 뽑으면 그대로 오답
 //  - category·keyword는 핵심어가 들어 있으면 정답 (표현이 조금 달라도 됨)
 // ============================================================
+@Tag("ai")   // 실제 OpenAI 호출 → 평소 ./gradlew test 에서 제외, ./gradlew aiTest 로만 실행
 @SpringBootTest
 class ExtractionAccuracyTest {
 
