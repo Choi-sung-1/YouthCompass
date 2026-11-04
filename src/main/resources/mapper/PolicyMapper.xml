@@ -34,6 +34,11 @@
                                POLICY_REGION_CODES,
                                POLICY_ADDITIONAL_CONDITION,
 
+                               POLICY_SCREENING_METHOD,
+                               POLICY_SUPPORT_SCALE,
+                               POLICY_ARRIVAL_ORDER_YN,
+                               POLICY_SCALE_LIMIT_YN,
+
                                POLICY_APPLY_PERIOD_CODE,
                                POLICY_APPLY_START_DATE,
                                POLICY_APPLY_END_DATE,
@@ -75,6 +80,11 @@
                        #{policySpecialTargetCodes},
                        #{policyRegionCodes},
                        #{policyAdditionalCondition},
+
+                       #{policyScreeningMethod},
+                       #{policySupportScale},
+                       #{policyArrivalOrderYn},
+                       #{policyScaleLimitYn},
 
                        #{policyApplyPeriodCode},
                        #{policyApplyStartDate},
@@ -119,6 +129,11 @@
 
         POLICY_REGION_CODES,
         POLICY_ADDITIONAL_CONDITION,
+
+        POLICY_SCREENING_METHOD,
+        POLICY_SUPPORT_SCALE,
+        POLICY_ARRIVAL_ORDER_YN,
+        POLICY_SCALE_LIMIT_YN,
 
         POLICY_APPLY_PERIOD_CODE,
         POLICY_APPLY_START_DATE,

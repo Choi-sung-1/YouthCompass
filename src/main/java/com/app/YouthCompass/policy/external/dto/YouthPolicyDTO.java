@@ -90,6 +90,22 @@ public class YouthPolicyDTO {
     private String addAplyQlfcCndCn;
 
     // ================================
+    // 신청 방식 정보
+    // ================================
+
+    // 심사 방법
+    private String srngMthdCn;
+
+    // 지원 규모 (인원 등, 원문)
+    private String sprtSclCnt;
+
+    // 지원 도착순서 여부 (선착순으로 추정, 의미 확인 중)
+    private String sprtArvlSeqYn;
+
+    // 지원 규모 제한 여부 (의미 확인 중)
+    private String sprtSclLmtYn;
+
+    // ================================
     // 신청기간
     // ================================
 
