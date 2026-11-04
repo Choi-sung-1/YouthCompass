@@ -22,6 +22,8 @@ public final class SigunguRegistry {
     private static final Map<String, Unit> BY_NAME = new HashMap<>();
     // 시도코드 → 그 시도의 단위 개수 (도 전체 정책 판별용)
     private static final Map<String, Integer> UNIT_COUNT = new HashMap<>();
+    // 시도코드 → 단위 목록 (가입·마이페이지 시·군 선택용, 이름순)
+    private static final Map<String, List<Unit>> UNITS_BY_SIDO = new HashMap<>();
 
     static {
         load();
@@ -35,7 +37,7 @@ public final class SigunguRegistry {
             throw new IllegalStateException("sigungu.csv 를 찾을 수 없습니다.");
         }
         Map<String, Set<String>> unitsBySido = new HashMap<>();
-
+        Map<String, Unit> uniqueUnits = new LinkedHashMap<>();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(in, StandardCharsets.UTF_8))) {
 
@@ -49,6 +51,7 @@ public final class SigunguRegistry {
 
                 if (!"legacy".equals(c[6])) {
                     unitsBySido.computeIfAbsent(c[1], k -> new HashSet<>()).add(c[4]);
+                    uniqueUnits.putIfAbsent(c[4], unit);   // 일반구는 같은 시로 합쳐지므로 단위코드로 중복 제거
                     indexName(unit, c[5]);   // 평택시, 광주
                     indexName(unit, c[3]);   // 원래 이름: 성남시분당구, 강남구
                     if (c[3].startsWith(c[5]) && c[3].length() > c[5].length()) {
@@ -60,6 +63,10 @@ public final class SigunguRegistry {
             throw new UncheckedIOException(e);
         }
         unitsBySido.forEach((sido, units) -> UNIT_COUNT.put(sido, units.size()));
+
+        uniqueUnits.values().forEach(u ->
+                UNITS_BY_SIDO.computeIfAbsent(u.sidoCode(), k -> new ArrayList<>()).add(u));
+        UNITS_BY_SIDO.values().forEach(list -> list.sort(Comparator.comparing(Unit::unitName)));
     }
 
     private static void indexName(Unit unit, String name) {
@@ -152,5 +159,9 @@ public final class SigunguRegistry {
     // 시도의 단위 개수 (경기 31, 서울 1 …)
     public static int unitCount(String sidoCode) {
         return UNIT_COUNT.getOrDefault(sidoCode, 0);
+    }
+    // 시도코드 → 그 시도의 시·군 단위 목록 (서울처럼 시 전체가 1단위면 1개)
+    public static Map<String, List<Unit>> unitsBySido() {
+        return Collections.unmodifiableMap(UNITS_BY_SIDO);
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.app.YouthCompass.profile.MemberProfileMapper">
+
+    <select id="selectByMemberId" resultType="com.app.YouthCompass.profile.domain.MemberProfileVO">
+        SELECT MEMBER_ID, SIGUNGU_CODE, SCHOOL, JOB, MARRIAGE, MAJOR, ANNUAL_INCOME, UPDATED_AT
+        FROM TBL_MEMBER_PROFILE
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <!-- H2 MERGE: MEMBER_ID가 있으면 UPDATE, 없으면 INSERT -->
+    <update id="upsertProfile">
+        MERGE INTO TBL_MEMBER_PROFILE
+            (MEMBER_ID, SIGUNGU_CODE, SCHOOL, JOB, MARRIAGE, MAJOR, ANNUAL_INCOME, UPDATED_AT)
+            KEY (MEMBER_ID)
+            VALUES (#{memberId}, #{sigunguCode}, #{school}, #{job}, #{marriage}, #{major},
+                    #{annualIncome}, CURRENT_TIMESTAMP)
+    </update>
+</mapper>
