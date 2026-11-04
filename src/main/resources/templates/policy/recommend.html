@@ -696,6 +696,18 @@
                 <p class="support" th:text="${policy.supportContent}"></p>
             </details>
 
+            <!-- 신청 준비: 신청 방법 + 제출서류 체크리스트 (체크 상태는 저장 안 함) -->
+            <details th:if="${!#lists.isEmpty(policy.documents) or policy.applicationMethod != null}">
+                <summary>신청 준비</summary>
+                <p th:if="${policy.applicationMethod}">신청 방법: <span th:text="${policy.applicationMethod}"></span></p>
+                <!-- B-4: 심사 방법 <p th:if="${policy.screeningMethod}">...</p> 자리 -->
+                <ul>
+                    <li th:each="d : ${policy.documents}">
+                        <label><input type="checkbox"> <span th:text="${d}"></span></label>
+                    </li>
+                </ul>
+            </details>
+
             <a class="apply-btn"
                th:if="${policy.applicationUrl}"
                th:href="${policy.applicationUrl}"

@@ -89,6 +89,7 @@ public class RecommendedPolicyDTO {
                 .deadlineLabel(card.getDeadlineLabel())
                 .closingSoon(card.isClosingSoon())
                 .applicationMethod(policy.getPolicyApplicationMethod())
+                .documents(splitDocuments(policy.getPolicySubmissionDocuments()))
                 .build();
     }
 
@@ -101,5 +102,56 @@ public class RecommendedPolicyDTO {
         }
 
         return policy.getPolicyReferenceUrl();
+    }
+
+    // 체크리스트에 보여줄 최대 서류 수
+    private static final int DOCUMENT_LIMIT = 15;
+
+    // 제출서류 원문 → 항목 목록 (괄호 안 구분자는 무시, 중복·빈 항목 제거)
+    private static List<String> splitDocuments(String text) {
+
+        List<String> items = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return items;
+        }
+
+        StringBuilder current = new StringBuilder();
+        int depth = 0;
+
+        for (char c : text.toCharArray()) {
+            if (c == '(' || c == '[') {
+                depth++;
+            } else if ((c == ')' || c == ']') && depth > 0) {
+                depth--;
+            }
+
+            boolean separator = c == '\n'
+                    || (depth == 0 && (c == ',' || c == '·' || c == 'ㆍ' || c == ';'));
+
+            if (separator) {
+                addDocument(items, current.toString());
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        addDocument(items, current.toString());
+
+        return items.size() > DOCUMENT_LIMIT
+                ? new ArrayList<>(items.subList(0, DOCUMENT_LIMIT))
+                : items;
+    }
+
+    // 앞의 기호·번호(-, •, ○, ※, 1. 2) 등) 제거 후 추가
+    private static void addDocument(List<String> items, String raw) {
+
+        String item = raw
+                .replaceAll("^[\\s\\-*•○●□■▶※]+", "")
+                .replaceAll("^\\d+[.)]\\s*", "")
+                .trim();
+
+        if (!item.isEmpty() && !items.contains(item)) {
+            items.add(item);
+        }
     }
 }
