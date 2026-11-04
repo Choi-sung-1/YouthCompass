@@ -87,9 +87,12 @@
                 <a class="btn" th:if="${p.policyReferenceUrl}"
                    th:href="${p.policyReferenceUrl}" target="_blank" rel="noopener">공고 원문 보기</a>
 
-                <!-- TODO: B의 찜 버튼 조각 머지 후 연결
-                     <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarked})}"></div> -->
-            </div>
+                <a class="btn" th:if="${p.policyReferenceUrl}"
+                   th:href="${p.policyReferenceUrl}" target="_blank" rel="noopener">공고 원문 보기</a>
+
+                <!-- 찜 버튼 (fragments/bookmark.html, B) -->
+                <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarked})}"></div>
+                </div>
 
             <div class="card eligibility">
                 <h2>나에게 맞을까?</h2>
