@@ -8,6 +8,7 @@ import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
 import com.app.YouthCompass.policy.dto.RecommendedPolicyDTO;
+import com.app.YouthCompass.policy.eligibility.MissedPolicyFinder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,7 @@ public class RecommendResultService {
     private final RecommendReasonBuilder reasonBuilder;
     private final PolicyInsightService insightService;
     private final MemberProfileDefaults memberProfileDefaults;
-
+    private final MissedPolicyFinder missedPolicyFinder;   // A 담당 — 호출만
     // 사용자 문장으로 추천 (AI 호출 O)
     // member: 로그인 회원 (없으면 null) → 문장에 없는 나이·지역을 회원정보로 채움
     public RecommendResponseDTO recommendFromSentence(String sentence, MemberVO member) {
@@ -123,6 +124,8 @@ public class RecommendResultService {
         RecommendResponseDTO response =
                 new RecommendResponseDTO(profile, intent, policies, memberFilled, !insights.isEmpty());
         fillSummary(response);
+        // 조건 하나 차이로 놓친 정책 (최대 3개)
+        response.setMissedPolicies(missedPolicyFinder.find(profile, intent, 3));
         return response;
     }
 
