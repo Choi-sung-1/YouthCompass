@@ -68,7 +68,7 @@ public class openAiService {
 
         PolicySearchIntent intent = PolicySearchIntent.builder()
                 .category(normalizeCategory(data.category()))
-                .keyword(data.keyword())
+                .keyword(checkKeywordInText(data.keyword(), text))
                 .build();
 
         return new ExtractionResult(profile, intent);
@@ -144,12 +144,17 @@ public class openAiService {
                 아래 한글 값 중 하나를 글자 그대로 반환하세요:
                 일자리, 주거, 교육, 복지문화, 참여권리
                 예: 장학금·학자금·교육비 → 교육, 월세·전세 → 주거, 취업·창업 → 일자리
+                사용자가 찾는 지원을 직접 말한 경우에만 분야를 정하세요.
+                학력·취업 상태·신분(대학생, 취준생, 직장인 등)만으로 분야를 추측하지 마세요.
+                예: "대학생 받을만한 정책" → null, "대학생인데 장학금 있어?" → 교육
                 해당하는 분야가 없거나 검색 목적이 없으면 null로 두세요.
                 
                 keyword:
                 사용자가 찾는 구체적인 지원 내용을 짧은 핵심어로 추출하세요.
                 예: 월세 지원을 찾는 경우 "월세".
-                나이·거주지·전공만으로 검색 목적을 추측하지 마세요.
+                문장에 나온 단어로만 만드세요. 문장에 없는 지원 이름을 만들지 마세요.
+                나이·거주지·전공·학력·취업 상태·신분만으로 검색 목적을 추측하지 마세요.
+                예: "대학생 받을만한 정책" → null
                 검색 목적이 없으면 null로 두세요.
 
                 사용 가능한 enum과 의미:
@@ -333,5 +338,22 @@ public class openAiService {
             return null;
         }
         return won / 10_000;
+    }
+    // AI가 문장에 없는 지원 이름을 추측해 넣으면 버림 ex) "대학생 받을만한 정책" → "장학금" ✕
+    // 띄어쓰기 차이는 무시 ("전세 자금" ↔ "전세자금")
+    private String checkKeywordInText(String keyword, String text) {
+
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
+        String k = keyword.replaceAll("\\s", "");
+        String t = text.replaceAll("\\s", "");
+
+        if (!t.contains(k)) {
+            log.info("문장에 없는 키워드라서 버림: {}", keyword);
+            return null;
+        }
+        return keyword.trim();
     }
 }
