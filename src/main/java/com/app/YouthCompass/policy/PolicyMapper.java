@@ -41,4 +41,12 @@ public interface PolicyMapper {
     List<PolicyVO> findRecentlyOpened(@Param("from") LocalDate from,
                                       @Param("today") LocalDate today,
                                       @Param("limit") int limit);
+
+    // 서류 정리 대상 후보: 신청 가능하고 제출서류 원문이 있는 정책 (ID·원문·지난 해시만)
+    List<PolicyVO> findDocumentTargets();
+
+    // AI가 정리한 서류 목록 저장
+    int updateDocumentItems(@Param("policyId") Long policyId,
+                            @Param("items") String items,
+                            @Param("hash") String hash);
 }

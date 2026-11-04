@@ -85,7 +85,8 @@ public class PolicyConverter {
                 // 신청 방식 정보
                 // ================================
 
-                .policyScreeningMethod(meaninglessToNull(blankToNull(dto.getSrngMthdCn())))                // 지원 규모 "0"은 정해진 인원이 없다는 뜻으로 보고 null (나이 0 = 제한 없음과 같은 기준)
+                .policyScreeningMethod(meaninglessToNull(blankToNull(dto.getSrngMthdCn())))
+                // 지원 규모 "0"은 정해진 인원이 없다는 뜻으로 보고 null (나이 0 = 제한 없음과 같은 기준)
                 .policySupportScale(zeroToNull(blankToNull(dto.getSprtSclCnt())))
                 .policyArrivalOrderYn(blankToNull(dto.getSprtArvlSeqYn()))
                 .policyScaleLimitYn(blankToNull(dto.getSprtSclLmtYn()))

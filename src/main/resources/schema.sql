@@ -56,9 +56,10 @@ CREATE TABLE TBL_POLICY (
                             POLICY_ARRIVAL_ORDER_YN       VARCHAR(10) COMMENT '지원 도착순서 여부 원본 (sprtArvlSeqYn)',
                             POLICY_SCALE_LIMIT_YN         VARCHAR(10) COMMENT '지원 규모 제한 여부 원본 (sprtSclLmtYn)',
                             POLICY_DOCUMENT_ITEMS         TEXT COMMENT 'AI가 정리한 제출 서류 목록 (줄바꿈 구분, null=정리 전, 빈 값=서류 없음)',
-                            POLICY_DOCUMENT_SOURCE_HASH   VARCHAR(64) COMMENT '정리할 때 쓴 제출서류 원문의 SHA-256 (바뀌면 다시 정리)',    -- ================================
-    -- 신청기간
+                            POLICY_DOCUMENT_SOURCE_HASH   VARCHAR(64) COMMENT '정리할 때 쓴 제출서류 원문의 SHA-256 (바뀌면 다시 정리)',
+
     -- ================================
+    -- 신청기간
                             POLICY_APPLY_PERIOD_CODE      VARCHAR(20) COMMENT '신청기간 구분 코드',
                             POLICY_APPLY_START_DATE       DATE COMMENT '신청 시작일',
                             POLICY_APPLY_END_DATE         DATE COMMENT '신청 마감일',
