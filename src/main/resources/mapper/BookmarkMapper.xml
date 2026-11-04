@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.app.YouthCompass.bookmark.BookmarkMapper">
+
+    <!-- 찜 추가 (CREATED_AT은 DB 기본값 CURRENT_TIMESTAMP) -->
+    <insert id="insertBookmark">
+        INSERT INTO TBL_BOOKMARK (MEMBER_ID, POLICY_ID)
+        VALUES (#{memberId}, #{policyId})
+    </insert>
+
+    <!-- 찜 삭제 -->
+    <delete id="deleteBookmark">
+        DELETE FROM TBL_BOOKMARK
+        WHERE MEMBER_ID = #{memberId}
+          AND POLICY_ID = #{policyId}
+    </delete>
+
+    <!-- 찜 여부 확인 -->
+    <select id="countBookmark" resultType="int">
+        SELECT COUNT(*)
+        FROM TBL_BOOKMARK
+        WHERE MEMBER_ID = #{memberId}
+          AND POLICY_ID = #{policyId}
+    </select>
+
+    <!-- 회원이 찜한 정책 ID 전체 -->
+    <select id="selectBookmarkedPolicyIds" resultType="java.lang.Long">
+        SELECT POLICY_ID
+        FROM TBL_BOOKMARK
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+</mapper>
