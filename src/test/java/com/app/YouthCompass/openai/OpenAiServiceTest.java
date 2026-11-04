@@ -1,5 +1,6 @@
-package com.app.YouthCompass.openAI;
+package com.app.YouthCompass.openai;
 
+import com.app.YouthCompass.openAI.openAiService;
 import com.app.YouthCompass.policy.domain.eligibility.*;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.recommendation.PolicyRecommendationService;
