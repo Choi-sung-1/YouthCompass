@@ -713,6 +713,8 @@
                th:href="${policy.applicationUrl}"
                target="_blank" rel="noopener noreferrer">신청하러 가기 →</a>
             <p class="no-link" th:unless="${policy.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
+            <a th:if="${policy.applyEndDate}"
+               th:href="@{/policy/{id}/calendar.ics(id=${policy.policyId})}">마감일 캘린더에 추가</a>
 
             <!-- 찜 버튼 (fragments/bookmark.html) — 이 화면에서는 아래 스크립트가 페이지 이동 없이 처리 -->
             <div th:replace="~{fragments/bookmark :: button(${policy.policyId}, ${bookmarkedIds.contains(policy.policyId)})}"></div>
