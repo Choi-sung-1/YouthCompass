@@ -8,8 +8,10 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 // YouthPolicyDTO --> PolicyVO 변환
 @Component
@@ -78,6 +80,15 @@ public class PolicyConverter {
 
                 // 기타 추가 자격조건
                 .policyAdditionalCondition(dto.getAddAplyQlfcCndCn())
+
+                // ================================
+                // 신청 방식 정보
+                // ================================
+
+                .policyScreeningMethod(meaninglessToNull(blankToNull(dto.getSrngMthdCn())))                // 지원 규모 "0"은 정해진 인원이 없다는 뜻으로 보고 null (나이 0 = 제한 없음과 같은 기준)
+                .policySupportScale(zeroToNull(blankToNull(dto.getSprtSclCnt())))
+                .policyArrivalOrderYn(blankToNull(dto.getSprtArvlSeqYn()))
+                .policyScaleLimitYn(blankToNull(dto.getSprtSclLmtYn()))
 
                 // ================================
                 // 신청기간
@@ -166,5 +177,20 @@ public class PolicyConverter {
     private LocalDate parseApplyEndDate(String aplyYmd) {
         List<LocalDate> dates = parseApplyDates(aplyYmd);
         return dates.isEmpty() ? null : dates.get(dates.size() - 1);
+    }
+    // 빈 문자열·공백 → null, 아니면 앞뒤 공백 제거
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    // "0" → null (값이 없다는 뜻으로 오는 경우)
+    private String zeroToNull(String value) {
+        return "0".equals(value) ? null : value;
+    }
+    // 내용 없이 형식만 채운 값 → null (화면에 "심사 방법: 해당없음"이 나오지 않게)
+    private static final Set<String> MEANINGLESS = Set.of("해당없음", "해당 없음", "없음", "-", "미정");
+
+    private String meaninglessToNull(String value) {
+        return value == null || MEANINGLESS.contains(value) ? null : value;
     }
 }
