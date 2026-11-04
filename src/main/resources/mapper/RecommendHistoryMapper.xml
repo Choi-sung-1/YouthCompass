@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.app.YouthCompass.history.RecommendHistoryMapper">
+
+    <!-- 추천 기록 저장 (생성된 HISTORY_ID → historyId 필드에 채움) -->
+    <insert id="insertHistory" useGeneratedKeys="true" keyProperty="historyId">
+        INSERT INTO TBL_RECOMMEND_HISTORY (MEMBER_ID, SENTENCE, PROFILE_JSON)
+        VALUES (#{memberId}, #{sentence}, #{profileJson})
+    </insert>
+
+    <!-- 추천 항목 여러 행 한 번에 저장: INSERT ... VALUES (…), (…), … -->
+    <insert id="insertItems">
+        INSERT INTO TBL_RECOMMEND_ITEM (HISTORY_ID, RANK_NO, POLICY_ID, REASON, EFFECT)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.historyId}, #{item.rankNo}, #{item.policyId}, #{item.reason}, #{item.effect})
+        </foreach>
+    </insert>
+
+    <!-- 내 추천 기록 목록 (최근 순, 같은 시각이면 나중에 저장된 것 먼저) -->
+    <select id="selectHistoriesByMemberId" resultType="com.app.YouthCompass.history.domain.RecommendHistoryVO">
+        SELECT HISTORY_ID, MEMBER_ID, SENTENCE, PROFILE_JSON, CREATED_AT
+        FROM TBL_RECOMMEND_HISTORY
+        WHERE MEMBER_ID = #{memberId}
+        ORDER BY CREATED_AT DESC, HISTORY_ID DESC
+    </select>
+
+    <!-- 추천 기록 한 건 (MEMBER_ID 조건으로 남의 기록은 조회 안 됨) -->
+    <select id="selectHistory" resultType="com.app.YouthCompass.history.domain.RecommendHistoryVO">
+        SELECT HISTORY_ID, MEMBER_ID, SENTENCE, PROFILE_JSON, CREATED_AT
+        FROM TBL_RECOMMEND_HISTORY
+        WHERE HISTORY_ID = #{historyId}
+          AND MEMBER_ID = #{memberId}
+    </select>
+
+    <!-- 기록 상세용: 항목 + 정책 정보 (LEFT JOIN → 정책이 없어도 순위 자리는 유지) -->
+    <select id="selectItemsWithPolicy" resultType="com.app.YouthCompass.history.dto.RecommendHistoryItemDTO">
+        SELECT I.RANK_NO,
+               I.POLICY_ID,
+               I.REASON,
+               I.EFFECT,
+               P.POLICY_NAME,
+               P.POLICY_ORGANIZATION_NAME,
+               P.POLICY_LARGE_CATEGORY,
+               P.POLICY_APPLY_PERIOD_CODE,
+               P.POLICY_APPLY_END_DATE
+        FROM TBL_RECOMMEND_ITEM I
+                 LEFT JOIN TBL_POLICY P ON P.POLICY_ID = I.POLICY_ID
+        WHERE I.HISTORY_ID = #{historyId}
+        ORDER BY I.RANK_NO
+    </select>
+
+</mapper>
