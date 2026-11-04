@@ -636,6 +636,9 @@
                th:href="${policy.applicationUrl}"
                target="_blank" rel="noopener noreferrer">신청하러 가기 →</a>
             <p class="no-link" th:unless="${policy.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
+
+            <!-- 찜 버튼 (fragments/bookmark.html) — 이 화면에서는 아래 스크립트가 페이지 이동 없이 처리 -->
+            <div th:replace="~{fragments/bookmark :: button(${policy.policyId}, ${bookmarkedIds.contains(policy.policyId)})}"></div>
         </div>
 
     </th:block>
@@ -657,6 +660,33 @@
 
     lockOnSubmit("recommend-form", "submit-btn", "AI가 내 상황에 맞는 정책을 고르고 있어요...");
     lockOnSubmit("condition-form", "condition-btn", "고친 조건으로 다시 고르고 있어요...");
+
+    // 찜 버튼: 추천 결과는 POST로 그려진 화면이라 페이지를 이동하면 결과가 사라짐
+    //          → 이동 없이 fetch로 토글만 보내고, 버튼 글자·색만 바꾼다
+    document.querySelectorAll('form[action^="/bookmarks/"]').forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const btn = form.querySelector("button");
+            btn.disabled = true;
+
+            fetch(form.action, { method: "POST" })
+                .then(function (res) {
+                    // 로그인이 풀렸으면 로그인 화면으로 리다이렉트됨 → 실패로 처리
+                    if (!res.ok || res.url.includes("/member/login")) {
+                        throw new Error("찜 실패");
+                    }
+                    const nowBookmarked = !btn.classList.contains("btn-primary");
+                    btn.classList.toggle("btn-primary", nowBookmarked);
+                    btn.textContent = nowBookmarked ? "♥ 찜 해제" : "♡ 찜하기";
+                })
+                .catch(function () {
+                    alert("찜 처리에 실패했어요. 다시 로그인한 뒤 시도해 주세요.");
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                });
+        });
+    });
 </script>
 
 </body>

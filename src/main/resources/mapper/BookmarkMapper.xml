@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.app.YouthCompass.bookmark.BookmarkMapper">
+
+    <!-- 찜 추가 (CREATED_AT은 DB 기본값 CURRENT_TIMESTAMP) -->
+    <insert id="insertBookmark">
+        INSERT INTO TBL_BOOKMARK (MEMBER_ID, POLICY_ID)
+        VALUES (#{memberId}, #{policyId})
+    </insert>
+
+    <!-- 찜 삭제 -->
+    <delete id="deleteBookmark">
+        DELETE FROM TBL_BOOKMARK
+        WHERE MEMBER_ID = #{memberId}
+          AND POLICY_ID = #{policyId}
+    </delete>
+
+    <!-- 찜 여부 확인 -->
+    <select id="countBookmark" resultType="int">
+        SELECT COUNT(*)
+        FROM TBL_BOOKMARK
+        WHERE MEMBER_ID = #{memberId}
+          AND POLICY_ID = #{policyId}
+    </select>
+
+    <!-- 회원이 찜한 정책 ID 전체 -->
+    <select id="selectBookmarkedPolicyIds" resultType="java.lang.Long">
+        SELECT POLICY_ID
+        FROM TBL_BOOKMARK
+        WHERE MEMBER_ID = #{memberId}
+    </select>
+
+    <!-- 찜 목록 화면용: 찜한 정책 정보 (PolicyListItemDTO.from()에 필요한 컬럼만) -->
+    <select id="selectBookmarkedPolicies" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
+        SELECT P.POLICY_ID,
+               P.POLICY_NAME,
+               P.POLICY_ORGANIZATION_NAME,
+               P.POLICY_LARGE_CATEGORY,
+               P.POLICY_DESCRIPTION,
+               P.POLICY_APPLY_PERIOD_CODE,
+               P.POLICY_APPLY_END_DATE
+        FROM TBL_BOOKMARK B
+                 JOIN TBL_POLICY P ON P.POLICY_ID = B.POLICY_ID
+        WHERE B.MEMBER_ID = #{memberId}
+        ORDER BY B.CREATED_AT DESC
+    </select>
+
+</mapper>
