@@ -1,5 +1,6 @@
 package com.app.YouthCompass.policy;
 
+import com.app.YouthCompass.bookmark.BookmarkService;
 import com.app.YouthCompass.member.MemberService;
 import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.JobRequirement;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Controller
@@ -35,6 +37,15 @@ public class PolicyController {
 
     private final RecommendResultService recommendResultService;
     private final MemberService memberService;
+    private final BookmarkService bookmarkService;
+
+    // 추천 카드의 찜 버튼 상태용: 로그인 회원이 찜한 정책 ID (비로그인이면 빈 Set)
+    // @ModelAttribute 메서드라서 이 컨트롤러의 모든 화면에 자동으로 들어감 → 기존 recommend() 본문은 수정하지 않음
+    @ModelAttribute("bookmarkedIds")
+    public Set<Long> bookmarkedIds(Principal principal) {
+        MemberVO member = loginMember(principal);
+        return bookmarkService.findBookmarkedPolicyIds(member == null ? null : member.getMemberId());
+    }
 
     // 추천 페이지 (입력창만 있는 처음 화면)
     @GetMapping("/recommend")
