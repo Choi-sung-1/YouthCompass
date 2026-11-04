@@ -647,6 +647,11 @@
         <h2 class="result-title" th:if="${!#lists.isEmpty(result.policies)}">
             추천 정책 <span th:text="${#lists.size(result.policies)}"></span>개
         </h2>
+        <p th:if="${!#lists.isEmpty(result.policies)}">
+            바로 신청 가능 <b th:text="${result.readyCount}">0</b>개 ·
+            7일 안에 마감 <b th:text="${result.closingSoonCount}">0</b>개 ·
+            확인 필요 <b th:text="${result.needCheckCount}">0</b>개
+        </p>
         <p class="result-note" th:if="${!#lists.isEmpty(result.policies)}"
            th:text="${result.personalized}
                 ? '자격이 되는 정책 중에서 AI가 내 상황에 가장 도움이 될 순서로 골랐어요.'
@@ -661,7 +666,10 @@
             <span class="rank" th:text="${st.count}"></span>
             <span class="policy-name" th:text="${policy.policyName}"></span>
             <p class="org" th:if="${policy.organizationName}" th:text="${policy.organizationName}"></p>
-
+            <p>
+                <span th:text="${policy.deadlineLabel}">D-3</span>
+                <span th:if="${policy.applyEndDate}" th:text="'(' + ${policy.applyEndDate} + ' 마감)'"></span>
+            </p>
             <!-- 추천 이유: 왜 나에게 맞는지 -->
             <div class="insight why" th:if="${policy.recommendReason}">
                 <span class="title">💡 추천 이유<span class="ai-badge" th:if="${policy.personalized}">AI 맞춤</span></span>

@@ -120,7 +120,33 @@ public class RecommendResultService {
             }
         }
 
-        return new RecommendResponseDTO(profile, intent, policies, memberFilled, !insights.isEmpty());
+        RecommendResponseDTO response =
+                new RecommendResponseDTO(profile, intent, policies, memberFilled, !insights.isEmpty());
+        fillSummary(response);
+        return response;
+    }
+
+    // 상단 요약: 바로 신청 가능 / 7일 안에 마감 / 확인 필요 개수
+    private void fillSummary(RecommendResponseDTO response) {
+
+        int ready = 0;
+        int closingSoon = 0;
+        int needCheck = 0;
+
+        for (RecommendedPolicyDTO p : response.getPolicies()) {
+            if (p.getUnknownReasons() == null || p.getUnknownReasons().isEmpty()) {
+                ready++;
+            } else {
+                needCheck++;
+            }
+            if (p.isClosingSoon()) {
+                closingSoon++;
+            }
+        }
+
+        response.setReadyCount(ready);
+        response.setClosingSoonCount(closingSoon);
+        response.setNeedCheckCount(needCheck);
     }
 
     // 판정 결과 → 카드 DTO
