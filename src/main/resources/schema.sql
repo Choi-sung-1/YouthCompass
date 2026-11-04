@@ -121,3 +121,5 @@ CREATE TABLE TBL_SYNC_LOG (
                               SAVED INT, SKIPPED INT, FAILED INT, DEACTIVATED INT,
                               TOTAL_COUNT  INT
 );
+
+select * from TBL_MEMBER_PROFILE;

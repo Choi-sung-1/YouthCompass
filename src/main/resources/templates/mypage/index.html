@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>마이페이지 | YouthCompass</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <style>
+        .mypage { display: grid; gap: 20px; max-width: 720px; }
+        .mypage h2 { margin: 0 0 12px; font-size: 18px; }
+        .info { display: grid; grid-template-columns: 100px 1fr; gap: 8px 12px; margin: 0; }
+        .info dt { color: var(--color-muted); }
+        .info dd { margin: 0; }
+        .help { color: var(--color-muted); font-size: 13px; margin: 0 0 16px; }
+        .form-row { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .form-row select, .form-row input {
+            padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px;
+        }
+        .notice { padding: 10px 12px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .notice-ok { background: #dcfce7; color: var(--color-ok); }
+        .notice-error { background: #fee2e2; color: var(--color-no); }
+        .links { display: flex; gap: 8px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container page">
+    <h1>마이페이지</h1>
+
+    <div class="mypage">
+
+        <!-- 내 정보 -->
+        <section class="card">
+            <h2>내 정보</h2>
+            <dl class="info">
+                <dt>이름</dt>
+                <dd th:text="${member.memberName}"></dd>
+                <dt>아이디</dt>
+                <dd th:text="${member.memberLoginId}"></dd>
+                <dt>생년월일</dt>
+                <dd th:text="${member.memberBirth} ?: '-'"></dd>
+                <dt>지역</dt>
+                <dd th:text="${regionName} ?: '-'"></dd>
+            </dl>
+        </section>
+
+        <!-- 내 조건 프로필 -->
+        <section class="card">
+            <h2>내 조건 프로필</h2>
+            <p class="help">저장해 두면 추천과 정책 상세에서 문장에 없는 조건을 자동으로 채워요. 모르는 항목은 비워 두세요.</p>
+
+            <div th:if="${profileSaved}" class="notice notice-ok">저장했어요.</div>
+            <div th:if="${profileError}" class="notice notice-error" th:text="${profileError}"></div>
+
+            <form th:action="@{/mypage/profile}" th:object="${profileForm}" method="post">
+
+                <div class="form-row">
+                    <label for="sigunguCode">거주 시·군</label>
+                    <select th:field="*{sigunguCode}">
+                        <option value="">선택 안 함</option>
+                        <optgroup th:each="g : ${sigunguGroups}" th:label="${g.sidoName()}">
+                            <option th:each="u : ${g.units()}"
+                                    th:value="${u.unitCode()}"
+                                    th:text="${u.unitName()}"></option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="school">학력</label>
+                    <select th:field="*{school}">
+                        <option value="">모름</option>
+                        <option th:each="o : ${schoolOptions}" th:value="${o}" th:text="${o.description}"></option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="job">취업 상태</label>
+                    <select th:field="*{job}">
+                        <option value="">모름</option>
+                        <option th:each="o : ${jobOptions}" th:value="${o}" th:text="${o.description}"></option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="marriage">혼인 상태</label>
+                    <select th:field="*{marriage}">
+                        <option value="">모름</option>
+                        <option th:each="o : ${marriageOptions}" th:value="${o}" th:text="${o.description}"></option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="major">전공</label>
+                    <select th:field="*{major}">
+                        <option value="">모름</option>
+                        <option th:each="o : ${majorOptions}" th:value="${o}" th:text="${o.description}"></option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="annualIncome">연소득(만원)</label>
+                    <input type="number" min="0" th:field="*{annualIncome}" placeholder="2400">
+                </div>
+
+                <button type="submit" class="btn btn-primary">저장</button>
+            </form>
+        </section>
+
+        <!-- 내 활동 (찜·추천 기록 화면은 친구 담당, 여기서는 링크만) -->
+        <section class="card">
+            <h2>내 활동</h2>
+            <div class="links">
+                <a class="btn" th:href="@{/mypage/bookmarks}">찜한 정책</a>
+                <a class="btn" th:href="@{/mypage/history}">추천 기록</a>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
