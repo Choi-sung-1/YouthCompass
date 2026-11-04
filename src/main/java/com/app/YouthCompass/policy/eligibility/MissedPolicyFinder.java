@@ -83,16 +83,15 @@ public class MissedPolicyFinder {
             if (missed.size() >= limit) {
                 break;
             }
-            toDto(candidate.result(), profile).ifPresent(missed::add);
-        }
+            describeNotMatch(candidate.result(), profile).ifPresent(missed::add);        }
         return missed;
     }
 
     // =========================
     // 걸린 조건 → 안내 문구
     // =========================
-    private Optional<MissedPolicyDTO> toDto(PolicyEvaluationResult r, UserPolicyProfileVO profile) {
-
+    // 안 맞는 조건 1개 → 조건 이름 + 안내 문구 (같은 패키지의 RecheckService도 같은 문구를 씀)
+    Optional<MissedPolicyDTO> describeNotMatch(PolicyEvaluationResult r, UserPolicyProfileVO profile) {
         PolicyVO p = r.getPolicy();
         String condition;
         String hint;
