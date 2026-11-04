@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>찜한 정책 | YouthCompass</title>
+    <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <style>
+        /* 카드 모양은 정책 목록(policy/list.html)과 맞춤 */
+        .result-count { color: var(--color-muted); font-size: 14px; margin: 8px 0 16px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .policy-card { display: flex; flex-direction: column; gap: 8px; }
+        .policy-card h3 { margin: 0; font-size: 16px; line-height: 1.4; }
+        .policy-card h3 a { color: var(--color-text); }
+        .policy-card .meta { color: var(--color-muted); font-size: 13px; }
+        .policy-card .summary { font-size: 14px; margin: 0; flex: 1; }
+        .card-top { display: flex; justify-content: space-between; gap: 8px; }
+        .empty { text-align: center; color: var(--color-muted); padding: 60px 0; }
+        .empty .btn { margin-top: 16px; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container page">
+    <h1>찜한 정책</h1>
+
+    <p class="result-count">
+        총 <b th:text="${#lists.size(bookmarks)}">0</b>개 · 최근에 찜한 순
+    </p>
+
+    <!-- 찜이 없을 때 -->
+    <div class="empty" th:if="${#lists.isEmpty(bookmarks)}">
+        아직 찜한 정책이 없어요.<br>
+        <a class="btn btn-primary" th:href="@{/policies}">정책 둘러보기</a>
+    </div>
+
+    <!-- 찜 목록 (PolicyListItemDTO) -->
+    <div class="grid">
+        <div class="card policy-card" th:each="p : ${bookmarks}">
+            <div class="card-top">
+                <span class="badge" th:text="${p.largeCategory} ?: '기타'">분야</span>
+                <span class="badge"
+                      th:classappend="${p.closed} ? 'badge-no' : (${p.closingSoon} ? 'badge-unknown' : 'badge-ok')"
+                      th:text="${p.deadlineLabel}">D-7</span>
+            </div>
+
+            <!-- 5장 ③: 정책 이름은 A의 상세 화면으로 링크 -->
+            <h3><a th:href="@{/policies/{id}(id=${p.policyId})}" th:text="${p.policyName}">정책명</a></h3>
+            <div class="meta" th:text="${p.organizationName}">주관 기관</div>
+            <p class="summary" th:text="${p.summary}">설명</p>
+
+            <!-- 이 화면의 정책은 모두 찜한 상태 → bookmarked=true (누르면 해제 후 이 화면으로 돌아옴) -->
+            <div th:replace="~{fragments/bookmark :: button(${p.policyId}, true)}"></div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

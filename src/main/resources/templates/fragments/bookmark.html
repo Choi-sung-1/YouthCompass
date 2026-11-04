@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    찜 버튼 조각 (5장 약속: button(policyId, bookmarked))
+    사용 예) <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarked})}"></div>
+    - loginId 는 GlobalModelAdvice 가 모든 화면에 넣어 줌 → null 이면 비로그인
+    - 누르면 POST /bookmarks/{policyId} → 토글 후 Referer(지금 보던 화면)로 돌아옴
+-->
+<th:block th:fragment="button(policyId, bookmarked)">
+
+    <!-- 로그인: 찜 토글 버튼 -->
+    <form th:if="${loginId != null}"
+          th:action="@{/bookmarks/{id}(id=${policyId})}" method="post" class="inline">
+        <button type="submit" class="btn"
+                th:classappend="${bookmarked} ? 'btn-primary'"
+                th:text="${bookmarked} ? '♥ 찜 해제' : '♡ 찜하기'">♡ 찜하기</button>
+    </form>
+
+    <!-- 비로그인: 로그인 화면으로 -->
+    <a th:if="${loginId == null}" class="btn" th:href="@{/member/login}">♡ 로그인 후 찜하기</a>
+
+</th:block>
+
+</body>
+</html>
