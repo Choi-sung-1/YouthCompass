@@ -78,6 +78,11 @@
         button:hover {
             background: #1565c0;
         }
+        .hint {
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: #888;
+        }
     </style>
 </head>
 
@@ -149,7 +154,14 @@
 
             </select>
         </div>
-
+        <!-- 시·군 (선택) : 지역을 고르면 아래 원본 목록에서 그 지역 것만 복사해서 채움 -->
+        <div class="form-group">
+            <label for="sigunguCode">시·군 (선택)</label>
+            <select id="sigunguCode" name="sigunguCode" disabled>
+                <option value="">지역을 먼저 선택하세요</option>
+            </select>
+            <p class="hint">시·군까지 고르면 우리 동네 정책도 정확히 찾아드려요.</p>
+        </div>
         <!-- 생년월일 -->
         <div class="form-group">
             <label for="memberBirth">생년월일</label>
@@ -196,7 +208,48 @@
         <button type="submit">회원가입</button>
 
     </form>
+    <!-- 시·군 원본 목록 (화면에 안 보이고 전송도 안 됨, name 없음) -->
+    <select id="sigunguSource" hidden>
+        <optgroup th:each="g : ${sigunguGroups}" th:attr="data-sido=${g.sidoCode()}">
+            <option th:each="u : ${g.units()}"
+                    th:value="${u.unitCode()}"
+                    th:text="${u.unitName()}"></option>
+        </optgroup>
+    </select>
 
+    <script>
+        (function () {
+            const region = document.getElementById('memberRegion');
+            const sigungu = document.getElementById('sigunguCode');
+            const source = document.getElementById('sigunguSource');
+
+            // 고른 지역의 시·군만 sigungu select에 다시 채움
+            function refresh() {
+                sigungu.innerHTML = '';
+                const group = source.querySelector('optgroup[data-sido="' + region.value + '"]');
+
+                if (!group) {
+                    sigungu.add(new Option('지역을 먼저 선택하세요', ''));
+                    sigungu.disabled = true;
+                    return;
+                }
+
+                sigungu.add(new Option('선택 안 함', ''));
+                group.querySelectorAll('option').forEach(function (o) {
+                    sigungu.add(new Option(o.text, o.value));
+                });
+
+                // 서울·세종처럼 시 전체가 1단위면 자동 선택
+                if (group.children.length === 1) {
+                    sigungu.selectedIndex = 1;
+                }
+                sigungu.disabled = false;
+            }
+
+            region.addEventListener('change', refresh);
+            refresh();
+        })();
+    </script>
 </div>
 
 </body>
