@@ -1,6 +1,7 @@
 package com.app.YouthCompass.bookmark;
 
 import com.app.YouthCompass.bookmark.domain.BookmarkVO;
+import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -59,5 +61,15 @@ public class BookmarkService {
             return new HashSet<>();
         }
         return new HashSet<>(bookmarkMapper.selectBookmarkedPolicyIds(memberId));
+    }
+
+    //    찜 목록 화면용 (최근에 찜한 순, D-day 표시는 A의 PolicyListItemDTO 계산을 그대로 사용)
+    public List<PolicyListItemDTO> findBookmarkedPolicies(Long memberId) {
+        if (memberId == null) {
+            return List.of();
+        }
+        return bookmarkMapper.selectBookmarkedPolicies(memberId).stream()
+                .map(PolicyListItemDTO::from)
+                .toList();
     }
 }

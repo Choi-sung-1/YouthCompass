@@ -1,6 +1,7 @@
 package com.app.YouthCompass.bookmark;
 
 import com.app.YouthCompass.bookmark.domain.BookmarkVO;
+import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,4 +21,8 @@ public interface BookmarkMapper {
 
     // 회원이 찜한 정책 ID 전체 (목록 화면에서 한 번에 조회용)
     List<Long> selectBookmarkedPolicyIds(Long memberId);
+
+    // 찜 목록 화면용: 찜한 정책 정보 (최근에 찜한 순, TBL_POLICY에 없는 정책은 제외)
+    List<PolicyVO> selectBookmarkedPolicies(Long memberId);
+
 }
