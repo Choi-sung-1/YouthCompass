@@ -1,6 +1,7 @@
 package com.app.YouthCompass.policy;
 
 import com.app.YouthCompass.bookmark.BookmarkService;
+import com.app.YouthCompass.history.RecommendHistoryService;
 import com.app.YouthCompass.member.MemberService;
 import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.JobRequirement;
@@ -38,6 +39,7 @@ public class PolicyController {
     private final RecommendResultService recommendResultService;
     private final MemberService memberService;
     private final BookmarkService bookmarkService;
+    private final RecommendHistoryService historyService;
 
     // 추천 카드의 찜 버튼 상태용: 로그인 회원이 찜한 정책 ID (비로그인이면 빈 Set)
     // @ModelAttribute 메서드라서 이 컨트롤러의 모든 화면에 자동으로 들어감 → 기존 recommend() 본문은 수정하지 않음
@@ -71,6 +73,9 @@ public class PolicyController {
 
             model.addAttribute("result", result);
 
+            // 추천 기록 저장 (로그인 회원만, 실패해도 추천 화면은 그대로)
+            historyService.save(loginMemberId(principal), request.getSentence(), result);
+
             // 12번: AI가 뽑은 조건을 수정 칸에 미리 채워둠
             addConditionForm(
                     model,
@@ -98,6 +103,7 @@ public class PolicyController {
     public String recommendWithConditions(
             @ModelAttribute("conditions") ConditionRequestDTO conditions,
             BindingResult bindingResult,
+            Principal principal,
             Model model
     ) {
 
@@ -114,12 +120,13 @@ public class PolicyController {
         }
 
         try {
-            model.addAttribute(
-                    "result",
-                    recommendResultService.recommendFromProfile(
-                            conditions.getSentence(), conditions.toProfile(), conditions.toIntent())
-            );
+            RecommendResponseDTO result = recommendResultService.recommendFromProfile(
+                    conditions.getSentence(), conditions.toProfile(), conditions.toIntent());
+            model.addAttribute("result", result);
             model.addAttribute("edited", true);
+
+            // 추천 기록 저장 (조건을 고쳐서 다시 받은 추천도 기록, 실패해도 화면은 그대로)
+            historyService.save(loginMemberId(principal), conditions.getSentence(), result);
 
             if (conditions.isSigunguNotFound()) {
                 model.addAttribute(
@@ -148,6 +155,12 @@ public class PolicyController {
             return null;
         }
         return memberService.findMember(principal.getName()).orElse(null);
+    }
+
+    // 로그인 회원 PK (비로그인이면 null → 추천 기록 저장 안 함)
+    private Long loginMemberId(Principal principal) {
+        MemberVO member = loginMember(principal);
+        return member == null ? null : member.getMemberId();
     }
 
     // 숫자 칸에 숫자가 아닌 값, 말이 안 되는 나이·소득 → 안내 문구
@@ -195,3 +208,5 @@ public class PolicyController {
                 .toList();
     }
 }
+
+
