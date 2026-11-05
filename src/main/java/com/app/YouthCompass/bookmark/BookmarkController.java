@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.security.Principal;
+import java.util.Map;
 
 // 찜 토글·찜 목록 (둘 다 로그인 필요 — SecurityConfig의 anyRequest().authenticated())
 @Slf4j
@@ -42,6 +44,14 @@ public class BookmarkController {
         bookmarkService.toggleBookmark(loginMemberId(principal), policyId);
 
         return "redirect:" + returnPath(redirect, referer);
+    }
+
+    // POST /bookmarks/{policyId} + X-Requested-With: fetch 헤더 — 화면 이동 없이 토글 (js/bookmark.js)
+    // 응답: {"bookmarked": true} = 이제 찜 상태 (버튼을 서버 결과대로 바꿈)
+    @PostMapping(value = "/bookmarks/{policyId}", headers = "X-Requested-With=fetch")
+    @ResponseBody
+    public Map<String, Boolean> toggleAsync(@PathVariable Long policyId, Principal principal) {
+        return Map.of("bookmarked", bookmarkService.toggleBookmark(loginMemberId(principal), policyId));
     }
 
     // GET /mypage/bookmarks — 찜 목록 (최근에 찜한 순, D-day 포함)
