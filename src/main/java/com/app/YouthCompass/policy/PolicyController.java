@@ -121,7 +121,7 @@ public class PolicyController {
 
         try {
             RecommendResponseDTO result = recommendResultService.recommendFromProfile(
-                    conditions.getSentence(), conditions.toProfile(), conditions.toIntent());
+                    conditions.getSentence(), conditions.toProfile(), conditions.toIntent(), loginMember(principal));
             model.addAttribute("result", result);
             model.addAttribute("edited", true);
 

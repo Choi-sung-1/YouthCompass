@@ -53,20 +53,26 @@ public class RecommendResultService {
         UserPolicyProfileVO profile = extracted.profile();
         List<String> memberFilled = memberProfileDefaults.fill(profile, member);
 
-        return recommend(sentence, profile, extracted.intent(), memberFilled);
+        return recommend(nameOf(member), sentence, profile, extracted.intent(), memberFilled);
     }
 
     // 사용자가 화면에서 직접 고친 조건으로 추천 (조건 추출 AI 호출 X)
-    // 회원정보로 다시 채우지 않음 → 사용자가 일부러 비운 칸을 존중
+    // 회원정보로 다시 채우지 않음 → 사용자가 일부러 비운 칸을 존중 (member는 추천 문장의 이름에만 사용)
     public RecommendResponseDTO recommendFromProfile(
             String sentence,
             UserPolicyProfileVO profile,
-            PolicySearchIntent intent
+            PolicySearchIntent intent,
+            MemberVO member
     ) {
-        return recommend(sentence, profile, intent, List.of());
+        return recommend(nameOf(member), sentence, profile, intent, List.of());
+    }
+
+    private String nameOf(MemberVO member) {
+        return member == null ? null : member.getMemberName();
     }
 
     private RecommendResponseDTO recommend(
+            String memberName,
             String sentence,
             UserPolicyProfileVO profile,
             PolicySearchIntent intent,
@@ -99,7 +105,7 @@ public class RecommendResultService {
         // 3. AI 개인 맞춤 재정렬 + 추천 이유 + 기대 효과 (실패하면 빈 목록)
         long aiStart = System.currentTimeMillis();
         List<PolicyInsightService.Insight> insights =
-                insightService.pick(sentence, profile, intent, candidates, matched, unchecked, TOP_N);
+                insightService.pick(memberName, sentence, profile, intent, candidates, matched, unchecked, TOP_N);
         log.info("[추천 시간] AI 맞춤 재정렬·이유 생성: {}ms (선택 {}개)",
                 System.currentTimeMillis() - aiStart, insights.size());
 

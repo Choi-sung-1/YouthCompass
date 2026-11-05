@@ -37,8 +37,11 @@ public class PolicyInsightService {
     private static final int DESCRIPTION_LIMIT = 200;
     private static final int SUPPORT_LIMIT = 250;
 
-    // AI가 만든 문장 최대 길이 (화면이 깨지지 않게)
-    private static final int SENTENCE_LIMIT = 220;
+    // AI가 만든 문장 최대 길이 (2~3문장, 화면이 깨지지 않게)
+    private static final int SENTENCE_LIMIT = 320;
+
+    // AI가 사용자 이름 자리에 쓰는 표시 → 코드가 실제 이름으로 바꿈 (이름 자체는 AI에 보내지 않음)
+    private static final String NAME_SLOT = "{이름}";
 
     private final ChatClient client;
 
@@ -53,8 +56,10 @@ public class PolicyInsightService {
     public record InsightResponse(List<Insight> picks) {}
 
     // candidates: 규칙 기반 정렬 순서의 후보들 / topN: 최종 개수
+    // memberName: 문장에 넣을 이름 (없으면 "회원"), AI에는 보내지 않음
     // 반환: AI가 고른 순서대로의 Insight (검증 통과한 것만). 실패하면 빈 목록
     public List<Insight> pick(
+            String memberName,
             String sentence,
             UserPolicyProfileVO profile,
             PolicySearchIntent intent,
@@ -76,7 +81,7 @@ public class PolicyInsightService {
                     .call()
                     .entity(InsightResponse.class);
 
-            return validate(response, candidates, topN);
+            return validate(response, candidates, topN, displayName(memberName));
 
         } catch (RuntimeException e) {
             // AI 실패해도 추천 자체는 보여줘야 하므로 여기서 삼키고 규칙 기반으로 넘김
@@ -104,10 +109,16 @@ public class PolicyInsightService {
 
                 각 항목:
                 - policyId: 후보 목록에 있는 id 숫자만. 없는 id를 만들지 마세요.
-                - reason (추천 이유): 이 사용자의 상황·조건과 정책을 연결해서 왜 이 사람에게 맞는지
-                  1문장(80자 이내)으로 쓰세요. "~해요" 말투. 사용자가 말한 사실과 충족 조건만 근거로 쓰세요.
-                  확인 필요 조건을 충족한다고 단정하지 마세요.
-                - effect (기대 효과): 이 정책을 받으면 이 사용자에게 무엇이 좋아지는지 1문장(80자 이내).
+                사용자 이름은 모릅니다. 이름이 들어갈 자리에는 반드시 {이름} 을 그대로 쓰세요. (예: {이름}님)
+                "~해요" 말투로, 사용자에게 직접 말하듯 쓰세요.
+
+                - reason (추천 이유): 2~3문장, 150자 이내.
+                  반드시 "{이름}님에게 이 정책을 추천하는 이유는"으로 시작하세요.
+                  사용자가 문장에서 말한 상황(나이·사는 곳·학업·일·고민 등)을 구체적으로 짚고,
+                  정책의 어떤 점이 그 상황에 맞는지 연결하세요. 정책 설명을 그대로 옮기지 마세요.
+                  근거는 사용자가 말한 사실과 충족 조건만 쓰세요. 확인 필요 조건을 충족한다고 단정하지 마세요.
+                - effect (기대 효과): 2~3문장, 150자 이내.
+                  이 정책을 받으면 {이름}님의 생활이 구체적으로 어떻게 달라지는지 쓰세요.
                   금액·기간·횟수는 반드시 그 정책의 [지원내용]에 적힌 숫자만 쓰세요. 숫자를 지어내지 마세요.
                   사용자가 자기 상황의 금액(예: 월세 40만원)을 말했다면, 지원내용의 숫자와 비교해서
                   체감되는 효과로 설명해도 됩니다(예: 월세의 절반 정도를 덜 내요).
@@ -189,7 +200,8 @@ public class PolicyInsightService {
     private List<Insight> validate(
             InsightResponse response,
             List<PolicyEvaluationResult> candidates,
-            int topN
+            int topN,
+            String name
     ) {
 
         if (response == null || response.picks() == null) {
@@ -217,8 +229,8 @@ public class PolicyInsightService {
 
             picked.put(insight.policyId(), new Insight(
                     insight.policyId(),
-                    clean(insight.reason()),
-                    clean(insight.effect())
+                    clean(fillName(insight.reason(), name)),
+                    clean(fillName(insight.effect(), name))
             ));
 
             if (picked.size() >= topN) {
@@ -232,6 +244,15 @@ public class PolicyInsightService {
     // =========================
     // 작은 도우미
     // =========================
+    // {이름} → 실제 이름
+    static String fillName(String text, String name) {
+        return text == null ? null : text.replace(NAME_SLOT, name);
+    }
+
+    static String displayName(String memberName) {
+        return memberName == null || memberName.isBlank() ? "회원" : memberName.trim();
+    }
+
     private String clean(String text) {
 
         if (text == null || text.isBlank()) {
