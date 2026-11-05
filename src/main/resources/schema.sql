@@ -47,6 +47,7 @@ CREATE TABLE TBL_POLICY (
                             POLICY_SPECIAL_TARGET_CODES   VARCHAR(500) COMMENT '특화 대상 코드',
                             POLICY_REGION_CODES           TEXT COMMENT '지원 지역 코드 목록',
                             POLICY_ADDITIONAL_CONDITION   TEXT COMMENT '추가 신청 자격조건',
+                            POLICY_PARTICIPATION_RESTRICTION TEXT COMMENT '참여 제한 대상 (ptcpPrpTrgtCn)',
 
     -- ================================
     -- 신청 방식 정보
@@ -63,6 +64,14 @@ CREATE TABLE TBL_POLICY (
                             POLICY_APPLY_PERIOD_CODE      VARCHAR(20) COMMENT '신청기간 구분 코드',
                             POLICY_APPLY_START_DATE       DATE COMMENT '신청 시작일',
                             POLICY_APPLY_END_DATE         DATE COMMENT '신청 마감일',
+
+    -- ================================
+    -- 사업기간 / 기타 (화면 안내용)
+    -- ================================
+                            POLICY_BUSINESS_START_DATE    DATE COMMENT '사업 시작일 (bizPrdBgngYmd)',
+                            POLICY_BUSINESS_END_DATE      DATE COMMENT '사업 종료일 (bizPrdEndYmd)',
+                            POLICY_BUSINESS_PERIOD_ETC    TEXT COMMENT '사업기간 기타 (bizPrdEtcCn)',
+                            POLICY_ETC_NOTE               TEXT COMMENT '기타 사항 (etcMttrCn)',
 
     -- ================================
     -- 관리 정보

@@ -99,6 +99,9 @@ public class PolicyVO {
     // 추가 신청 자격조건
     private String policyAdditionalCondition;
 
+    // 참여 제한 대상 (ptcpPrpTrgtCn, 판정에는 안 쓰고 화면 안내용)
+    private String policyParticipationRestriction;
+
     // ================================
     // 신청 방식 정보
     // ================================
@@ -109,7 +112,8 @@ public class PolicyVO {
     // 지원 규모 원문 (sprtSclCnt, "0"·빈 값은 null)
     private String policySupportScale;
 
-    // 지원 도착순서 여부 원본 (sprtArvlSeqYn, 의미 확인 후 사용)
+    // 지원 도착순서 여부 원본 (sprtArvlSeqYn)
+    // 화면에 "선착순" 배지로 쓰지 않음: Y인 정책 256개 중 원문에 선착순이 나오는 건 30개뿐이라 선착순 표시로 믿기 어려움 (2026-11 확인)
     private String policyArrivalOrderYn;
 
     // 지원 규모 제한 여부 원본 (sprtSclLmtYn, 의미 확인 후 사용)
@@ -132,6 +136,20 @@ public class PolicyVO {
 
     // 신청 마감일 (aplyYmd 뒤쪽, 상시면 null) → 오늘보다 이전이면 추천 제외
     private LocalDate policyApplyEndDate;
+
+    // ================================
+    // 사업기간 / 기타 (화면 안내용)
+    // ================================
+
+    // 사업기간 시작일·종료일 (bizPrdBgngYmd / bizPrdEndYmd)
+    private LocalDate policyBusinessStartDate;
+    private LocalDate policyBusinessEndDate;
+
+    // 사업기간 기타 (bizPrdEtcCn, 날짜 대신 "연중 계속" 등)
+    private String policyBusinessPeriodEtc;
+
+    // 기타 사항 (etcMttrCn)
+    private String policyEtcNote;
 
     // ================================
     // 정책 관리 정보

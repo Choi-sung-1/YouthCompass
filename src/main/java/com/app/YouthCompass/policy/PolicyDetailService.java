@@ -13,6 +13,8 @@ import com.app.YouthCompass.policy.recommendation.RecommendReasonBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +41,7 @@ public class PolicyDetailService {
         dto.setPolicy(policy);
         dto.setCard(PolicyListItemDTO.from(policy));
         dto.setAgeText(ageText(policy));
+        dto.setBusinessPeriodText(businessPeriodText(policy));
         dto.setInactive("INACTIVE".equals(policy.getPolicyStatus()));
 
         if (member != null) {
@@ -83,6 +86,20 @@ public class PolicyDetailService {
         if (max == null) return "만 " + min + "세 이상";
         return "만 " + min + "세 ~ " + max + "세";
     }
+
+    // 사업기간: 날짜가 있으면 날짜, 없으면 기타 문구("연중 계속" 등), 둘 다 없으면 null (화면에서 숨김)
+    private String businessPeriodText(PolicyVO p) {
+
+        LocalDate start = p.getPolicyBusinessStartDate();
+        LocalDate end = p.getPolicyBusinessEndDate();
+
+        if (start != null || end != null) {
+            return (start == null ? "" : start.format(DOT_DATE)) + " ~ " + (end == null ? "" : end.format(DOT_DATE));
+        }
+        return p.getPolicyBusinessPeriodEtc();
+    }
+
+    private static final DateTimeFormatter DOT_DATE = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
     private Integer positive(Integer value) {
         return value != null && value > 0 ? value : null;

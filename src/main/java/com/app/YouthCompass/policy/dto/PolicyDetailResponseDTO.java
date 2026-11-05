@@ -16,6 +16,7 @@ public class PolicyDetailResponseDTO {
     private PolicyVO policy;
     private PolicyListItemDTO card;          // 분야·D-day 라벨 재사용 (목록 카드와 같은 기준)
     private String ageText;                  // "만 19세 ~ 34세" / "제한 없음"
+    private String businessPeriodText;       // "2026.01.01 ~ 2026.12.31" / "연중 계속" / null
     private boolean inactive;                // API에서 사라진 정책
 
     // 나에게 맞는지 (로그인 회원만, 비로그인이면 evaluated = false)
