@@ -154,4 +154,30 @@ class RecommendHistoryServiceTest {
         assertThat(historyService.findHistoryDetail(historyId, 999998L)).isEmpty();
         assertThat(historyService.findHistoryDetail(historyId, null)).isEmpty();
     }
+
+    @Test
+    void 내_기록을_삭제하면_기록과_항목이_모두_사라진다() {
+        Long historyId = historyService.save(MEMBER_ID, "삭제할 기록",
+                result(List.of(policy(999999L, "이유 1"), policy(999998L, "이유 2"))));
+
+        assertThat(historyService.delete(historyId, MEMBER_ID)).isTrue();
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM TBL_RECOMMEND_HISTORY WHERE HISTORY_ID = ?", Integer.class, historyId)).isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM TBL_RECOMMEND_ITEM WHERE HISTORY_ID = ?", Integer.class, historyId)).isZero();
+        assertThat(historyService.findHistoryDetail(historyId, MEMBER_ID)).isEmpty();
+    }
+
+    @Test
+    void 남의_기록은_삭제되지_않는다() {
+        Long historyId = historyService.save(MEMBER_ID, "남의 기록",
+                result(List.of(policy(999999L, "이유 1"))));
+
+        assertThat(historyService.delete(historyId, MEMBER_ID + 1)).isFalse();
+
+        assertThat(historyService.findHistoryDetail(historyId, MEMBER_ID)).isPresent();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM TBL_RECOMMEND_ITEM WHERE HISTORY_ID = ?", Integer.class, historyId)).isEqualTo(1);
+    }
 }

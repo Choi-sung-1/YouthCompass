@@ -14,6 +14,10 @@
         .history-card .sentence { margin: 6px 0 0; font-size: 15px; }
         .empty { text-align: center; color: var(--color-muted); padding: 60px 0; }
         .empty .btn { margin-top: 16px; }
+        .history-row { display: flex; gap: 8px; align-items: stretch; }
+        .history-row .history-card { flex: 1; }
+        .history-row form { display: flex; align-items: center; }
+        .notice-ok { background: #dcfce7; color: var(--color-ok); padding: 10px 12px; border-radius: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -22,6 +26,8 @@
 <main class="container page">
     <a class="back" th:href="@{/mypage}">← 마이페이지</a>
     <h1>추천 기록</h1>
+
+    <p class="notice-ok" th:if="${deleted}">추천 기록을 삭제했어요.</p>
 
     <p class="result-count">
         총 <b th:text="${#lists.size(histories)}">0</b>건 · 최근 순 · 누르면 그때 받은 TOP 10을 다시 볼 수 있어요
@@ -35,12 +41,17 @@
 
     <!-- 기록 목록 (RecommendHistoryVO) -->
     <div class="history-list">
-        <a class="card history-card" th:each="h : ${histories}"
-           th:href="@{/mypage/history/{id}(id=${h.historyId})}">
-            <span class="date" th:text="${#temporals.format(h.createdAt, 'yyyy.MM.dd HH:mm')}">2026.11.04 15:30</span>
-            <p class="sentence"
-               th:text="${h.sentence != null} ? ${#strings.abbreviate(h.sentence, 90)} : '(입력 문장 없음)'">입력한 문장</p>
-        </a>
+        <div class="history-row" th:each="h : ${histories}">
+            <a class="card history-card" th:href="@{/mypage/history/{id}(id=${h.historyId})}">
+                <span class="date" th:text="${#temporals.format(h.createdAt, 'yyyy.MM.dd HH:mm')}">2026.11.04 15:30</span>
+                <p class="sentence"
+                   th:text="${h.sentence != null} ? ${#strings.abbreviate(h.sentence, 90)} : '(입력 문장 없음)'">입력한 문장</p>
+            </a>
+            <form th:action="@{/mypage/history/{id}/delete(id=${h.historyId})}" method="post"
+                  onsubmit="return confirm('이 추천 기록을 삭제할까요? 되돌릴 수 없어요.');">
+                <button type="submit" class="btn">삭제</button>
+            </form>
+        </div>
     </div>
 </main>
 

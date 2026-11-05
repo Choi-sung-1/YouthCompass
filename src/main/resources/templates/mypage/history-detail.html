@@ -34,6 +34,10 @@
     <a class="back" th:href="@{/mypage/history}">← 추천 기록 목록</a>
     <h1>추천 기록</h1>
     <p class="date" th:text="${#temporals.format(detail.createdAt, 'yyyy.MM.dd HH:mm')} + ' 에 받은 추천'">받은 시각</p>
+    <form th:action="@{/mypage/history/{id}/delete(id=${detail.historyId})}" method="post" class="inline"
+          onsubmit="return confirm('이 추천 기록을 삭제할까요? 되돌릴 수 없어요.');">
+        <button type="submit" class="btn">기록 삭제</button>
+    </form>
 
     <!-- 그때 입력한 문장 -->
     <div class="sentence-box" th:text="${detail.sentence} ?: '(입력 문장 없음)'">입력한 문장</div>

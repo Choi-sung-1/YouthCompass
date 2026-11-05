@@ -62,7 +62,12 @@ public class PolicyEligibilityService {
             userRegion = Region.fromCode(userSigunguCode).orElse(null);
         }
 
-        // 2. 정책에는 지역 제한이 있지만 사용자 지역 정보가 없음
+        // 2. 전국 대상 정책은 사용자 지역을 몰라도 MATCH (모든 시·도 코드가 들어 있음)
+        if (userRegion == null && Region.isNationwide(policyRegionCodes)) {
+            return EligibilityStatus.MATCH;
+        }
+
+        // 3. 정책에는 지역 제한이 있지만 사용자 지역 정보가 없음
         if (userRegion == null) {
             return EligibilityStatus.UNKNOWN;
         }
@@ -98,29 +103,29 @@ public class PolicyEligibilityService {
             }
         }
 
-        // 3. 정책에 지역코드는 있는데 하나도 해석하지 못함
+        // 4. 정책에 지역코드는 있는데 하나도 해석하지 못함
         if (!validRegionCodeExists) {
             return EligibilityStatus.UNKNOWN;
         }
 
-        // 4. 사용자 시·도가 정책 대상에 없음
+        // 5. 사용자 시·도가 정책 대상에 없음
         if (!sameSidoExists) {
             return EligibilityStatus.NOT_MATCH;
         }
 
-        // 5. 시·도 전체 대상 정책 (전체 코드 or 그 시·도의 모든 시·군 포함)
+        // 6. 시·도 전체 대상 정책 (전체 코드 or 그 시·도의 모든 시·군 포함)
         //    서울·세종처럼 시 전체가 1단위인 곳은 구 하나만 있어도 여기서 MATCH
         String sidoCode = userRegion.getRegionCodes().get(0);
         if (wholeSido || policyUnits.size() >= SigunguRegistry.unitCount(sidoCode)) {
             return EligibilityStatus.MATCH;
         }
 
-        // 6. 특정 시·군만 대상인데 사용자 시·군을 모름 → 확인 필요
+        // 7. 특정 시·군만 대상인데 사용자 시·군을 모름 → 확인 필요
         if (userSigunguCode == null) {
             return EligibilityStatus.UNKNOWN;
         }
 
-        // 7. 사용자 시·군이 대상에 있으면 MATCH, 같은 도의 다른 시·군만 있으면 NOT_MATCH
+        // 8. 사용자 시·군이 대상에 있으면 MATCH, 같은 도의 다른 시·군만 있으면 NOT_MATCH
         return policyUnits.contains(userSigunguCode)
                 ? EligibilityStatus.MATCH
                 : EligibilityStatus.NOT_MATCH;
@@ -720,15 +725,8 @@ public class PolicyEligibilityService {
             return false;
         }
 
-        String[] codes = regionCodes.split(",");
-
-        // 전국의 수많은 시군구 코드가 들어있는 경우
-        // 특정 지역 제한으로 보지 않음
-        if (codes.length > 100) {
-            return false;
-        }
-
-        return true;
+        // 전국 대상 정책은 특정 지역 제한으로 보지 않음
+        return !Region.isNationwide(regionCodes);
     }
     private boolean hasRealJobCondition(String codes) {
 

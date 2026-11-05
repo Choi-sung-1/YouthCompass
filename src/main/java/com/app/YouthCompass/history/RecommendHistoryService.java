@@ -70,6 +70,19 @@ public class RecommendHistoryService {
         return historyMapper.selectHistoriesByMemberId(memberId);
     }
 
+    //    추천 기록 삭제 (내 기록일 때만) — 반환: 삭제했으면 true, 남의 기록이거나 없으면 false
+    //    항목 + 기록을 한 트랜잭션으로 (항목만 지워지고 기록이 남는 일 없게)
+    public boolean delete(Long historyId, Long memberId) {
+        if (historyId == null || memberId == null) {
+            return false;
+        }
+        Boolean deleted = transactionTemplate.execute(status -> {
+            historyMapper.deleteItems(historyId, memberId);
+            return historyMapper.deleteHistory(historyId, memberId) == 1;
+        });
+        return Boolean.TRUE.equals(deleted);
+    }
+
     //    추천 기록 상세 (내 기록일 때만, 남의 기록이거나 없으면 empty)
     public Optional<RecommendHistoryDetailDTO> findHistoryDetail(Long historyId, Long memberId) {
         if (historyId == null || memberId == null) {

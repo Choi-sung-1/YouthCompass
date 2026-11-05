@@ -67,7 +67,7 @@
             <div class="meta" th:text="${p.organizationName}">주관 기관</div>
             <p class="summary" th:text="${p.summary}">설명</p>
 
-            <!-- 찜 버튼 (fragments/bookmark.html, B) — 누르면 토글 후 지금 보던 목록(필터·페이지 그대로)으로 돌아옴 -->
+            <!-- 찜 버튼 (fragments/bookmark.html, B) — js/bookmark.js가 새로고침 없이 토글 -->
             <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarkedIds.contains(p.policyId)})}"></div>
         </div>
     </div>
@@ -92,5 +92,8 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- 찜 버튼 비동기 토글 -->
+<script th:src="@{/js/bookmark.js}"></script>
 </body>
 </html>
