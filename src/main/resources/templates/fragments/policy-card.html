@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    추천 정책 카드 한 장 (모양은 /css/policy-card.css)
+    사용: <div th:replace="~{fragments/policy-card :: card(${policy}, ${순위}, ${안내 문장 또는 null}, ${다시 판정 버튼 여부})}"></div>
+    - policy: RecommendedPolicyDTO
+    - 찜 버튼 상태는 화면 모델의 bookmarkedIds 를 씀
+    - AI 추천 결과(policy/recommend.html), 추천 기록 상세(mypage/history-detail.html)
+-->
+<div class="box policy" th:fragment="card(policy, rank, notice, recheck)">
+
+    <div class="policy-head">
+        <span class="rank" th:text="${rank}"></span>
+        <div>
+            <!-- 추천 결과는 POST로 그려져서 같은 탭으로 가면 뒤로 가기 때 결과가 사라짐 → 상세는 새 탭 -->
+            <a class="policy-name" th:href="@{/policies/{id}(id=${policy.policyId})}"
+               target="_blank" rel="noopener" th:text="${policy.policyName}"></a>
+            <p class="org" th:if="${policy.organizationName}" th:text="${policy.organizationName}"></p>
+        </div>
+    </div>
+
+    <p class="when">
+        <span class="badge" th:if="${policy.deadlineLabel}"
+              th:classappend="${policy.deadlineLabel == '마감'} ? 'badge-no' : (${policy.closingSoon} ? 'badge-unknown' : 'badge-ok')"
+              th:text="${policy.deadlineLabel}">D-3</span>
+        <span th:if="${policy.applyEndDate}" th:text="${policy.applyEndDate} + ' 마감'"></span>
+        <span th:if="${policy.supportScale}" th:text="'모집 규모 ' + ${policy.supportScale}"></span>
+    </p>
+
+    <!-- 안내 한 줄 (추천 기록: 그 뒤로 정책 조건이 바뀐 경우) -->
+    <p class="card-notice" th:if="${notice}" th:text="${notice}"></p>
+
+    <!-- 추천 이유: 왜 나에게 맞는지 -->
+    <div class="insight why" th:if="${policy.recommendReason}">
+        <span class="title">추천 이유<span class="ai-badge" th:if="${policy.personalized}">AI 맞춤</span></span>
+        <span th:text="${policy.recommendReason}"></span>
+    </div>
+
+    <!-- 기대 효과: 받으면 뭐가 좋아지는지 -->
+    <div class="insight effect" th:if="${policy.expectedEffect}">
+        <span class="title">기대 효과</span>
+        <span th:text="${policy.expectedEffect}"></span>
+    </div>
+
+    <!-- 자격 조건 충족 / 확인 필요 -->
+    <th:block th:if="${!#lists.isEmpty(policy.reasons) or !#lists.isEmpty(policy.unknownReasons)}">
+        <p class="section-label">자격 조건</p>
+        <ul class="reasons">
+            <li class="ok" th:each="reason : ${policy.reasons}" th:text="${reason}"></li>
+            <li class="check" th:each="reason : ${policy.unknownReasons}" th:text="${reason}"></li>
+        </ul>
+    </th:block>
+
+    <!-- 확인 필요 조건 다시 판정 (A의 조각) — 조건 수정 폼(#condition-form) 값을 쓰므로 추천 화면에서만 -->
+    <th:block th:if="${recheck}">
+        <div th:replace="~{fragments/recheck :: buttons(${policy})}"></div>
+    </th:block>
+
+    <!-- 아래 접는 칸들은 내용이 있을 때만 보임 (빈 값은 RecommendedPolicyDTO.from()에서 null로 정리) -->
+    <div class="folds"
+         th:if="${policy.participationRestriction != null or policy.supportContent != null
+                 or !#lists.isEmpty(policy.documents) or policy.applicationMethod != null or policy.screeningMethod != null}">
+    <!-- 참여 제한 대상: 자격 판정에는 안 들어가서 원문 그대로 안내 -->
+    <details th:if="${policy.participationRestriction}">
+        <summary>참여 제한 대상 확인</summary>
+        <p class="support" th:text="${policy.participationRestriction}"></p>
+    </details>
+
+    <details th:if="${policy.supportContent}">
+        <summary>지원 내용 원문 보기</summary>
+        <p class="support" th:text="${policy.supportContent}"></p>
+    </details>
+
+    <!-- 신청 준비: 신청 방법·심사 방법 + 제출서류 체크리스트 (체크 상태는 저장 안 함) -->
+    <details class="prep"
+             th:if="${!#lists.isEmpty(policy.documents) or policy.applicationMethod != null or policy.screeningMethod != null}">
+        <summary>신청 준비</summary>
+        <p th:if="${policy.applicationMethod}">신청 방법: <span th:text="${policy.applicationMethod}"></span></p>
+        <p th:if="${policy.screeningMethod}">심사 방법: <span th:text="${policy.screeningMethod}"></span></p>
+        <ul th:if="${!#lists.isEmpty(policy.documents)}">
+            <li th:each="d : ${policy.documents}">
+                <label><input type="checkbox"> <span th:text="${d}"></span></label>
+            </li>
+        </ul>
+    </details>
+    </div>
+
+    <div class="card-actions">
+        <a class="apply-btn"
+           th:if="${policy.applicationUrl}"
+           th:href="${policy.applicationUrl}"
+           target="_blank" rel="noopener noreferrer">신청하러 가기</a>
+        <p class="no-link" th:unless="${policy.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
+        <a class="btn" th:href="@{/policies/{id}(id=${policy.policyId})}"
+           target="_blank" rel="noopener">상세 보기</a>
+
+        <!-- 찜 버튼 (fragments/bookmark.html) — 이 화면에서는 아래 스크립트가 페이지 이동 없이 처리 -->
+        <div th:replace="~{fragments/bookmark :: button(${policy.policyId}, ${bookmarkedIds.contains(policy.policyId)})}"></div>
+
+        <a class="calendar-link" th:if="${policy.applyEndDate != null and policy.deadlineLabel != '마감'}"
+           th:href="@{/policy/{id}/calendar.ics(id=${policy.policyId})}">마감일 캘린더에 추가</a>
+    </div>
+</div>
+
+</body>
+</html>
