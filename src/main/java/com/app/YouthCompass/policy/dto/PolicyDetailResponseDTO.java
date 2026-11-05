@@ -60,6 +60,15 @@ public class PolicyDetailResponseDTO {
         return "확인된 조건을 모두 충족해요. 신청해 볼 만해요!";
     }
 
+    // 화면 개수 요약용 (표에 보이는 조건 줄 기준)
+    public long matchRowCount()    { return countRows(EligibilityStatus.MATCH); }
+    public long unknownRowCount()  { return countRows(EligibilityStatus.UNKNOWN); }
+    public long notMatchRowCount() { return countRows(EligibilityStatus.NOT_MATCH); }
+
+    private long countRows(EligibilityStatus status) {
+        return conditions.stream().filter(c -> c.status() == status).count();
+    }
+
     public String verdictClass() {
         if (notMatchCount > 0) return "badge-no";
         if (unknownCount > 0) return "badge-unknown";
