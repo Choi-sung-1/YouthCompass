@@ -13,7 +13,16 @@ public class PolicyListRequestDTO {
     private Region region;            // 시·도 (빈 값 = 전체)
     private String keyword;           // 정책명·키워드·설명 검색
     private boolean openOnly = true;  // 신청 가능한 것만 (첫 화면 기본값)
+    private String sort;              // latest(기본, 최신 등록순) / deadline(마감 임박순) / recent(최근 모집 시작순)
     private int page = 1;
+
+    // 정렬 값 정규화 (알 수 없는 값은 기본 정렬)
+    public String getSort() {
+        if ("deadline".equals(sort) || "recent".equals(sort)) {
+            return sort;
+        }
+        return "latest";
+    }
 
     // 이상한 페이지 번호 방어
     public int getPage() {

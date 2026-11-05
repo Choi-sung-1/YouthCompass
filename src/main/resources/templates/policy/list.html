@@ -43,6 +43,12 @@
 
         <input type="text" th:field="*{keyword}" placeholder="정책명·키워드 검색 (예: 월세, 보안)">
 
+        <select th:field="*{sort}">
+            <option value="latest">최신순</option>
+            <option value="deadline">마감 임박순</option>
+            <option value="recent">최근 모집 시작순</option>
+        </select>
+
         <label><input type="checkbox" th:field="*{openOnly}"> 신청 가능한 것만</label>
 
         <button type="submit" class="btn btn-primary">검색</button>
@@ -76,17 +82,17 @@
     <nav class="pagination" th:if="${result.totalPages > 1}">
         <a class="btn" th:if="${result.hasPrev()}"
            th:href="@{/policies(category=${condition.category}, region=${condition.region},
-                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${result.startPage - 1})}">이전</a>
+                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, sort=${condition.sort}, page=${result.startPage - 1})}">이전</a>
 
         <a class="btn" th:each="n : ${#numbers.sequence(result.startPage, result.endPage)}"
            th:classappend="${n == result.page} ? 'current'"
            th:href="@{/policies(category=${condition.category}, region=${condition.region},
-                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${n})}"
+                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, sort=${condition.sort}, page=${n})}"
            th:text="${n}">1</a>
 
         <a class="btn" th:if="${result.hasNext()}"
            th:href="@{/policies(category=${condition.category}, region=${condition.region},
-                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, page=${result.endPage + 1})}">다음</a>
+                     keyword=${condition.keyword}, openOnly=${condition.openOnly}, sort=${condition.sort}, page=${result.endPage + 1})}">다음</a>
     </nav>
 
 </main>

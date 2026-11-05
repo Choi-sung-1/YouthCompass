@@ -227,20 +227,45 @@
         </if>
     </sql>
 
+    <!-- 정렬 공통: 마감된 정책(0057003 또는 마감일 지남)은 맨 뒤 -->
+    <sql id="closedLast">
+        CASE
+        WHEN POLICY_APPLY_PERIOD_CODE = '0057003' THEN 1
+        WHEN POLICY_APPLY_END_DATE &lt; CURRENT_DATE THEN 1
+        ELSE 0
+        END
+    </sql>
+
     <select id="searchPolicies" resultType="com.app.YouthCompass.policy.domain.model.PolicyVO">
         SELECT <include refid="policyColumns"/>
         FROM TBL_POLICY
         <include refid="searchWhere"/>
         ORDER BY
-        <!-- 0: 마감일 있는 모집 중 → 1: 상시·기간 정보 없음 → 2: 마감 -->
-        CASE
-        WHEN POLICY_APPLY_PERIOD_CODE = '0057003' THEN 2
-        WHEN POLICY_APPLY_END_DATE &lt; CURRENT_DATE THEN 2
-        WHEN POLICY_APPLY_END_DATE IS NULL THEN 1
-        ELSE 0
-        END,
-        POLICY_APPLY_END_DATE ASC,
-        POLICY_ID DESC
+        <choose>
+            <!-- 마감 임박순: 마감일 있는 모집 중 → 상시·기간 정보 없음 → 마감 -->
+            <when test="sort == 'deadline'">
+                CASE
+                WHEN POLICY_APPLY_PERIOD_CODE = '0057003' THEN 2
+                WHEN POLICY_APPLY_END_DATE &lt; CURRENT_DATE THEN 2
+                WHEN POLICY_APPLY_END_DATE IS NULL THEN 1
+                ELSE 0
+                END,
+                POLICY_APPLY_END_DATE ASC,
+                POLICY_ID DESC
+            </when>
+            <!-- 최근 모집 시작순: 마감된 정책·시작일 없는 정책은 뒤로 -->
+            <when test="sort == 'recent'">
+                <include refid="closedLast"/>,
+                POLICY_APPLY_START_DATE IS NULL,
+                POLICY_APPLY_START_DATE DESC,
+                POLICY_ID DESC
+            </when>
+            <!-- 기본(최신 등록순): 마감된 정책은 뒤로 -->
+            <otherwise>
+                <include refid="closedLast"/>,
+                POLICY_ID DESC
+            </otherwise>
+        </choose>
         LIMIT #{size} OFFSET #{offset}
     </select>
 

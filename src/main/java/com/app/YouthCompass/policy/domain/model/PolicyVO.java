@@ -163,4 +163,42 @@ public class PolicyVO {
 
     // 정책 DB 수정일
     private LocalDateTime policyUpdatedAt;
+
+    // ================================
+    // 링크 정리
+    // ================================
+    // API 원본에 "www.xxx.or.kr"(http 없음), 앞뒤 공백(전각 포함), "-", "전화문의" 같은 값이 섞여 있음.
+    // http(s)가 없으면 브라우저가 우리 사이트 내부 경로로 해석해 "신청하러 가기"가 같은 화면으로 열리므로
+    // 화면·캘린더·저장 모두 이 getter를 거치게 해서 절대 URL 또는 null 만 나가게 한다.
+
+    public String getPolicyApplicationUrl() {
+        return normalizeUrl(policyApplicationUrl);
+    }
+
+    public String getPolicyReferenceUrl() {
+        return normalizeUrl(policyReferenceUrl);
+    }
+
+    static String normalizeUrl(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        // 일반 공백 + 전각 공백(U+3000) + NBSP 제거
+        String url = raw.replaceAll("^[\\s\\u3000\\u00A0]+|[\\s\\u3000\\u00A0]+$", "");
+        if (url.isEmpty()) {
+            return null;
+        }
+        String lower = url.toLowerCase();
+        if (lower.startsWith("http://") || lower.startsWith("https://")) {
+            return url;
+        }
+        if (lower.startsWith("//")) {
+            return "https:" + url;
+        }
+        // 공백 없는 "도메인.tld[/경로]" 모양이면 https 붙임, 아니면("-", "전화문의") 링크로 쓰지 않음
+        if (url.matches("^[A-Za-z0-9][A-Za-z0-9-]*(\\.[A-Za-z0-9-]+)+(:\\d+)?([/?#]\\S*)?$")) {
+            return "https://" + url;
+        }
+        return null;
+    }
 }
