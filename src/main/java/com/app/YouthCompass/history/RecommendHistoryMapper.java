@@ -28,4 +28,9 @@ public interface RecommendHistoryMapper {
     // 기록 상세용: 항목 + 정책 정보 (순위 순, 정책을 못 찾아도 항목은 남김)
     // 주의: historyId로만 찾으므로 반드시 selectHistory로 본인 기록인지 확인한 뒤 호출
     List<RecommendHistoryItemDTO> selectItemsWithPolicy(Long historyId);
+
+    // 기록 삭제: 항목 먼저 → 기록 (둘 다 MEMBER_ID 조건 → 남의 기록 번호면 0건)
+    int deleteItems(@Param("historyId") Long historyId, @Param("memberId") Long memberId);
+
+    int deleteHistory(@Param("historyId") Long historyId, @Param("memberId") Long memberId);
 }

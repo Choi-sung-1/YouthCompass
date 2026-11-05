@@ -10,8 +10,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 
@@ -49,6 +51,19 @@ public class RecommendHistoryController {
         // 카드의 찜 버튼 상태용 (찜 목록 화면과 같은 BookmarkService 호출)
         model.addAttribute("bookmarkedIds", bookmarkService.findBookmarkedPolicyIds(memberId));
         return "mypage/history-detail";
+    }
+
+    // POST /mypage/history/{historyId}/delete — 추천 기록 삭제 후 목록으로
+    @PostMapping("/{historyId}/delete")
+    public String delete(@PathVariable Long historyId, Principal principal, RedirectAttributes redirectAttributes) {
+
+        // 남의 기록 번호이거나 없는 번호면 404 (상세 화면과 같은 기준)
+        if (!historyService.delete(historyId, loginMemberId(principal))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "추천 기록을 찾을 수 없습니다.");
+        }
+
+        redirectAttributes.addFlashAttribute("deleted", true);
+        return "redirect:/mypage/history";
     }
 
     // 로그인 회원 PK (로그인 필수 URL이므로 principal이 없으면 비정상 접근)

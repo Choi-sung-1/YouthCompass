@@ -50,4 +50,21 @@
         ORDER BY I.RANK_NO
     </select>
 
+    <!-- 기록 삭제 1) 항목: 내 기록에 속한 항목만 -->
+    <delete id="deleteItems">
+        DELETE FROM TBL_RECOMMEND_ITEM
+        WHERE HISTORY_ID = (
+            SELECT HISTORY_ID FROM TBL_RECOMMEND_HISTORY
+            WHERE HISTORY_ID = #{historyId}
+              AND MEMBER_ID = #{memberId}
+        )
+    </delete>
+
+    <!-- 기록 삭제 2) 기록 1행 (MEMBER_ID 조건으로 남의 기록은 삭제 안 됨) -->
+    <delete id="deleteHistory">
+        DELETE FROM TBL_RECOMMEND_HISTORY
+        WHERE HISTORY_ID = #{historyId}
+          AND MEMBER_ID = #{memberId}
+    </delete>
+
 </mapper>
