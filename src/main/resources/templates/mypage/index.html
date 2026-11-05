@@ -5,12 +5,33 @@
     <title>마이페이지 | YouthCompass</title>
     <th:block th:replace="~{fragments/layout :: assets}"></th:block>
     <style>
-        .mypage { display: grid; gap: 20px; max-width: 720px; }
+        .greeting { margin: 0 0 4px; }
+        .greeting-sub { margin: 0 0 20px; color: var(--color-muted); }
+
+        /* 요약 숫자 3칸 (누르면 각 목록으로) */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat { display: block; color: var(--color-text); text-align: center; padding: 18px 12px; }
+        .stat:hover { text-decoration: none; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); }
+        .stat .num { display: block; font-size: 28px; font-weight: 700; color: var(--color-primary); line-height: 1.2; }
+        .stat .num.warn { color: var(--color-unknown); }
+        .stat .label { color: var(--color-muted); font-size: 14px; }
+
+        /* 왼쪽: 조건 프로필 / 오른쪽: 활동·내 정보 */
+        .mypage { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: start; }
+        .side { display: grid; gap: 20px; }
         .mypage h2 { margin: 0 0 12px; font-size: 18px; }
-        .info { display: grid; grid-template-columns: 100px 1fr; gap: 8px 12px; margin: 0; }
+        .section-head { display: flex; justify-content: space-between; align-items: baseline; }
+        .section-head a { font-size: 13px; }
+
+        .info { display: grid; grid-template-columns: 90px 1fr; gap: 8px 12px; margin: 0; font-size: 14px; }
         .info dt { color: var(--color-muted); }
         .info dd { margin: 0; }
-        .help { color: var(--color-muted); font-size: 13px; margin: 0 0 16px; }
+
+        .help { color: var(--color-muted); font-size: 13px; margin: 0 0 12px; }
+        .progress { height: 8px; background: var(--color-border); border-radius: 999px; overflow: hidden; margin: 0 0 6px; }
+        .progress .bar { height: 100%; background: var(--color-primary); }
+        .progress-text { font-size: 13px; color: var(--color-muted); margin: 0 0 16px; }
+
         .form-row { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 12px; margin-bottom: 12px; }
         .form-row select, .form-row input {
             padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px;
@@ -18,35 +39,61 @@
         .notice { padding: 10px 12px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
         .notice-ok { background: #dcfce7; color: var(--color-ok); }
         .notice-error { background: #fee2e2; color: var(--color-no); }
+
+        /* 요약 목록 (마감 임박 찜·최근 추천 기록) */
+        .mini-list { list-style: none; margin: 0; padding: 0; }
+        .mini-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            padding: 10px 0; border-top: 1px solid var(--color-border); font-size: 14px; }
+        .mini-list li:first-child { border-top: none; padding-top: 0; }
+        .mini-list .title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text); }
+        .mini-list .date { color: var(--color-muted); font-size: 12px; white-space: nowrap; }
+        .empty { color: var(--color-muted); font-size: 14px; margin: 0; }
+        .cta { display: block; text-align: center; margin-top: 12px; }
+
+        @media (max-width: 760px) {
+            .mypage { grid-template-columns: 1fr; }
+            .stats { gap: 8px; }
+            .stat .num { font-size: 22px; }
+            .stat .label { font-size: 12px; }
+        }
     </style>
 </head>
 <body>
 <header th:replace="~{fragments/layout :: header}"></header>
 
 <main class="container page">
-    <h1>마이페이지</h1>
+    <h1 class="greeting" th:text="${member.memberName} + '님의 마이페이지'">마이페이지</h1>
+    <p class="greeting-sub">찜한 정책과 추천 기록을 한눈에 보고, 조건 프로필을 채워 추천을 더 정확하게 받아보세요.</p>
+
+    <!-- 요약 숫자 -->
+    <div class="stats">
+        <a class="card stat" th:href="@{/mypage/bookmarks}">
+            <span class="num" th:text="${bookmarkCount}">0</span>
+            <span class="label">찜한 정책</span>
+        </a>
+        <a class="card stat" th:href="@{/mypage/bookmarks}">
+            <span class="num" th:classappend="${closingSoonCount > 0} ? 'warn'" th:text="${closingSoonCount}">0</span>
+            <span class="label">7일 안에 마감</span>
+        </a>
+        <a class="card stat" th:href="@{/mypage/history}">
+            <span class="num" th:text="${historyCount}">0</span>
+            <span class="label">추천 기록</span>
+        </a>
+    </div>
 
     <div class="mypage">
 
-        <!-- 내 정보 -->
-        <section class="card">
-            <h2>내 정보</h2>
-            <dl class="info">
-                <dt>이름</dt>
-                <dd th:text="${member.memberName}"></dd>
-                <dt>아이디</dt>
-                <dd th:text="${member.memberLoginId}"></dd>
-                <dt>생년월일</dt>
-                <dd th:text="${member.memberBirth} ?: '-'"></dd>
-                <dt>지역</dt>
-                <dd th:text="${regionName} ?: '-'"></dd>
-            </dl>
-        </section>
-
-        <!-- 내 조건 프로필 -->
+        <!-- 왼쪽: 내 조건 프로필 -->
         <section class="card">
             <h2>내 조건 프로필</h2>
             <p class="help">저장해 두면 추천과 정책 상세에서 문장에 없는 조건을 자동으로 채워요. 모르는 항목은 비워 두세요.</p>
+
+            <!-- 채운 정도: 많이 채울수록 "확인 필요" 조건이 줄어듦 -->
+            <div class="progress">
+                <div class="bar" th:style="'width:' + ${profileForm.filledCount() * 100 / profileTotal} + '%'"></div>
+            </div>
+            <p class="progress-text"
+               th:text="${profileTotal} + '개 중 ' + ${profileForm.filledCount()} + '개 채움 · 많이 채울수록 확인 필요 조건이 줄어요'">6개 중 0개 채움</p>
 
             <div th:if="${profileSaved}" class="notice notice-ok">저장했어요.</div>
             <div th:if="${profileError}" class="notice notice-error" th:text="${profileError}"></div>
@@ -105,6 +152,57 @@
                 <button type="submit" class="btn btn-primary">저장</button>
             </form>
         </section>
+
+        <!-- 오른쪽: 내 활동 + 내 정보 -->
+        <div class="side">
+
+            <!-- 7일 안에 마감되는 찜 (마감 가까운 순) -->
+            <section class="card">
+                <div class="section-head">
+                    <h2>마감 임박 찜</h2>
+                    <a th:href="@{/mypage/bookmarks}">찜 전체 보기 →</a>
+                </div>
+                <ul class="mini-list" th:if="${!#lists.isEmpty(closingSoon)}">
+                    <li th:each="p : ${closingSoon}">
+                        <a class="title" th:href="@{/policies/{id}(id=${p.policyId})}" th:text="${p.policyName}">정책명</a>
+                        <span class="badge badge-unknown" th:text="${p.deadlineLabel}">D-3</span>
+                    </li>
+                </ul>
+                <p class="empty" th:if="${#lists.isEmpty(closingSoon)}">7일 안에 마감되는 찜한 정책이 없어요.</p>
+            </section>
+
+            <!-- 최근 추천 기록 -->
+            <section class="card">
+                <div class="section-head">
+                    <h2>최근 추천 기록</h2>
+                    <a th:href="@{/mypage/history}">기록 전체 보기 →</a>
+                </div>
+                <ul class="mini-list" th:if="${!#lists.isEmpty(recentHistories)}">
+                    <li th:each="h : ${recentHistories}">
+                        <a class="title" th:href="@{/mypage/history/{id}(id=${h.historyId})}"
+                           th:text="${h.sentence != null} ? ${h.sentence} : '(입력 문장 없음)'">입력한 문장</a>
+                        <span class="date" th:text="${#temporals.format(h.createdAt, 'MM.dd HH:mm')}">11.05 13:40</span>
+                    </li>
+                </ul>
+                <p class="empty" th:if="${#lists.isEmpty(recentHistories)}">아직 추천 기록이 없어요.</p>
+                <a class="btn btn-primary cta" th:href="@{/policy/recommend}">AI 추천 받으러 가기</a>
+            </section>
+
+            <!-- 내 정보 -->
+            <section class="card">
+                <h2>내 정보</h2>
+                <dl class="info">
+                    <dt>이름</dt>
+                    <dd th:text="${member.memberName}"></dd>
+                    <dt>아이디</dt>
+                    <dd th:text="${member.memberLoginId}"></dd>
+                    <dt>생년월일</dt>
+                    <dd th:text="${member.memberBirth} ?: '-'"></dd>
+                    <dt>지역</dt>
+                    <dd th:text="${regionName} ?: '-'"></dd>
+                </dl>
+            </section>
+        </div>
 
     </div>
 </main>
