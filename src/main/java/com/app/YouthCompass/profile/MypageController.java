@@ -2,7 +2,6 @@ package com.app.YouthCompass.profile;
 
 import com.app.YouthCompass.bookmark.BookmarkService;
 import com.app.YouthCompass.history.RecommendHistoryService;
-import com.app.YouthCompass.history.domain.RecommendHistoryVO;
 import com.app.YouthCompass.member.MemberService;
 import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.JobRequirement;
@@ -10,6 +9,7 @@ import com.app.YouthCompass.policy.domain.eligibility.MajorRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.MarriageRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.Region;
 import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
 import com.app.YouthCompass.profile.dto.MemberProfileFormDTO;
 import com.app.YouthCompass.profile.dto.SigunguGroupDTO;
@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-// 마이페이지: 내 정보 + 조건 프로필 + 내 활동 요약 (찜·마감 임박·최근 추천 기록)
+// 마이페이지: 내 활동 요약 (찜·마감 임박·추천 기록 수) + 조건 프로필 + 내 정보
 // (찜 목록 /mypage/bookmarks, 추천 기록 /mypage/history 는 각자 다른 컨트롤러 — 여기서는 요약만)
 @Controller
 @RequiredArgsConstructor
@@ -103,11 +103,15 @@ public class MypageController {
         model.addAttribute("marriageOptions", userChoices(MarriageRequirement.values()));
         model.addAttribute("majorOptions", userChoices(MajorRequirement.values()));
         model.addAttribute("profileTotal", MemberProfileFormDTO.TOTAL_FIELDS);
+        // 저장된 시·군 이름 (프로필 요약 칩) ex) "경기도 수원시"
+        model.addAttribute("sigunguName", SigunguRegistry.fromUnitCode(form.getSigunguCode())
+                .map(u -> Region.fromCode(u.sidoCode()).map(r -> r.getRegionName() + " ").orElse("") + u.unitName())
+                .orElse(null));
 
         addActivity(model, member.getMemberId());
     }
 
-    // 내 활동 요약: 찜 수 · 7일 안에 마감되는 찜 · 추천 기록 수 · 최근 추천 기록
+    // 내 활동 요약: 찜 수 · 7일 안에 마감되는 찜 · 추천 기록 수
     private void addActivity(Model model, Long memberId) {
 
         List<PolicyListItemDTO> bookmarks = bookmarkService.findBookmarkedPolicies(memberId);
@@ -116,13 +120,11 @@ public class MypageController {
                 .sorted(Comparator.comparing(PolicyListItemDTO::getApplyEndDate,
                         Comparator.nullsLast(Comparator.<LocalDate>naturalOrder())))
                 .toList();
-        List<RecommendHistoryVO> histories = historyService.findHistories(memberId);
 
         model.addAttribute("bookmarkCount", bookmarks.size());
         model.addAttribute("closingSoonCount", closingSoon.size());
         model.addAttribute("closingSoon", closingSoon.stream().limit(SUMMARY_LIMIT).toList());
-        model.addAttribute("historyCount", histories.size());
-        model.addAttribute("recentHistories", histories.stream().limit(SUMMARY_LIMIT).toList());
+        model.addAttribute("historyCount", historyService.findHistories(memberId).size());
     }
 
     // 사용자가 고를 수 있는 값만 (알 수 없음·제한없음 제외 — 추천 조건 수정 폼과 같은 기준)

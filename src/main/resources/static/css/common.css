@@ -94,10 +94,25 @@ a:hover { text-decoration: underline; }
 .badge-no { background: #fee2e2; color: var(--color-no); }
 
 /* ---------- 본문·푸터 ---------- */
-.page { padding: 32px 0 60px; }
+/* 위아래만 (좌우는 .container 여백 유지 — padding 줄임말로 쓰면 좌우가 0이 됨) */
+.page { padding-top: 32px; padding-bottom: 60px; }
 .site-footer {
     padding: 24px 0;
     text-align: center;
     color: var(--color-muted);
     font-size: 13px;
+}
+
+/* ---------- 좁은 화면 (휴대폰) ---------- */
+@media (max-width: 640px) {
+    .container { padding: 0 16px; }
+    .page { padding-top: 20px; padding-bottom: 40px; }
+    .card { padding: 16px; }
+
+    /* 상단 바: 로고·로그인 버튼 한 줄 + 메뉴는 아래 줄에서 가로 스크롤 */
+    .header-inner { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 10px; gap: 8px 12px; }
+    .logo { flex: 1; }
+    .nav { order: 3; flex-basis: 100%; gap: 14px; overflow-x: auto; white-space: nowrap; font-size: 14px; }
+    .nav-user { display: none; }
+    .nav-auth .btn { padding: 6px 10px; font-size: 13px; }
 }
