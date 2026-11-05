@@ -37,6 +37,10 @@ public class PolicyBrowseController {
 
         model.addAttribute("result", policyService.searchPolicies(condition));
 
+        // 필터 선택지 (분야·지역 select)
+        model.addAttribute("categoryOptions", PolicyCategories.ALL);
+        model.addAttribute("regionOptions", Region.values());
+
         // 카드별 찜 버튼 상태: 찜한 정책 ID를 한 번에 조회 (비로그인이면 빈 Set)
         model.addAttribute("bookmarkedIds",
                 bookmarkService.findBookmarkedPolicyIds(memberIdOf(loginMember(principal))));
