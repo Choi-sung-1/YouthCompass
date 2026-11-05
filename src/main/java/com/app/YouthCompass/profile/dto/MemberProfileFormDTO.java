@@ -36,6 +36,20 @@ public class MemberProfileFormDTO {
     }
 
     // 폼 → 저장용 VO
+    // 프로필 칸 수 / 채운 칸 수 (마이페이지 진행 표시용) — 칸을 늘리면 TOTAL_FIELDS도 같이
+    public static final int TOTAL_FIELDS = 6;
+
+    public int filledCount() {
+        int count = 0;
+        if (sigunguCode != null && !sigunguCode.isBlank()) count++;
+        if (school != null) count++;
+        if (job != null) count++;
+        if (marriage != null) count++;
+        if (major != null) count++;
+        if (annualIncome != null) count++;
+        return count;
+    }
+
     public MemberProfileVO toVO(Long memberId) {
 
         return MemberProfileVO.builder()
