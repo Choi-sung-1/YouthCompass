@@ -22,9 +22,30 @@
         .item-card h3 { margin: 0; font-size: 16px; line-height: 1.4; flex: 1; }
         .item-card h3 a { color: var(--color-text); }
         .item-card .meta { color: var(--color-muted); font-size: 13px; }
-        .insight { font-size: 14px; background: var(--color-bg); border-radius: 8px; padding: 10px 12px; }
-        .insight .title { display: block; font-weight: 700; margin-bottom: 4px; }
         .missing { color: var(--color-muted); }
+        .item-card .when { color: var(--color-muted); font-size: 13px; margin: 0; }
+        .item-card .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
+
+        /* 추천 카드와 같은 모양 (policy/recommend.html) — UI 정리 때 공통 조각으로 합칠 것 */
+        .insight { padding: 12px 14px; border-radius: 6px; font-size: 14px; line-height: 1.55; }
+        .insight.why { background: #eef4ff; border-left: 4px solid #1976d2; }
+        .insight.effect { background: #eefaf0; border-left: 4px solid #2e7d32; }
+        .insight .title { display: block; margin-bottom: 3px; font-size: 13px; font-weight: bold; }
+        .insight.why .title { color: #1565c0; }
+        .insight.effect .title { color: #2e7d32; }
+        .section-label { margin: 8px 0 0; color: #555; font-size: 13px; font-weight: bold; }
+        .reasons { list-style: none; margin: 0; padding: 0; }
+        .reasons li { margin-bottom: 6px; font-size: 14px; }
+        .reasons .ok::before { content: "✔ "; color: #2e7d32; font-weight: bold; }
+        .reasons .check { color: #b26a00; }
+        .reasons .check::before { content: "？ "; font-weight: bold; }
+        details { font-size: 14px; }
+        summary { color: #1976d2; cursor: pointer; }
+        .support { margin: 8px 0 0; padding: 12px; border-radius: 5px; background: #f7f9fb; white-space: pre-line; line-height: 1.5; }
+        .apply-btn { display: inline-block; padding: 10px 18px; border-radius: 5px; background: #1976d2; color: white; font-size: 14px; text-decoration: none; }
+        .apply-btn:hover { background: #1565c0; text-decoration: none; }
+        .no-link { margin: 0; color: #999; font-size: 13px; }
+        .changed { margin: 0; padding: 10px 12px; border-radius: 6px; background: #fee2e2; color: var(--color-no); font-size: 14px; }
     </style>
 </head>
 <body>
@@ -54,7 +75,7 @@
 
     <!-- 그때의 TOP 10 (RecommendHistoryItemDTO) -->
     <h2 class="section-title">그때 받은 추천 TOP <span th:text="${#lists.size(detail.items)}">10</span></h2>
-    <p class="note">추천 이유·기대 효과는 그때 저장한 내용이고, 마감 표시는 오늘 기준이에요.</p>
+    <p class="note">추천 이유·기대 효과는 그때 저장한 내용이고, 자격 조건·마감·신청 정보는 그때 조건으로 오늘 정책 정보를 다시 확인한 결과예요.</p>
 
     <div class="items">
         <div class="card item-card" th:each="item : ${detail.items}">
@@ -75,18 +96,73 @@
             <div class="meta" th:if="${item.policyOrganizationName != null}"
                  th:text="${item.policyOrganizationName}">주관 기관</div>
 
-            <div class="insight" th:if="${item.reason != null}">
+            <!-- 마감일·모집 규모 (추천 카드와 같은 줄) -->
+            <p class="when" th:if="${item.card != null and (item.card.applyEndDate != null or item.card.supportScale != null)}">
+                <span th:if="${item.card.applyEndDate}" th:text="${item.card.applyEndDate} + ' 마감'"></span>
+                <span th:if="${item.card.supportScale}" th:text="'모집 규모 ' + ${item.card.supportScale}"></span>
+            </p>
+
+            <!-- 추천 이유·기대 효과: 그때 저장한 문장 -->
+            <div class="insight why" th:if="${item.reason != null}">
                 <span class="title">💡 추천 이유</span>
                 <span th:text="${item.reason}">추천 이유</span>
             </div>
 
-            <div class="insight" th:if="${item.effect != null}">
+            <div class="insight effect" th:if="${item.effect != null}">
                 <span class="title">🎯 기대 효과</span>
                 <span th:text="${item.effect}">기대 효과</span>
             </div>
 
-            <!-- 찜 버튼 (GET 화면이라 누르면 이 화면으로 그대로 돌아옴) — 정책 정보가 없으면 숨김 -->
-            <div th:if="${item.policyName != null}">
+            <!-- 아래는 정책 정보가 있을 때만 (추천 카드와 같은 구성) -->
+            <th:block th:if="${item.card != null}" th:with="policy=${item.card}">
+
+                <!-- 추천 뒤에 정책 조건이 바뀌어 지금은 맞지 않는 조건 -->
+                <p class="changed" th:if="${!#lists.isEmpty(item.notMatchedConditions)}"
+                   th:text="'⚠ 지금 정책 정보로는 ' + ${#strings.listJoin(item.notMatchedConditions, ', ')} + ' 조건이 맞지 않아요. 공고를 다시 확인해 주세요.'"></p>
+
+                <!-- 자격 조건 충족 / 확인 필요 -->
+                <th:block th:if="${!#lists.isEmpty(policy.reasons) or !#lists.isEmpty(policy.unknownReasons)}">
+                    <p class="section-label">자격 조건</p>
+                    <ul class="reasons">
+                        <li class="ok" th:each="reason : ${policy.reasons}" th:text="${reason}"></li>
+                        <li class="check" th:each="reason : ${policy.unknownReasons}" th:text="${reason}"></li>
+                    </ul>
+                </th:block>
+
+                <!-- 참여 제한 대상: 자격 판정에는 안 들어가서 원문 그대로 안내 -->
+                <details th:if="${policy.participationRestriction}">
+                    <summary>참여 제한 대상 확인</summary>
+                    <p class="support" th:text="${policy.participationRestriction}"></p>
+                </details>
+
+                <details th:if="${policy.supportContent}">
+                    <summary>지원 내용 원문 보기</summary>
+                    <p class="support" th:text="${policy.supportContent}"></p>
+                </details>
+
+                <!-- 신청 준비: 신청 방법·심사 방법 + 제출서류 체크리스트 (체크 상태는 저장 안 함) -->
+                <details th:if="${!#lists.isEmpty(policy.documents) or policy.applicationMethod != null or policy.screeningMethod != null}">
+                    <summary>신청 준비</summary>
+                    <p th:if="${policy.applicationMethod}">신청 방법: <span th:text="${policy.applicationMethod}"></span></p>
+                    <p th:if="${policy.screeningMethod}">심사 방법: <span th:text="${policy.screeningMethod}"></span></p>
+                    <ul th:if="${!#lists.isEmpty(policy.documents)}">
+                        <li th:each="d : ${policy.documents}">
+                            <label><input type="checkbox"> <span th:text="${d}"></span></label>
+                        </li>
+                    </ul>
+                </details>
+            </th:block>
+
+            <div class="actions" th:if="${item.policyName != null}">
+                <th:block th:if="${item.card != null}">
+                    <a class="apply-btn" th:if="${item.card.applicationUrl}" th:href="${item.card.applicationUrl}"
+                       target="_blank" rel="noopener noreferrer">신청하러 가기 →</a>
+                    <p class="no-link" th:unless="${item.card.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
+                    <a th:if="${item.card.applyEndDate != null and !item.closed}"
+                       th:href="@{/policy/{id}/calendar.ics(id=${item.policyId})}">📅 마감일 캘린더에 추가</a>
+                </th:block>
+
+                <!-- 찜 버튼 (아래 스크립트가 새로고침 없이 토글) -->
                 <div th:replace="~{fragments/bookmark :: button(${item.policyId}, ${bookmarkedIds.contains(item.policyId)})}"></div>
             </div>
         </div>

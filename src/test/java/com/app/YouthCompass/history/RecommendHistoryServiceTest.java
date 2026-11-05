@@ -2,7 +2,12 @@ package com.app.YouthCompass.history;
 
 import com.app.YouthCompass.history.dto.RecommendHistoryDetailDTO;
 import com.app.YouthCompass.history.dto.RecommendHistoryItemDTO;
+import com.app.YouthCompass.policy.domain.eligibility.JobRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.MajorRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.MarriageRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.Region;
+import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
@@ -12,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -28,6 +34,9 @@ class RecommendHistoryServiceTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;  // 저장된 값 확인용
+
+    @Autowired
+    private JsonMapper jsonMapper;
 
     private static final Long MEMBER_ID = 999999L;
 
@@ -179,5 +188,71 @@ class RecommendHistoryServiceTest {
         assertThat(historyService.findHistoryDetail(historyId, MEMBER_ID)).isPresent();
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM TBL_RECOMMEND_ITEM WHERE HISTORY_ID = ?", Integer.class, historyId)).isEqualTo(1);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void 저장한_조건을_다시_판정용_조건으로_되돌린다() {
+        UserPolicyProfileVO original = UserPolicyProfileVO.builder()
+                .age(27)
+                .region(Region.GYEONGGI)
+                .sigunguCode("41170")   // 안양시
+                .school(SchoolRequirement.UNIVERSITY_GRADUATE)
+                .job(JobRequirement.UNEMPLOYED)
+                .marriage(MarriageRequirement.SINGLE)
+                .annualIncome(2400L)
+                .major(MajorRequirement.ENGINEERING)
+                .specialTargets(java.util.Set.of(SpecialTargetRequirement.SME))
+                .build();
+        RecommendResponseDTO dto = result(List.of(policy(999999L, "이유")));
+        dto.setProfile(original);
+
+        Long historyId = historyService.save(MEMBER_ID, "왕복 테스트", dto);
+        String json = jdbcTemplate.queryForObject(
+                "SELECT PROFILE_JSON FROM TBL_RECOMMEND_HISTORY WHERE HISTORY_ID = ?", String.class, historyId);
+        java.util.Map<String, String> conditions = jsonMapper.readValue(json, java.util.LinkedHashMap.class);
+
+        assertThat(historyService.toProfile(conditions)).isEqualTo(original);
+        assertThat(historyService.toIntent(conditions).getCategory()).isEqualTo("주거");
+        assertThat(historyService.toIntent(conditions).getKeyword()).isEqualTo("월세");
+    }
+
+    @Test
+    void 지원대상_해당없음은_빈_목록_언급없음은_null로_되돌린다() {
+        assertThat(historyService.toProfile(java.util.Map.of("지원 대상", "해당 없음")).getSpecialTargets()).isEmpty();
+        assertThat(historyService.toProfile(java.util.Map.of()).getSpecialTargets()).isNull();
+    }
+
+    @Test
+    void 기록_상세_카드에_자격조건과_신청정보가_채워진다() {
+        Long policyId = jdbcTemplate.queryForObject(
+                "SELECT MIN(POLICY_ID) FROM TBL_POLICY WHERE POLICY_STATUS = 'ACTIVE'", Long.class);
+        Long historyId = historyService.save(MEMBER_ID, "카드 테스트",
+                result(List.of(policy(policyId, "저장한 이유"), policy(999999L, "없는 정책"))));
+
+        List<RecommendHistoryItemDTO> items = historyService.findHistoryDetail(historyId, MEMBER_ID).orElseThrow().getItems();
+
+        RecommendedPolicyDTO card = items.get(0).getCard();
+        assertThat(card).isNotNull();
+        assertThat(card.getPolicyId()).isEqualTo(policyId);
+        assertThat(card.getRecommendReason()).isEqualTo("저장한 이유");   // AI 재호출 없이 저장한 문장
+        assertThat(card.getReasons().size() + card.getUnknownReasons().size()).isPositive();
+
+        assertThat(items.get(1).getCard()).isNull();   // 정책 정보가 없으면 카드 없음
+    }
+
+    @Test
+    void 지금_정책과_맞지_않는_조건은_따로_알려준다() {
+        // 나이 조건이 있는 정책에 그 범위를 벗어난 나이로 기록
+        java.util.Map<String, Object> row = jdbcTemplate.queryForMap(
+                "SELECT MIN(POLICY_ID) ID FROM TBL_POLICY WHERE POLICY_STATUS = 'ACTIVE' AND POLICY_MAX_AGE BETWEEN 1 AND 100");
+        Long policyId = ((Number) row.get("ID")).longValue();
+
+        RecommendResponseDTO dto = result(List.of(policy(policyId, "이유")));
+        dto.setProfile(UserPolicyProfileVO.builder().age(120).build());
+        Long historyId = historyService.save(MEMBER_ID, "나이 초과", dto);
+
+        RecommendHistoryItemDTO item = historyService.findHistoryDetail(historyId, MEMBER_ID).orElseThrow().getItems().get(0);
+        assertThat(item.getNotMatchedConditions()).contains("나이");
     }
 }

@@ -4,6 +4,14 @@ import com.app.YouthCompass.history.domain.RecommendHistoryVO;
 import com.app.YouthCompass.history.domain.RecommendItemVO;
 import com.app.YouthCompass.history.dto.RecommendHistoryDetailDTO;
 import com.app.YouthCompass.history.dto.RecommendHistoryItemDTO;
+import com.app.YouthCompass.policy.PolicyMapper;
+import com.app.YouthCompass.policy.domain.eligibility.EligibilityStatus;
+import com.app.YouthCompass.policy.domain.eligibility.JobRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.MajorRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.MarriageRequirement;
+import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
+import com.app.YouthCompass.policy.domain.eligibility.Region;
+import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
@@ -12,6 +20,8 @@ import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
 import com.app.YouthCompass.policy.dto.RecommendedPolicyDTO;
+import com.app.YouthCompass.policy.eligibility.PolicyEligibilityService;
+import com.app.YouthCompass.policy.recommendation.RecommendReasonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -19,10 +29,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,13 +50,24 @@ public class RecommendHistoryService {
     private final JsonMapper jsonMapper;
     private final TransactionTemplate transactionTemplate;
 
+    // 기록 상세 카드: 추천 화면과 같은 판정·문장 (A의 정책 조회·판정·이유 문장 — 호출만)
+    private final PolicyMapper policyMapper;
+    private final PolicyEligibilityService eligibilityService;
+    private final RecommendReasonBuilder reasonBuilder;
+
     // 생성자 주입 (TransactionTemplate은 트랜잭션 매니저로 직접 만듦)
     public RecommendHistoryService(RecommendHistoryMapper historyMapper,
                                    JsonMapper jsonMapper,
-                                   PlatformTransactionManager transactionManager) {
+                                   PlatformTransactionManager transactionManager,
+                                   PolicyMapper policyMapper,
+                                   PolicyEligibilityService eligibilityService,
+                                   RecommendReasonBuilder reasonBuilder) {
         this.historyMapper = historyMapper;
         this.jsonMapper = jsonMapper;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.policyMapper = policyMapper;
+        this.eligibilityService = eligibilityService;
+        this.reasonBuilder = reasonBuilder;
     }
 
     //    추천 결과 저장 (PolicyController에서 추천 직후 한 줄로 호출)
@@ -91,17 +116,64 @@ public class RecommendHistoryService {
 
         // 1) 본인 기록인지 먼저 확인 → 2) 맞을 때만 항목 조회
         return historyMapper.selectHistory(historyId, memberId).map(history -> {
+            Map<String, String> conditions = readConditions(history.getProfileJson());
+            UserPolicyProfileVO profile = toProfile(conditions);
+            PolicySearchIntent intent = toIntent(conditions);
+
             List<RecommendHistoryItemDTO> items = historyMapper.selectItemsWithPolicy(historyId);
-            items.forEach(this::fillDeadline);
+            items.forEach(item -> {
+                fillDeadline(item);
+                fillCard(item, profile, intent);
+            });
 
             return new RecommendHistoryDetailDTO(
                     history.getHistoryId(),
                     history.getSentence(),
                     history.getCreatedAt(),
-                    readConditions(history.getProfileJson()),
+                    conditions,
                     items
             );
         });
+    }
+
+    //    추천 화면과 같은 카드 (자격 조건·신청 준비·지원 내용 등)
+    //    그때 조건으로 지금 정책 정보를 다시 판정 → 정책 정보가 바뀌었으면 그때와 다를 수 있음
+    //    추천 이유·기대 효과는 AI 재호출 없이 저장해 둔 문장 사용
+    private void fillCard(RecommendHistoryItemDTO item, UserPolicyProfileVO profile, PolicySearchIntent intent) {
+        if (item.getPolicyName() == null) {
+            return;
+        }
+        PolicyVO policy = policyMapper.findPolicyById(item.getPolicyId());
+        if (policy == null) {
+            return;
+        }
+        PolicyEvaluationResult result = eligibilityService.evaluate(profile, policy);
+
+        RecommendedPolicyDTO card = RecommendedPolicyDTO.from(result);
+        card.setReasons(reasonBuilder.reasons(result, profile, intent));
+        card.setUnknownReasons(reasonBuilder.unknownReasons(result, profile));
+        card.setRecommendReason(item.getReason());
+        card.setExpectedEffect(item.getEffect());
+        item.setCard(card);
+        item.setNotMatchedConditions(notMatched(result));
+    }
+
+    //    추천 때는 없던 '맞지 않는 조건' (그 뒤로 정책 조건이 바뀐 경우) → 화면에서 경고
+    private List<String> notMatched(PolicyEvaluationResult r) {
+        Map<String, EligibilityStatus> byName = new LinkedHashMap<>();
+        byName.put("나이", r.getAgeResult());
+        byName.put("지역", r.getRegionResult());
+        byName.put("학력", r.getSchoolResult());
+        byName.put("취업 상태", r.getJobResult());
+        byName.put("혼인 여부", r.getMarriageResult());
+        byName.put("소득", r.getIncomeResult());
+        byName.put("전공", r.getMajorResult());
+        byName.put("지원 대상", r.getSpecialTargetResult());
+
+        return byName.entrySet().stream()
+                .filter(e -> e.getValue() == EligibilityStatus.NOT_MATCH)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     //    지금 기준 마감 표시 (A의 PolicyListItemDTO 계산을 그대로 사용 → 정책 목록·찜 목록과 같은 표시)
@@ -222,6 +294,70 @@ public class RecommendHistoryService {
         }
 
         return jsonMapper.writeValueAsString(summary);
+    }
+
+    //    toProfileJson의 반대: 저장해 둔 조건 → 판정용 조건 (기록 상세에서 자격 조건을 다시 판정할 때 사용)
+    //    toProfileJson의 키·표시 형식을 바꾸면 여기도 같이 바꿀 것 (RecommendHistoryServiceTest 왕복 테스트로 확인)
+    //    읽을 수 없는 값은 null = 모름 → 판정에서 확인 필요로 나옴
+    UserPolicyProfileVO toProfile(Map<String, String> c) {
+        Region region = byLabel(Region.values(), Region::getRegionName, c.get("지역"));
+        String sidoCode = region == null ? null : region.getRegionCodes().get(0);
+        Long age = parseNumber(c.get("나이"));
+
+        return UserPolicyProfileVO.builder()
+                .age(age == null ? null : age.intValue())
+                .region(region)
+                .sigunguCode(c.get("시·군") == null ? null
+                        : SigunguRegistry.findByName(sidoCode, c.get("시·군")).map(SigunguRegistry.Unit::unitCode).orElse(null))
+                .school(byLabel(SchoolRequirement.values(), SchoolRequirement::getDescription, c.get("학력")))
+                .job(byLabel(JobRequirement.values(), JobRequirement::getDescription, c.get("취업")))
+                .marriage(byLabel(MarriageRequirement.values(), MarriageRequirement::getDescription, c.get("혼인")))
+                .annualIncome(parseNumber(c.get("연소득")))
+                .major(byLabel(MajorRequirement.values(), MajorRequirement::getDescription, c.get("전공")))
+                .specialTargets(toTargets(c.get("지원 대상")))
+                .build();
+    }
+
+    PolicySearchIntent toIntent(Map<String, String> c) {
+        return PolicySearchIntent.builder()
+                .category(c.get("찾는 분야"))
+                .keyword(c.get("찾는 지원"))
+                .build();
+    }
+
+    // "해당 없음" = 빈 Set (해당 없다고 말함), 없으면 null (언급 없음)
+    private Set<SpecialTargetRequirement> toTargets(String text) {
+        if (text == null) {
+            return null;
+        }
+        Set<SpecialTargetRequirement> targets = EnumSet.noneOf(SpecialTargetRequirement.class);
+        if (text.equals("해당 없음")) {
+            return targets;
+        }
+        for (String label : text.split(", ")) {
+            SpecialTargetRequirement t = byLabel(SpecialTargetRequirement.values(), SpecialTargetRequirement::getDescription, label);
+            if (t != null) {
+                targets.add(t);
+            }
+        }
+        return targets;
+    }
+
+    // 화면 표시 이름 → enum (못 찾으면 null)
+    private <E extends Enum<E>> E byLabel(E[] values, Function<E, String> label, String text) {
+        if (text == null) {
+            return null;
+        }
+        return Arrays.stream(values).filter(v -> text.equals(label.apply(v))).findFirst().orElse(null);
+    }
+
+    // "25세" → 25, "2,400만원" → 2400 (숫자가 없으면 null)
+    private Long parseNumber(String text) {
+        if (text == null) {
+            return null;
+        }
+        String digits = text.replaceAll("[^0-9]", "");
+        return digits.isEmpty() ? null : Long.valueOf(digits);
     }
 
     //    컬럼 길이를 넘는 AI 문장은 잘라서 저장 (넘으면 INSERT 실패)
