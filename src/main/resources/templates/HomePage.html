@@ -27,23 +27,6 @@
             padding: 24px 28px;
         }
 
-        /* 파란 버튼 공통 */
-        .primary-btn {
-            display: inline-block;
-            padding: 14px 28px;
-            border-radius: 10px;
-            background: var(--color-primary);
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background 0.15s;
-        }
-
-        .primary-btn:hover {
-            background: var(--color-primary-dark);
-            text-decoration: none;
-        }
-
         /* 1. 첫 화면 */
         .hero {
             background: var(--rc-tint);
@@ -62,10 +45,87 @@
         }
 
         .hero p {
-            margin: 0 0 28px;
+            margin: 0 0 32px;
             color: var(--color-muted);
             font-size: 16px;
             word-break: keep-all;
+        }
+
+        /* 첫 화면 버튼 묶음: 주 버튼(AI 추천) + 보조 버튼(정책 목록) */
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 54px;
+            padding: 0 26px;
+            border-radius: 999px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            transition: background 0.15s, box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+        }
+
+        .hero-btn:hover { text-decoration: none; }
+
+        .hero-btn.main {
+            padding: 0 24px 0 28px;
+            background: var(--color-primary);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+        }
+
+        .hero-btn.main:hover {
+            background: var(--color-primary-dark);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.32);
+            transform: translateY(-1px);
+        }
+
+        /* 버튼 안 화살표: 마우스를 올리면 오른쪽으로 살짝 이동 */
+        .hero-btn .arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            font-size: 15px;
+            transition: transform 0.15s;
+        }
+
+        .hero-btn.main:hover .arrow { transform: translateX(3px); }
+
+        .hero-btn.sub {
+            background: var(--color-surface);
+            border: 1px solid #d9e1f0;
+            color: var(--color-text);
+        }
+
+        .hero-btn.sub:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+        /* 버튼 아래 안심 문구 */
+        .hero-note {
+            margin-top: 16px;
+            color: var(--color-muted);
+            font-size: 13px;
+        }
+
+        .hero-note span + span::before {
+            content: "·";
+            margin: 0 8px;
+            color: #c3cad6;
+        }
+
+        @media (max-width: 480px) {
+            .hero-actions { flex-direction: column; align-items: stretch; padding: 0 12px; }
+            .hero-btn { justify-content: center; }
         }
 
         /* 2. 정책 수 */
@@ -251,7 +311,15 @@
 <div class="hero">
     <h1>당신에게 꼭 맞는 지원 정책을 찾아드립니다</h1>
     <p>AI가 나에게 맞는 지원금, 장학금, 취업·주거 지원 정보를 한 번에 추천합니다.</p>
-    <a href="/policy/recommend" th:href="@{/policy/recommend}" class="primary-btn">AI 정책 추천 받기</a>
+    <div class="hero-actions">
+        <a href="/policy/recommend" th:href="@{/policy/recommend}" class="hero-btn main">
+            AI로 내 정책 찾기 <span class="arrow">→</span>
+        </a>
+        <a href="/policies" th:href="@{/policies}" class="hero-btn sub">전체 정책 둘러보기</a>
+    </div>
+    <div class="hero-note">
+        <span>나이·지역·조건만 입력</span><span>1분이면 끝나요</span><span>무료</span>
+    </div>
 </div>
 
 <!-- 정책 수 -->
@@ -341,7 +409,9 @@
 <div class="bottom-wrap">
     <div class="box bottom-cta">
         <h2>지금 받을 수 있는 정책이 궁금하다면?</h2>
-        <a href="/policy/recommend" th:href="@{/policy/recommend}" class="primary-btn">AI 맞춤 정책 확인하기</a>
+        <a href="/policy/recommend" th:href="@{/policy/recommend}" class="hero-btn main">
+            AI 맞춤 정책 확인하기 <span class="arrow">→</span>
+        </a>
     </div>
 </div>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
