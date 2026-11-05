@@ -4,168 +4,193 @@
     <meta charset="UTF-8">
     <title>추천 기록 상세 | YouthCompass</title>
     <th:block th:replace="~{fragments/layout :: assets}"></th:block>
+    <!-- 카드·요약·칩 모양은 AI 추천 결과 화면과 같은 CSS (policy/recommend.html) -->
+    <link rel="stylesheet" th:href="@{/css/policy-card.css}">
     <style>
-        .back { display: inline-block; margin-bottom: 12px; font-size: 14px; }
-        .date { color: var(--color-muted); font-size: 14px; margin: 0 0 12px; }
-        .sentence-box { background: var(--color-surface); border-left: 4px solid var(--color-primary);
-            border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; white-space: pre-line; }
-        .section-title { font-size: 16px; margin: 24px 0 10px; }
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-        .chip { background: var(--color-surface); border: 1px solid var(--color-border);
-            border-radius: 999px; padding: 4px 12px; font-size: 13px; }
-        .chip .label { color: var(--color-muted); margin-right: 4px; }
-        .note { color: var(--color-muted); font-size: 13px; margin: 8px 0 0; }
-        .items { display: flex; flex-direction: column; gap: 14px; }
-        .item-card { display: flex; flex-direction: column; gap: 8px; }
-        .item-top { display: flex; align-items: center; gap: 8px; }
-        .rank { font-weight: 700; color: var(--color-primary); font-size: 18px; min-width: 32px; }
-        .item-card h3 { margin: 0; font-size: 16px; line-height: 1.4; flex: 1; }
-        .item-card h3 a { color: var(--color-text); }
-        .item-card .meta { color: var(--color-muted); font-size: 13px; }
-        .missing { color: var(--color-muted); }
-        .item-card .when { color: var(--color-muted); font-size: 13px; margin: 0; }
-        .item-card .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
+        /* 추천 결과 화면과 같은 폭: 카드는 한 줄에 3개라 넓게, 위쪽 기록 정보는 .narrow 폭 */
+        .page {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px 72px;
+            color: var(--rc-body);
+        }
 
-        /* 추천 카드와 같은 모양 (policy/recommend.html) — UI 정리 때 공통 조각으로 합칠 것 */
-        .insight { padding: 12px 14px; border-radius: 6px; font-size: 14px; line-height: 1.55; }
-        .insight.why { background: #eef4ff; border-left: 4px solid #1976d2; }
-        .insight.effect { background: #eefaf0; border-left: 4px solid #2e7d32; }
-        .insight .title { display: block; margin-bottom: 3px; font-size: 13px; font-weight: bold; }
-        .insight.why .title { color: #1565c0; }
-        .insight.effect .title { color: #2e7d32; }
-        .section-label { margin: 8px 0 0; color: #555; font-size: 13px; font-weight: bold; }
-        .reasons { list-style: none; margin: 0; padding: 0; }
-        .reasons li { margin-bottom: 6px; font-size: 14px; }
-        .reasons .ok::before { content: "✔ "; color: #2e7d32; font-weight: bold; }
-        .reasons .check { color: #b26a00; }
-        .reasons .check::before { content: "？ "; font-weight: bold; }
-        details { font-size: 14px; }
-        summary { color: #1976d2; cursor: pointer; }
-        .support { margin: 8px 0 0; padding: 12px; border-radius: 5px; background: #f7f9fb; white-space: pre-line; line-height: 1.5; }
-        .apply-btn { display: inline-block; padding: 10px 18px; border-radius: 5px; background: #1976d2; color: white; font-size: 14px; text-decoration: none; }
-        .apply-btn:hover { background: #1565c0; text-decoration: none; }
-        .no-link { margin: 0; color: #999; font-size: 13px; }
-        .changed { margin: 0; padding: 10px 12px; border-radius: 6px; background: #fee2e2; color: var(--color-no); font-size: 14px; }
+        .narrow {
+            max-width: 820px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 14px;
+            color: var(--color-muted);
+            font-size: 14px;
+        }
+
+        .back:hover {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .title-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            color: var(--color-text);
+            font-size: 28px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            margin: 0 0 28px;
+            color: var(--color-muted);
+            font-size: 16px;
+        }
+
+        .title-row .btn {
+            border-color: var(--rc-line);
+            color: var(--color-muted);
+            font-size: 14px;
+        }
+
+        .title-row .btn:hover {
+            border-color: #f1b8b8;
+            color: var(--color-no);
+        }
+
+        /* 그때 입력한 문장 */
+        .sentence {
+            margin: 0;
+            padding: 14px 16px;
+            border: 1px solid var(--rc-line);
+            border-radius: 10px;
+            background: var(--rc-soft);
+            color: var(--color-text);
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .sentence.missing {
+            color: #9ca3af;
+        }
+
+        /* 정책 정보가 지워진 기록 카드 */
+        .policy.gone .policy-name {
+            color: #9ca3af;
+        }
+
+        .gone-note {
+            margin: 14px 0 0;
+            color: var(--color-muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .page {
+                padding: 24px 16px 48px;
+            }
+        }
     </style>
 </head>
 <body>
 <header th:replace="~{fragments/layout :: header}"></header>
 
-<main class="container page">
-    <a class="back" th:href="@{/mypage/history}">← 추천 기록 목록</a>
-    <h1>추천 기록</h1>
-    <p class="date" th:text="${#temporals.format(detail.createdAt, 'yyyy.MM.dd HH:mm')} + ' 에 받은 추천'">받은 시각</p>
-    <form th:action="@{/mypage/history/{id}/delete(id=${detail.historyId})}" method="post" class="inline"
-          onsubmit="return confirm('이 추천 기록을 삭제할까요? 되돌릴 수 없어요.');">
-        <button type="submit" class="btn">기록 삭제</button>
-    </form>
+<main class="page">
+
+    <div class="narrow">
+        <a class="back" th:href="@{/mypage/history}">← 추천 기록 목록</a>
+
+        <div class="title-row">
+            <div>
+                <h1>추천 기록</h1>
+                <p class="subtitle"
+                   th:text="${#temporals.format(detail.createdAt, 'yyyy.MM.dd HH:mm')} + ' 에 받은 추천이에요.'">받은 시각</p>
+            </div>
+            <form th:action="@{/mypage/history/{id}/delete(id=${detail.historyId})}" method="post" class="inline"
+                  onsubmit="return confirm('이 추천 기록을 삭제할까요? 되돌릴 수 없어요.');">
+                <button type="submit" class="btn">기록 삭제</button>
+            </form>
+        </div>
+    </div>
 
     <!-- 그때 입력한 문장 -->
-    <div class="sentence-box" th:text="${detail.sentence} ?: '(입력 문장 없음)'">입력한 문장</div>
+    <div class="box narrow">
+        <h2>그때 입력한 문장</h2>
+        <p class="sentence" th:if="${detail.sentence}" th:text="${detail.sentence}">입력한 문장</p>
+        <p class="sentence missing" th:unless="${detail.sentence}">(입력 문장 없음)</p>
+    </div>
 
     <!-- 그때 AI가 이해한 조건 (저장된 PROFILE_JSON → 칩) -->
-    <th:block th:if="${!#maps.isEmpty(detail.conditions)}">
-        <h2 class="section-title">그때 AI가 이해한 조건</h2>
+    <div class="box narrow" th:if="${!#maps.isEmpty(detail.conditions)}">
+        <h2>그때 AI가 이해한 조건</h2>
         <div class="chips">
             <span class="chip" th:each="c : ${detail.conditions}">
                 <span class="label" th:text="${c.key}">나이</span><b th:text="${c.value}">25세</b>
             </span>
         </div>
-    </th:block>
+    </div>
 
-    <!-- 그때의 TOP 10 (RecommendHistoryItemDTO) -->
-    <h2 class="section-title">그때 받은 추천 TOP <span th:text="${#lists.size(detail.items)}">10</span></h2>
-    <p class="note">추천 이유·기대 효과는 그때 저장한 내용이고, 자격 조건·마감·신청 정보는 그때 조건으로 오늘 정책 정보를 다시 확인한 결과예요.</p>
-
-    <div class="items">
-        <div class="card item-card" th:each="item : ${detail.items}">
-            <div class="item-top">
-                <span class="rank" th:text="${item.rankNo} + '위'">1위</span>
-
-                <!-- 정책명: 정책 정보가 있으면 A의 상세 화면으로 링크 -->
-                <h3 th:if="${item.policyName != null}">
-                    <a th:href="@{/policies/{id}(id=${item.policyId})}" th:text="${item.policyName}">정책명</a>
-                </h3>
-                <h3 class="missing" th:if="${item.policyName == null}">정책 정보 없음</h3>
-
-                <span class="badge"
-                      th:classappend="${item.closed} ? 'badge-no' : (${item.closingSoon} ? 'badge-unknown' : 'badge-ok')"
-                      th:text="${item.deadlineLabel}">D-7</span>
+    <!-- 요약 (추천 결과 화면과 같은 모양) -->
+    <div class="result-top">
+        <div class="box summary-box">
+            <h2 class="result-title">
+                그때 받은 추천 <span th:text="${#lists.size(detail.items)}">10</span>개
+            </h2>
+            <div class="stats" th:if="${!#lists.isEmpty(detail.items)}">
+                <div class="stat ready">
+                    <b th:text="${#lists.size(detail.items.?[card != null and card.unknownReasons.isEmpty()])}">0</b>바로 신청 가능
+                </div>
+                <div class="stat soon">
+                    <b th:text="${#lists.size(detail.items.?[closingSoon])}">0</b>7일 안에 마감
+                </div>
+                <div class="stat check">
+                    <b th:text="${#lists.size(detail.items.?[card != null and !card.unknownReasons.isEmpty()])}">0</b>확인 필요
+                </div>
             </div>
+            <p class="result-note">추천 이유·기대 효과는 그때 저장한 내용이고, 자격 조건·마감·신청 정보는
+                그때 조건으로 오늘 정책 정보를 다시 확인한 결과예요.</p>
+        </div>
+    </div>
 
-            <div class="meta" th:if="${item.policyOrganizationName != null}"
-                 th:text="${item.policyOrganizationName}">주관 기관</div>
+    <!-- 그때의 추천 카드 (RecommendHistoryItemDTO.card → 추천 결과와 같은 조각) -->
+    <div class="policy-grid" th:if="${!#lists.isEmpty(detail.items)}">
+        <th:block th:each="item : ${detail.items}">
 
-            <!-- 마감일·모집 규모 (추천 카드와 같은 줄) -->
-            <p class="when" th:if="${item.card != null and (item.card.applyEndDate != null or item.card.supportScale != null)}">
-                <span th:if="${item.card.applyEndDate}" th:text="${item.card.applyEndDate} + ' 마감'"></span>
-                <span th:if="${item.card.supportScale}" th:text="'모집 규모 ' + ${item.card.supportScale}"></span>
-            </p>
-
-            <!-- 추천 이유·기대 효과: 그때 저장한 문장 -->
-            <div class="insight why" th:if="${item.reason != null}">
-                <span class="title">💡 추천 이유</span>
-                <span th:text="${item.reason}">추천 이유</span>
-            </div>
-
-            <div class="insight effect" th:if="${item.effect != null}">
-                <span class="title">🎯 기대 효과</span>
-                <span th:text="${item.effect}">기대 효과</span>
-            </div>
-
-            <!-- 아래는 정책 정보가 있을 때만 (추천 카드와 같은 구성) -->
-            <th:block th:if="${item.card != null}" th:with="policy=${item.card}">
-
-                <!-- 추천 뒤에 정책 조건이 바뀌어 지금은 맞지 않는 조건 -->
-                <p class="changed" th:if="${!#lists.isEmpty(item.notMatchedConditions)}"
-                   th:text="'⚠ 지금 정책 정보로는 ' + ${#strings.listJoin(item.notMatchedConditions, ', ')} + ' 조건이 맞지 않아요. 공고를 다시 확인해 주세요.'"></p>
-
-                <!-- 자격 조건 충족 / 확인 필요 -->
-                <th:block th:if="${!#lists.isEmpty(policy.reasons) or !#lists.isEmpty(policy.unknownReasons)}">
-                    <p class="section-label">자격 조건</p>
-                    <ul class="reasons">
-                        <li class="ok" th:each="reason : ${policy.reasons}" th:text="${reason}"></li>
-                        <li class="check" th:each="reason : ${policy.unknownReasons}" th:text="${reason}"></li>
-                    </ul>
-                </th:block>
-
-                <!-- 참여 제한 대상: 자격 판정에는 안 들어가서 원문 그대로 안내 -->
-                <details th:if="${policy.participationRestriction}">
-                    <summary>참여 제한 대상 확인</summary>
-                    <p class="support" th:text="${policy.participationRestriction}"></p>
-                </details>
-
-                <details th:if="${policy.supportContent}">
-                    <summary>지원 내용 원문 보기</summary>
-                    <p class="support" th:text="${policy.supportContent}"></p>
-                </details>
-
-                <!-- 신청 준비: 신청 방법·심사 방법 + 제출서류 체크리스트 (체크 상태는 저장 안 함) -->
-                <details th:if="${!#lists.isEmpty(policy.documents) or policy.applicationMethod != null or policy.screeningMethod != null}">
-                    <summary>신청 준비</summary>
-                    <p th:if="${policy.applicationMethod}">신청 방법: <span th:text="${policy.applicationMethod}"></span></p>
-                    <p th:if="${policy.screeningMethod}">심사 방법: <span th:text="${policy.screeningMethod}"></span></p>
-                    <ul th:if="${!#lists.isEmpty(policy.documents)}">
-                        <li th:each="d : ${policy.documents}">
-                            <label><input type="checkbox"> <span th:text="${d}"></span></label>
-                        </li>
-                    </ul>
-                </details>
+            <!-- 정책 정보가 있으면: 추천 결과와 같은 카드 (다시 판정 버튼은 조건 수정 폼이 없어서 뺌) -->
+            <th:block th:if="${item.card != null}"
+                      th:with="notice=${#lists.isEmpty(item.notMatchedConditions)} ? null
+                              : '지금 정책 정보로는 ' + ${#strings.listJoin(item.notMatchedConditions, ', ')}
+                                + ' 조건이 맞지 않아요. 공고를 다시 확인해 주세요.'">
+                <div th:replace="~{fragments/policy-card :: card(${item.card}, ${item.rankNo}, ${notice}, false)}"></div>
             </th:block>
 
-            <div class="actions" th:if="${item.policyName != null}">
-                <th:block th:if="${item.card != null}">
-                    <a class="apply-btn" th:if="${item.card.applicationUrl}" th:href="${item.card.applicationUrl}"
-                       target="_blank" rel="noopener noreferrer">신청하러 가기 →</a>
-                    <p class="no-link" th:unless="${item.card.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
-                    <a th:if="${item.card.applyEndDate != null and !item.closed}"
-                       th:href="@{/policy/{id}/calendar.ics(id=${item.policyId})}">📅 마감일 캘린더에 추가</a>
-                </th:block>
-
-                <!-- 찜 버튼 (아래 스크립트가 새로고침 없이 토글) -->
-                <div th:replace="~{fragments/bookmark :: button(${item.policyId}, ${bookmarkedIds.contains(item.policyId)})}"></div>
+            <!-- 정책 정보가 없으면: 저장해 둔 문장만 -->
+            <div class="box policy gone" th:if="${item.card == null}">
+                <div class="policy-head">
+                    <span class="rank" th:text="${item.rankNo}">1</span>
+                    <div>
+                        <span class="policy-name" th:text="${item.policyName} ?: '정책 정보 없음'">정책명</span>
+                    </div>
+                </div>
+                <p class="gone-note">지금은 정책 정보를 찾을 수 없어요. 그때 저장한 내용만 보여드려요.</p>
+                <div class="insight why" th:if="${item.reason}">
+                    <span class="title">추천 이유</span>
+                    <span th:text="${item.reason}"></span>
+                </div>
+                <div class="insight effect" th:if="${item.effect}">
+                    <span class="title">기대 효과</span>
+                    <span th:text="${item.effect}"></span>
+                </div>
             </div>
-        </div>
+        </th:block>
     </div>
 </main>
 
