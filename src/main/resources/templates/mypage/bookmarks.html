@@ -46,7 +46,7 @@
 
             <!-- 5장 ③: 정책 이름은 A의 상세 화면으로 링크 -->
             <h3><a th:href="@{/policies/{id}(id=${p.policyId})}" th:text="${p.policyName}">정책명</a></h3>
-            <div class="meta" th:text="${p.organizationName}">주관 기관</div>
+            <div class="meta" th:if="${p.organizationName}" th:text="${p.organizationName}">주관 기관</div>
             <p class="summary" th:text="${p.summary}">설명</p>
 
             <!-- 이 화면의 정책은 모두 찜한 상태 → bookmarked=true (누르면 해제 후 이 화면으로 돌아옴) -->

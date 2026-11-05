@@ -3,6 +3,7 @@ package com.app.YouthCompass.policy;
 import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.dto.PolicyDetailResponseDTO;
 import com.app.YouthCompass.policy.dto.PolicyDetailResponseDTO.ConditionRow;
@@ -47,7 +48,25 @@ public class PolicyDetailService {
         if (member != null) {
             evaluate(dto, policy, member);
         }
+        cleanForDisplay(policy);
         return Optional.of(dto);
+    }
+
+    // 화면에 그대로 쓰는 원문 칸: 빈 값·"해당없음" → null (th:if 로 숨김), URL 은 링크로 쓸 수 있는 것만 (PolicyText)
+    // 판정이 끝난 뒤에 바꿈 → 판정 결과에는 영향 없음
+    private void cleanForDisplay(PolicyVO p) {
+        p.setPolicyOrganizationName(PolicyText.text(p.getPolicyOrganizationName()));
+        p.setPolicyMediumCategory(PolicyText.text(p.getPolicyMediumCategory()));
+        p.setPolicyDescription(PolicyText.text(p.getPolicyDescription()));
+        p.setPolicySupportContent(PolicyText.text(p.getPolicySupportContent()));
+        p.setPolicyAdditionalCondition(PolicyText.text(p.getPolicyAdditionalCondition()));
+        p.setPolicyIncomeEtcCondition(PolicyText.text(p.getPolicyIncomeEtcCondition()));
+        p.setPolicyParticipationRestriction(PolicyText.text(p.getPolicyParticipationRestriction()));
+        p.setPolicyApplicationMethod(PolicyText.text(p.getPolicyApplicationMethod()));
+        p.setPolicySubmissionDocuments(PolicyText.text(p.getPolicySubmissionDocuments()));
+        p.setPolicyEtcNote(PolicyText.text(p.getPolicyEtcNote()));
+        p.setPolicyApplicationUrl(PolicyText.url(p.getPolicyApplicationUrl()));
+        p.setPolicyReferenceUrl(PolicyText.url(p.getPolicyReferenceUrl()));
     }
 
     private void evaluate(PolicyDetailResponseDTO dto, PolicyVO policy, MemberVO member) {
@@ -96,7 +115,7 @@ public class PolicyDetailService {
         if (start != null || end != null) {
             return (start == null ? "" : start.format(DOT_DATE)) + " ~ " + (end == null ? "" : end.format(DOT_DATE));
         }
-        return p.getPolicyBusinessPeriodEtc();
+        return PolicyText.text(p.getPolicyBusinessPeriodEtc());
     }
 
     private static final DateTimeFormatter DOT_DATE = DateTimeFormatter.ofPattern("yyyy.MM.dd");

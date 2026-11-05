@@ -1,5 +1,6 @@
 package com.app.YouthCompass.policy;
 
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -38,8 +39,11 @@ public class CalendarController {
         }
 
         LocalDate end = policy.getPolicyApplyEndDate();
-        String name = policy.getPolicyName();
-        String url = chooseUrl(policy);
+        String name = PolicyText.text(policy.getPolicyName());
+        if (name == null) {
+            name = "청년 정책";
+        }
+        String url = PolicyText.applyUrl(policy);
 
         // iCalendar 형식: 줄바꿈은 반드시 CRLF(\r\n)
         String ics = String.join("\r\n",
@@ -68,16 +72,6 @@ public class CalendarController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename("policy-" + policyId + ".ics").build().toString())
                 .body(ics.getBytes(StandardCharsets.UTF_8));
-    }
-
-    // 신청 URL이 없으면 참고 URL (둘 다 없으면 null)
-    private String chooseUrl(PolicyVO policy) {
-        String url = policy.getPolicyApplicationUrl();
-        if (url != null && !url.isBlank()) {
-            return url;
-        }
-        String ref = policy.getPolicyReferenceUrl();
-        return ref != null && !ref.isBlank() ? ref : null;
     }
 
     // iCalendar 규칙: \ ; , 앞에 \, 줄바꿈은 \n 으로

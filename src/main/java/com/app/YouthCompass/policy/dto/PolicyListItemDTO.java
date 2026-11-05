@@ -1,5 +1,6 @@
 package com.app.YouthCompass.policy.dto;
 
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import lombok.Getter;
 
@@ -29,8 +30,8 @@ public class PolicyListItemDTO {
         PolicyListItemDTO dto = new PolicyListItemDTO();
         dto.policyId = p.getPolicyId();
         dto.policyName = p.getPolicyName();
-        dto.organizationName = p.getPolicyOrganizationName();
-        dto.largeCategory = p.getPolicyLargeCategory();
+        dto.organizationName = PolicyText.text(p.getPolicyOrganizationName());
+        dto.largeCategory = PolicyText.text(p.getPolicyLargeCategory());
         dto.summary = cut(p.getPolicyDescription(), SUMMARY_LIMIT);
         dto.applyEndDate = p.getPolicyApplyEndDate();
         dto.fillDeadline(p.getPolicyApplyPeriodCode());

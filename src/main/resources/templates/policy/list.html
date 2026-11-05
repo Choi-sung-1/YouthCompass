@@ -64,7 +64,7 @@
             </div>
 
             <h3><a th:href="@{/policies/{id}(id=${p.policyId})}" th:text="${p.policyName}">정책명</a></h3>
-            <div class="meta" th:text="${p.organizationName}">주관 기관</div>
+            <div class="meta" th:if="${p.organizationName}" th:text="${p.organizationName}">주관 기관</div>
             <p class="summary" th:text="${p.summary}">설명</p>
 
             <!-- 찜 버튼 (fragments/bookmark.html, B) — js/bookmark.js가 새로고침 없이 토글 -->

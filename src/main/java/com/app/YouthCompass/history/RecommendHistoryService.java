@@ -15,6 +15,7 @@ import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
@@ -122,6 +123,10 @@ public class RecommendHistoryService {
 
             List<RecommendHistoryItemDTO> items = historyMapper.selectItemsWithPolicy(historyId);
             items.forEach(item -> {
+                // 빈 문장·빈 기관명은 null → 화면에서 해당 칸을 숨김
+                item.setReason(PolicyText.text(item.getReason()));
+                item.setEffect(PolicyText.text(item.getEffect()));
+                item.setPolicyOrganizationName(PolicyText.text(item.getPolicyOrganizationName()));
                 fillDeadline(item);
                 fillCard(item, profile, intent);
             });

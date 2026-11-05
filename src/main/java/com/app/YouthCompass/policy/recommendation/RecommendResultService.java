@@ -4,6 +4,7 @@ import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.openAI.openAiService;
 import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
@@ -174,6 +175,9 @@ public class RecommendResultService {
         RecommendedPolicyDTO dto = RecommendedPolicyDTO.from(result);
         dto.setReasons(matched.getOrDefault(id, List.of()));
         dto.setUnknownReasons(unchecked.getOrDefault(id, List.of()));
+        // AI가 빈 문장("")을 돌려줘도 규칙 문장으로 (빈 칸이 화면에 보이지 않게)
+        aiReason = PolicyText.text(aiReason);
+        aiEffect = PolicyText.text(aiEffect);
         dto.setRecommendReason(aiReason != null ? aiReason : fallbackReason(dto.getReasons()));
         dto.setExpectedEffect(aiEffect != null ? aiEffect : fallbackEffect(result.getPolicy()));
         dto.setPersonalized(personalized);
@@ -193,9 +197,9 @@ public class RecommendResultService {
     // AI 없이 만드는 기대 효과: 지원내용 앞부분
     private String fallbackEffect(PolicyVO policy) {
 
-        String support = policy.getPolicySupportContent();
+        String support = PolicyText.text(policy.getPolicySupportContent());
 
-        if (support == null || support.isBlank()) {
+        if (support == null) {
             return "지원 내용은 공고에서 확인해 주세요.";
         }
 
