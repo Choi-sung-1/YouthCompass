@@ -36,7 +36,26 @@ public final class PolicyCategories {
             Map.entry("권리", "참여권리")
     );
 
+    // 문장에 분야를 직접 말했다고 볼 단어 (분야 이름과 그 앞뒤 절반)
+    // 취업·창업처럼 신분(취준생 등)으로도 쓰이는 말은 넣지 않음 → 그런 말은 키워드로 들어올 때만 인정
+    private static final Map<String, List<String>> MENTIONS = Map.of(
+            "일자리", List.of("일자리"),
+            "주거", List.of("주거"),
+            "교육", List.of("교육"),
+            "복지문화", List.of("복지", "문화"),
+            "참여권리", List.of("참여", "권리")
+    );
+
     private PolicyCategories() {
+    }
+
+    // 문장에 이 분야 이름을 직접 썼는지 ex) "교육 관련 정책 있어?" → 교육 true, "대학교 3학년" → 교육 false
+    public static boolean mentionedIn(String category, String text) {
+
+        if (category == null || text == null) {
+            return false;
+        }
+        return MENTIONS.getOrDefault(category, List.of()).stream().anyMatch(text::contains);
     }
 
     // 한글 대분류로 정리. 알 수 없는 값이면 null (관련도 계산에서 분야 없음으로 처리)

@@ -144,7 +144,11 @@ class ExtractionAccuracyTest {
                     "region", Region.GYEONGGI, "sigungu", "안양시",
                     "school", SchoolRequirement.UNIVERSITY_STUDENT,
                     "major", MajorRequirement.ENGINEERING,   // 정보보안학과 = 공학계열 (기존 OpenAiServiceTest의 정보보호학과와 같은 기준)
-                    "category", "교육", "keyword", "보안")
+                    "category", "교육", "keyword", "보안"),
+
+            // 16. 신분만 말하고 찾는 지원은 없음 → 분야를 교육·일자리로 추측하면 안 됨
+            c("대학교 3학년인데 받을 수 있는 정책 있어?",
+                    "school", SchoolRequirement.UNIVERSITY_STUDENT)
     );
 
     @Test
