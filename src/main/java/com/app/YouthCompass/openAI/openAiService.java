@@ -66,9 +66,11 @@ public class openAiService {
                 .specialTargets(checkEmptyTargets(normalizeTargets(data.specialTargets()), text))
                 .build();
 
+        String keyword = checkKeywordInText(data.keyword(), text);
+
         PolicySearchIntent intent = PolicySearchIntent.builder()
-                .category(normalizeCategory(data.category()))
-                .keyword(checkKeywordInText(data.keyword(), text))
+                .category(checkCategoryGrounded(normalizeCategory(data.category()), keyword, text))
+                .keyword(keyword)
                 .build();
 
         return new ExtractionResult(profile, intent);
@@ -330,6 +332,17 @@ public class openAiService {
             log.info("AI가 알 수 없는 분야를 반환해서 분야 없음으로 처리: {}", category);
         }
         return normalized;
+    }
+
+    // AI가 신분만 보고 분야를 추측하면 버림 ex) "대학교 3학년인데 받을 수 있는 정책?" → 교육 ✕
+    // 남기는 경우: 찾는 지원을 직접 말함(문장 속 키워드가 있음) 또는 분야 이름을 직접 씀("교육 관련 정책")
+    private String checkCategoryGrounded(String category, String keyword, String text) {
+
+        if (category == null || keyword != null || PolicyCategories.mentionedIn(category, text)) {
+            return category;
+        }
+        log.info("찾는 지원을 말하지 않아 추측한 분야를 버림: {}", category);
+        return null;
     }
 
     // AI는 원 단위로 추출 → 정책 데이터(만원 단위)에 맞춰 변환
