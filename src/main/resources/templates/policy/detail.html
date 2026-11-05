@@ -7,23 +7,77 @@
     <style>
         .detail { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
         @media (max-width: 860px) { .detail { grid-template-columns: 1fr; } }
+        /* 긴 URL·공백 없는 문자열이 칸을 밀어내 화면 밖으로 넘치지 않게 */
+        .detail > * { min-width: 0; }
+        .detail section, .detail aside { overflow-wrap: anywhere; }
         .back { display: inline-block; margin-bottom: 12px; font-size: 14px; }
         .title-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
         h1 { margin: 4px 0 6px; font-size: 24px; line-height: 1.35; }
-        .org { color: var(--color-muted); margin: 0 0 16px; }
-        .info dt { font-weight: 700; margin-top: 18px; }
-        .info dd { margin: 6px 0 0; white-space: pre-line; }
+        .org { color: var(--color-muted); margin: 0 0 14px; }
+
+        /* 제목 아래 핵심 요약 칩 */
+        .summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .summary .chip { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px;
+                         border: 1px solid var(--color-border); border-radius: 8px; font-size: 13px; background: var(--color-bg); }
+        .summary .chip b { color: var(--color-muted); font-weight: 600; }
+
+        /* 섹션: 질문형 제목 + 구분선 */
+        .sec { padding-top: 20px; margin-top: 20px; border-top: 1px solid var(--color-border); }
+        .sec h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 17px; }
+        .sec h2 .ico { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
+                       border-radius: 8px; background: #eff6ff; font-size: 15px; }
+        .text { margin: 0; white-space: pre-line; }
+        .desc { color: #374151; }
+
+        /* 지원 내용: 가장 중요한 정보라 강조 박스 */
+        .highlight { padding: 14px 16px; border-radius: 8px; background: #eff6ff;
+                     border-left: 4px solid var(--color-primary); white-space: pre-line; }
+
+        /* 라벨 | 내용 행 */
+        .rows { margin: 0; }
+        .row { display: grid; grid-template-columns: 110px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--color-border); }
+        .row:last-child { border-bottom: 0; }
+        .row dt { font-size: 13px; font-weight: 700; color: var(--color-muted); padding-top: 2px; }
+        .row dd { margin: 0; white-space: pre-line; }
+        .row.warn dt { color: var(--color-no); }
+        .row.warn dd { color: #7f1d1d; }
+        @media (max-width: 640px) { .row { grid-template-columns: 1fr; gap: 4px; } }
+
         .apply-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .apply-box .dday { align-self: flex-start; font-size: 14px; font-weight: 700; padding: 4px 12px; }
         .apply-box .period { font-size: 14px; color: var(--color-muted); }
         .apply-box .btn { text-align: center; }
         .notice { padding: 10px 12px; border-radius: 8px; background: #fee2e2; color: var(--color-no); font-size: 14px; }
+
+        /* 나에게 맞을까? */
         .eligibility h2 { font-size: 18px; margin: 0 0 12px; }
-        .verdict { display: block; padding: 10px 12px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
-        .cond-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .cond-table td { padding: 8px 4px; border-bottom: 1px solid var(--color-border); }
-        .cond-table td:last-child { text-align: right; }
-        .reason-list { padding-left: 18px; font-size: 14px; margin: 8px 0 0; }
-        .reason-title { font-weight: 700; font-size: 14px; margin-top: 14px; }
+        .verdict { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px;
+                   font-size: 14px; font-weight: 600; margin-bottom: 14px; border: 1px solid transparent; }
+        .verdict .ico { font-size: 20px; line-height: 1.2; }
+        .verdict.badge-ok { border-color: #bbf7d0; }
+        .verdict.badge-unknown { border-color: #fde68a; }
+        .verdict.badge-no { border-color: #fecaca; }
+
+        .counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; text-align: center; }
+        .counts div { padding: 8px 4px; border-radius: 8px; font-size: 12px; }
+        .counts strong { display: block; font-size: 18px; line-height: 1.2; }
+
+        .cond-list { list-style: none; padding: 0; margin: 0; font-size: 14px; }
+        .cond-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+                        padding: 9px 10px; border-radius: 8px; margin-bottom: 4px; background: var(--color-bg); }
+        .cond-list li .name::before { content: "●"; margin-right: 8px; font-size: 10px; vertical-align: 2px; }
+        .cond-list li.st-badge-ok .name::before { color: var(--color-ok); }
+        .cond-list li.st-badge-unknown .name::before { color: var(--color-unknown); }
+        .cond-list li.st-badge-no { background: #fef2f2; }
+        .cond-list li.st-badge-no .name { font-weight: 700; }
+        .cond-list li.st-badge-no .name::before { color: var(--color-no); }
+
+        .reasons { margin-top: 14px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+        .reasons.ok { background: #f0fdf4; }
+        .reasons.unknown { background: #fffbeb; }
+        .reason-title { font-weight: 700; margin-bottom: 4px; }
+        .reason-list { padding-left: 18px; margin: 0; }
+        .reason-list li + li { margin-top: 4px; }
         .hint { font-size: 13px; color: var(--color-muted); margin-top: 12px; }
     </style>
 </head>
@@ -47,43 +101,75 @@
                 현재 온통청년에서 내려간 정책이에요. 최신 공고를 꼭 확인해 주세요.
             </p>
 
-            <dl class="info">
-                <dt>정책 설명</dt>
-                <dd th:text="${p.policyDescription} ?: '-'"></dd>
+            <!-- 핵심 요약 -->
+            <div class="summary">
+                <span class="chip"><b>나이</b><span th:text="${detail.ageText}">만 19세 ~ 34세</span></span>
+                <span class="chip" th:if="${p.policyApplyEndDate}"><b>신청 마감</b>
+                    <span th:text="${#temporals.format(p.policyApplyEndDate, 'yyyy.MM.dd')}">2026.12.31</span></span>
+                <span class="chip" th:if="${detail.businessPeriodText}"><b>사업 기간</b>
+                    <span th:text="${detail.businessPeriodText}">연중 계속</span></span>
+            </div>
 
-                <dt>지원 내용</dt>
-                <dd th:text="${p.policySupportContent} ?: '-'"></dd>
+            <div class="sec">
+                <h2><span class="ico">📌</span>어떤 정책인가요?</h2>
+                <p class="text desc" th:text="${p.policyDescription} ?: '-'"></p>
+            </div>
 
-                <dt>나이</dt>
-                <dd th:text="${detail.ageText}"></dd>
+            <div class="sec">
+                <h2><span class="ico">🎁</span>무엇을 지원하나요?</h2>
+                <div class="highlight" th:text="${p.policySupportContent} ?: '-'"></div>
+            </div>
 
-                <dt th:if="${p.policyAdditionalCondition}">추가 자격 조건</dt>
-                <dd th:if="${p.policyAdditionalCondition}" th:text="${p.policyAdditionalCondition}"></dd>
+            <div class="sec">
+                <h2><span class="ico">👤</span>누가 받을 수 있나요?</h2>
+                <dl class="rows">
+                    <div class="row">
+                        <dt>나이</dt>
+                        <dd th:text="${detail.ageText}"></dd>
+                    </div>
+                    <div class="row" th:if="${!#strings.isEmpty(#strings.trim(p.policyAdditionalCondition))}">
+                        <dt>추가 자격 조건</dt>
+                        <dd th:text="${p.policyAdditionalCondition}"></dd>
+                    </div>
+                    <div class="row" th:if="${!#strings.isEmpty(#strings.trim(p.policyIncomeEtcCondition))}">
+                        <dt>소득 조건</dt>
+                        <dd th:text="${p.policyIncomeEtcCondition}"></dd>
+                    </div>
+                    <div class="row warn" th:if="${!#strings.isEmpty(#strings.trim(p.policyParticipationRestriction))}">
+                        <dt>⚠ 참여 제한 대상</dt>
+                        <dd th:text="${p.policyParticipationRestriction}"></dd>
+                    </div>
+                </dl>
+            </div>
 
-                <dt th:if="${p.policyIncomeEtcCondition}">소득 조건</dt>
-                <dd th:if="${p.policyIncomeEtcCondition}" th:text="${p.policyIncomeEtcCondition}"></dd>
+            <div class="sec">
+                <h2><span class="ico">📝</span>어떻게 신청하나요?</h2>
+                <dl class="rows">
+                    <div class="row" th:if="${detail.businessPeriodText}">
+                        <dt>사업 기간</dt>
+                        <dd th:text="${detail.businessPeriodText}"></dd>
+                    </div>
+                    <div class="row">
+                        <dt>신청 방법</dt>
+                        <dd th:text="${p.policyApplicationMethod} ?: '-'"></dd>
+                    </div>
+                    <div class="row" th:if="${!#strings.isEmpty(#strings.trim(p.policySubmissionDocuments))}">
+                        <dt>제출 서류</dt>
+                        <dd th:text="${p.policySubmissionDocuments}"></dd>
+                    </div>
+                </dl>
+            </div>
 
-                <dt th:if="${p.policyParticipationRestriction}">참여 제한 대상</dt>
-                <dd th:if="${p.policyParticipationRestriction}" th:text="${p.policyParticipationRestriction}"></dd>
-
-                <dt th:if="${detail.businessPeriodText}">사업 기간</dt>
-                <dd th:if="${detail.businessPeriodText}" th:text="${detail.businessPeriodText}"></dd>
-
-                <dt>신청 방법</dt>
-                <dd th:text="${p.policyApplicationMethod} ?: '-'"></dd>
-
-                <dt th:if="${p.policySubmissionDocuments}">제출 서류</dt>
-                <dd th:if="${p.policySubmissionDocuments}" th:text="${p.policySubmissionDocuments}"></dd>
-
-                <dt th:if="${p.policyEtcNote}">기타 안내</dt>
-                <dd th:if="${p.policyEtcNote}" th:text="${p.policyEtcNote}"></dd>
-            </dl>
+            <div class="sec" th:if="${!#strings.isEmpty(#strings.trim(p.policyEtcNote))}">
+                <h2><span class="ico">ℹ️</span>기타 안내</h2>
+                <p class="text" th:text="${p.policyEtcNote}"></p>
+            </div>
         </section>
 
         <!-- 오른쪽: 신청 + 나에게 맞는지 -->
         <aside>
             <div class="card apply-box">
-                <span class="badge"
+                <span class="badge dday"
                       th:classappend="${detail.card.closed} ? 'badge-no' : (${detail.card.closingSoon} ? 'badge-unknown' : 'badge-ok')"
                       th:text="${detail.card.deadlineLabel}">D-7</span>
 
@@ -102,7 +188,7 @@
 
                 <!-- 찜 버튼 (fragments/bookmark.html, B) -->
                 <div th:replace="~{fragments/bookmark :: button(${p.policyId}, ${bookmarked})}"></div>
-                </div>
+            </div>
 
             <div class="card eligibility">
                 <h2>나에게 맞을까?</h2>
@@ -115,27 +201,38 @@
 
                 <!-- 로그인 회원 -->
                 <div th:if="${detail.evaluated}">
-                    <span class="verdict badge" th:classappend="${detail.verdictClass()}"
-                          th:text="${detail.verdict()}">결론</span>
-
-                    <table class="cond-table">
-                        <tr th:each="c : ${detail.conditions}">
-                            <td th:text="${c.name()}">나이</td>
-                            <td><span class="badge" th:classappend="${c.badgeClass()}" th:text="${c.label()}">충족</span></td>
-                        </tr>
-                    </table>
-
-                    <div th:unless="${#lists.isEmpty(detail.matchedReasons)}">
-                        <div class="reason-title">✅ 충족한 조건</div>
-                        <ul class="reason-list">
-                            <li th:each="r : ${detail.matchedReasons}" th:text="${r}"></li>
-                        </ul>
+                    <!-- 종합 결론 -->
+                    <div class="verdict" th:classappend="${detail.verdictClass()}">
+                        <span class="ico" th:text="${detail.notMatchCount > 0} ? '❌' : (${detail.unknownCount > 0} ? '⚠️' : '✅')">✅</span>
+                        <span th:text="${detail.verdict()}">결론</span>
                     </div>
 
-                    <div th:unless="${#lists.isEmpty(detail.unknownReasons)}">
+                    <!-- 개수 요약 -->
+                    <div class="counts" th:unless="${#lists.isEmpty(detail.conditions)}">
+                        <div class="badge-ok"><strong th:text="${detail.matchRowCount()}">3</strong>충족</div>
+                        <div class="badge-unknown"><strong th:text="${detail.unknownRowCount()}">1</strong>확인 필요</div>
+                        <div class="badge-no"><strong th:text="${detail.notMatchRowCount()}">0</strong>미충족</div>
+                    </div>
+
+                    <!-- 조건별 결과 -->
+                    <ul class="cond-list">
+                        <li th:each="c : ${detail.conditions}" th:classappend="${'st-' + c.badgeClass()}">
+                            <span class="name" th:text="${c.name()}">나이</span>
+                            <span class="badge" th:classappend="${c.badgeClass()}" th:text="${c.label()}">충족</span>
+                        </li>
+                    </ul>
+
+                    <div class="reasons unknown" th:unless="${#lists.isEmpty(detail.unknownReasons)}">
                         <div class="reason-title">❓ 확인이 필요한 조건</div>
                         <ul class="reason-list">
                             <li th:each="r : ${detail.unknownReasons}" th:text="${r}"></li>
+                        </ul>
+                    </div>
+
+                    <div class="reasons ok" th:unless="${#lists.isEmpty(detail.matchedReasons)}">
+                        <div class="reason-title">✅ 충족한 조건</div>
+                        <ul class="reason-list">
+                            <li th:each="r : ${detail.matchedReasons}" th:text="${r}"></li>
                         </ul>
                     </div>
 
