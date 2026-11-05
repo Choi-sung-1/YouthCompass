@@ -18,7 +18,11 @@
         <nav class="nav">
             <a th:href="@{/policies}">정책 목록</a>
             <a th:href="@{/policy/recommend}">AI 추천</a>
-            <a th:if="${loginId != null}" th:href="@{/mypage}">마이페이지</a>
+            <th:block th:if="${loginId != null}">
+                <a th:href="@{/mypage/bookmarks}">찜한 정책</a>
+                <a th:href="@{/mypage/history}">추천 기록</a>
+                <a th:href="@{/mypage}">마이페이지</a>
+            </th:block>
         </nav>
 
         <div class="nav-auth">
