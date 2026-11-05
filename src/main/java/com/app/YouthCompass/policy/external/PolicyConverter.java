@@ -1,6 +1,7 @@
 package com.app.YouthCompass.policy.external;
 
 import com.app.YouthCompass.policy.external.dto.YouthPolicyDTO;
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import org.springframework.stereotype.Component;
 
@@ -8,7 +9,6 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,15 +35,16 @@ public class PolicyConverter {
                 .policyLargeCategory(dto.getLclsfNm())
                 .policyMediumCategory(dto.getMclsfNm())
 
-                .policySupportContent(dto.getPlcySprtCn())
+                .policySupportContent(PolicyText.text(dto.getPlcySprtCn()))
 
-                .policyOrganizationName(dto.getSprvsnInstCdNm())
+                .policyOrganizationName(PolicyText.text(dto.getSprvsnInstCdNm()))
 
-                .policyApplicationMethod(dto.getPlcyAplyMthdCn())
-                .policyApplicationUrl(dto.getAplyUrlAddr())
+                .policyApplicationMethod(PolicyText.text(dto.getPlcyAplyMthdCn()))
+                // URL: "www.xxx.kr" → "https://www.xxx.kr", "전화문의"·빈 값 → null (PolicyText)
+                .policyApplicationUrl(PolicyText.url(dto.getAplyUrlAddr()))
 
                 .policySubmissionDocuments(dto.getSbmsnDcmntCn())
-                .policyReferenceUrl(dto.getRefUrlAddr1())
+                .policyReferenceUrl(PolicyText.url(dto.getRefUrlAddr1()))
 
 
                 // ================================
@@ -82,13 +83,13 @@ public class PolicyConverter {
                 .policyAdditionalCondition(dto.getAddAplyQlfcCndCn())
 
                 // 참여 제한 대상
-                .policyParticipationRestriction(meaninglessToNull(blankToNull(dto.getPtcpPrpTrgtCn())))
+                .policyParticipationRestriction(PolicyText.text(dto.getPtcpPrpTrgtCn()))
 
                 // ================================
                 // 신청 방식 정보
                 // ================================
 
-                .policyScreeningMethod(meaninglessToNull(blankToNull(dto.getSrngMthdCn())))
+                .policyScreeningMethod(PolicyText.text(dto.getSrngMthdCn()))
                 // 지원 규모 "0"은 정해진 인원이 없다는 뜻으로 보고 null (나이 0 = 제한 없음과 같은 기준)
                 .policySupportScale(zeroToNull(blankToNull(dto.getSprtSclCnt())))
                 .policyArrivalOrderYn(blankToNull(dto.getSprtArvlSeqYn()))
@@ -108,8 +109,8 @@ public class PolicyConverter {
 
                 .policyBusinessStartDate(parseDate(dto.getBizPrdBgngYmd()))
                 .policyBusinessEndDate(parseDate(dto.getBizPrdEndYmd()))
-                .policyBusinessPeriodEtc(meaninglessToNull(blankToNull(dto.getBizPrdEtcCn())))
-                .policyEtcNote(meaninglessToNull(blankToNull(dto.getEtcMttrCn())))
+                .policyBusinessPeriodEtc(PolicyText.text(dto.getBizPrdEtcCn()))
+                .policyEtcNote(PolicyText.text(dto.getEtcMttrCn()))
 
 
                 // ================================
@@ -205,11 +206,5 @@ public class PolicyConverter {
     // "0" → null (값이 없다는 뜻으로 오는 경우)
     private String zeroToNull(String value) {
         return "0".equals(value) ? null : value;
-    }
-    // 내용 없이 형식만 채운 값 → null (화면에 "심사 방법: 해당없음"이 나오지 않게)
-    private static final Set<String> MEANINGLESS = Set.of("해당없음", "해당 없음", "없음", "-", "미정");
-
-    private String meaninglessToNull(String value) {
-        return value == null || MEANINGLESS.contains(value) ? null : value;
     }
 }

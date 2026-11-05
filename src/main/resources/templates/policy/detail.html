@@ -95,7 +95,7 @@
                 <span class="badge" th:if="${p.policyMediumCategory}" th:text="${p.policyMediumCategory}">중분류</span>
             </div>
             <h1 th:text="${p.policyName}">정책명</h1>
-            <p class="org" th:text="${p.policyOrganizationName}">주관 기관</p>
+            <p class="org" th:if="${p.policyOrganizationName}" th:text="${p.policyOrganizationName}">주관 기관</p>
 
             <p class="notice" th:if="${detail.inactive}">
                 현재 온통청년에서 내려간 정책이에요. 최신 공고를 꼭 확인해 주세요.

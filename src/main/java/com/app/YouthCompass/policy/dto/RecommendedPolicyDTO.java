@@ -1,6 +1,7 @@
 package com.app.YouthCompass.policy.dto;
 
 import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
+import com.app.YouthCompass.policy.domain.model.PolicyText;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -80,29 +81,21 @@ public class RecommendedPolicyDTO {
         return RecommendedPolicyDTO.builder()
                 .policyId(policy.getPolicyId())
                 .policyName(policy.getPolicyName())
-                .organizationName(policy.getPolicyOrganizationName())
-                .supportContent(policy.getPolicySupportContent())
-                .applicationUrl(chooseUrl(policy))
+                // 빈 값·"해당없음"은 null → 화면에서 해당 칸을 숨김 (PolicyText)
+                .organizationName(PolicyText.text(policy.getPolicyOrganizationName()))
+                .supportContent(PolicyText.text(policy.getPolicySupportContent()))
+                .applicationUrl(PolicyText.applyUrl(policy))
                 .relevanceScore(result.getRelevanceScore())
                 .matchScore(result.getSpecificMatchScore())
                 .applyEndDate(policy.getPolicyApplyEndDate())
                 .deadlineLabel(card.getDeadlineLabel())
                 .closingSoon(card.isClosingSoon())
-                .applicationMethod(policy.getPolicyApplicationMethod())
-                .documents(chooseDocuments(policy))                .screeningMethod(policy.getPolicyScreeningMethod())
-                .supportScale(policy.getPolicySupportScale())
-                .participationRestriction(policy.getPolicyParticipationRestriction())
+                .applicationMethod(PolicyText.text(policy.getPolicyApplicationMethod()))
+                .documents(chooseDocuments(policy))
+                .screeningMethod(PolicyText.text(policy.getPolicyScreeningMethod()))
+                .supportScale(PolicyText.text(policy.getPolicySupportScale()))
+                .participationRestriction(PolicyText.text(policy.getPolicyParticipationRestriction()))
                 .build();
-    }
-    private static String chooseUrl(PolicyVO policy) {
-
-        String url = policy.getPolicyApplicationUrl();
-
-        if (url != null && !url.isBlank()) {
-            return url;
-        }
-
-        return policy.getPolicyReferenceUrl();
     }
 
     // 제출 서류: AI가 정리한 목록(A의 policyDocumentItems)이 있으면 그걸 쓰고, 정리 전(null)이면 원문을 규칙으로 나눔
@@ -116,8 +109,8 @@ public class RecommendedPolicyDTO {
 
         List<String> items = new ArrayList<>();
         for (String line : aiItems.split("\n")) {
-            String item = line.trim();
-            if (!item.isEmpty() && !items.contains(item)) {
+            String item = PolicyText.text(line);
+            if (item != null && !items.contains(item)) {
                 items.add(item);
             }
         }
@@ -172,7 +165,8 @@ public class RecommendedPolicyDTO {
                 .replaceAll("^\\d+[.)]\\s*", "")
                 .trim();
 
-        if (!item.isEmpty() && !items.contains(item)) {
+        item = PolicyText.text(item);
+        if (item != null && !items.contains(item)) {
             items.add(item);
         }
     }
