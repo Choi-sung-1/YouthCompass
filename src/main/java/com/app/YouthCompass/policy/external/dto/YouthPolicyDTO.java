@@ -89,6 +89,9 @@ public class YouthPolicyDTO {
     // 추가 신청 자격조건
     private String addAplyQlfcCndCn;
 
+    // 참여 제한 대상 (공무원, 기수혜자 등)
+    private String ptcpPrpTrgtCn;
+
     // ================================
     // 신청 방식 정보
     // ================================
@@ -114,6 +117,20 @@ public class YouthPolicyDTO {
 
     // 신청기간 원문 ("20261030 ~ 20261031", 상시면 빈 값)
     private String aplyYmd;
+
+    // ================================
+    // 사업기간 / 기타
+    // ================================
+
+    // 사업기간 시작일·종료일 ("20260101", 기간이 없으면 빈 값)
+    private String bizPrdBgngYmd;
+    private String bizPrdEndYmd;
+
+    // 사업기간 기타 ("연중 계속", "2026년 1월 ~ 12월" 등, 날짜가 없을 때 주로 채워짐)
+    private String bizPrdEtcCn;
+
+    // 기타 사항 (문의처, 상세 공고 확인 안내 등)
+    private String etcMttrCn;
 
     // ================================
     // 등록/수정 정보

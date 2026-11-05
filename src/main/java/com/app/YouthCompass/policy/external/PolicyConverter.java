@@ -81,6 +81,9 @@ public class PolicyConverter {
                 // 기타 추가 자격조건
                 .policyAdditionalCondition(dto.getAddAplyQlfcCndCn())
 
+                // 참여 제한 대상
+                .policyParticipationRestriction(meaninglessToNull(blankToNull(dto.getPtcpPrpTrgtCn())))
+
                 // ================================
                 // 신청 방식 정보
                 // ================================
@@ -98,6 +101,15 @@ public class PolicyConverter {
                 .policyApplyPeriodCode(dto.getAplyPrdSeCd())
                 .policyApplyStartDate(parseApplyStartDate(dto.getAplyYmd()))
                 .policyApplyEndDate(parseApplyEndDate(dto.getAplyYmd()))
+
+                // ================================
+                // 사업기간 / 기타
+                // ================================
+
+                .policyBusinessStartDate(parseDate(dto.getBizPrdBgngYmd()))
+                .policyBusinessEndDate(parseDate(dto.getBizPrdEndYmd()))
+                .policyBusinessPeriodEtc(meaninglessToNull(blankToNull(dto.getBizPrdEtcCn())))
+                .policyEtcNote(meaninglessToNull(blankToNull(dto.getEtcMttrCn())))
 
 
                 // ================================
@@ -179,6 +191,12 @@ public class PolicyConverter {
         List<LocalDate> dates = parseApplyDates(aplyYmd);
         return dates.isEmpty() ? null : dates.get(dates.size() - 1);
     }
+    // 날짜 하나 ("20260101") → LocalDate, 없거나 잘못된 값이면 null
+    private LocalDate parseDate(String ymd) {
+        List<LocalDate> dates = parseApplyDates(ymd);
+        return dates.isEmpty() ? null : dates.get(0);
+    }
+
     // 빈 문자열·공백 → null, 아니면 앞뒤 공백 제거
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();

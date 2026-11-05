@@ -68,6 +68,7 @@ public class RecommendedPolicyDTO {
 
     private String screeningMethod;      // 심사 방법 (A의 ② 머지 전엔 null)
     private String supportScale;         // 모집 규모 숫자만 ex) "300" (단위가 정책마다 달라 붙이지 않음)
+    private String participationRestriction; // 참여 제한 대상 원문 ex) "공무원, 기수혜자" (판정에는 안 씀)
     // 판정 결과(PolicyEvaluationResult)를 카드용 DTO로 변환
     public static RecommendedPolicyDTO from(PolicyEvaluationResult result) {
 
@@ -90,6 +91,7 @@ public class RecommendedPolicyDTO {
                 .applicationMethod(policy.getPolicyApplicationMethod())
                 .documents(chooseDocuments(policy))                .screeningMethod(policy.getPolicyScreeningMethod())
                 .supportScale(policy.getPolicySupportScale())
+                .participationRestriction(policy.getPolicyParticipationRestriction())
                 .build();
     }
     private static String chooseUrl(PolicyVO policy) {

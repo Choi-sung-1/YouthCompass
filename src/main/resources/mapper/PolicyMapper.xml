@@ -33,6 +33,7 @@
                                POLICY_SPECIAL_TARGET_CODES,
                                POLICY_REGION_CODES,
                                POLICY_ADDITIONAL_CONDITION,
+                               POLICY_PARTICIPATION_RESTRICTION,
 
                                POLICY_SCREENING_METHOD,
                                POLICY_SUPPORT_SCALE,
@@ -42,6 +43,11 @@
                                POLICY_APPLY_PERIOD_CODE,
                                POLICY_APPLY_START_DATE,
                                POLICY_APPLY_END_DATE,
+
+                               POLICY_BUSINESS_START_DATE,
+                               POLICY_BUSINESS_END_DATE,
+                               POLICY_BUSINESS_PERIOD_ETC,
+                               POLICY_ETC_NOTE,
 
                                POLICY_STATUS,
                                POLICY_UPDATED_AT
@@ -80,6 +86,7 @@
                        #{policySpecialTargetCodes},
                        #{policyRegionCodes},
                        #{policyAdditionalCondition},
+                       #{policyParticipationRestriction},
 
                        #{policyScreeningMethod},
                        #{policySupportScale},
@@ -89,6 +96,11 @@
                        #{policyApplyPeriodCode},
                        #{policyApplyStartDate},
                        #{policyApplyEndDate},
+
+                       #{policyBusinessStartDate},
+                       #{policyBusinessEndDate},
+                       #{policyBusinessPeriodEtc},
+                       #{policyEtcNote},
 
                        #{policyStatus},
                        #{policyUpdatedAt}
@@ -129,6 +141,7 @@
 
         POLICY_REGION_CODES,
         POLICY_ADDITIONAL_CONDITION,
+        POLICY_PARTICIPATION_RESTRICTION,
 
         POLICY_SCREENING_METHOD,
         POLICY_SUPPORT_SCALE,
@@ -140,6 +153,11 @@
         POLICY_APPLY_PERIOD_CODE,
         POLICY_APPLY_START_DATE,
         POLICY_APPLY_END_DATE,
+
+        POLICY_BUSINESS_START_DATE,
+        POLICY_BUSINESS_END_DATE,
+        POLICY_BUSINESS_PERIOD_ETC,
+        POLICY_ETC_NOTE,
 
         POLICY_STATUS,
         POLICY_CREATED_AT,

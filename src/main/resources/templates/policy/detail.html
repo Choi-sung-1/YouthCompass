@@ -63,11 +63,20 @@
                 <dt th:if="${p.policyIncomeEtcCondition}">소득 조건</dt>
                 <dd th:if="${p.policyIncomeEtcCondition}" th:text="${p.policyIncomeEtcCondition}"></dd>
 
+                <dt th:if="${p.policyParticipationRestriction}">참여 제한 대상</dt>
+                <dd th:if="${p.policyParticipationRestriction}" th:text="${p.policyParticipationRestriction}"></dd>
+
+                <dt th:if="${detail.businessPeriodText}">사업 기간</dt>
+                <dd th:if="${detail.businessPeriodText}" th:text="${detail.businessPeriodText}"></dd>
+
                 <dt>신청 방법</dt>
                 <dd th:text="${p.policyApplicationMethod} ?: '-'"></dd>
 
                 <dt th:if="${p.policySubmissionDocuments}">제출 서류</dt>
                 <dd th:if="${p.policySubmissionDocuments}" th:text="${p.policySubmissionDocuments}"></dd>
+
+                <dt th:if="${p.policyEtcNote}">기타 안내</dt>
+                <dd th:if="${p.policyEtcNote}" th:text="${p.policyEtcNote}"></dd>
             </dl>
         </section>
 
