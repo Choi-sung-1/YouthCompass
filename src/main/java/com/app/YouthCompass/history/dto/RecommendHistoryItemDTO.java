@@ -1,8 +1,10 @@
 package com.app.YouthCompass.history.dto;
 
+import com.app.YouthCompass.policy.dto.RecommendedPolicyDTO;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 // 추천 기록 상세의 카드 한 장 (TBL_RECOMMEND_ITEM + TBL_POLICY LEFT JOIN)
 @Data
@@ -30,4 +32,10 @@ public class RecommendHistoryItemDTO {
     private boolean closingSoon;
     //    마감됨
     private boolean closed;
+
+    // ---------- Service에서 채움 (추천 화면과 같은 카드, 정책 정보가 없으면 null) ----------
+    //    자격 조건·신청 준비·지원 내용·신청 링크 등 (그때 조건으로 지금 정책을 다시 판정)
+    private RecommendedPolicyDTO card;
+    //    지금 정책 정보로 다시 판정했을 때 맞지 않는 조건 이름 ex) ["지역"] (보통 빈 목록)
+    private List<String> notMatchedConditions = List.of();
 }
