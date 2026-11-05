@@ -37,9 +37,6 @@ import static com.app.YouthCompass.policy.domain.eligibility.EligibilityStatus.U
 @Component
 public class RecommendReasonBuilder {
 
-    // 지역 코드가 이보다 많으면 전국 대상으로 보고 지역 조건으로 치지 않음 (점수 계산과 같은 기준)
-    private static final int NATIONWIDE_REGION_CODE_COUNT = 100;
-
     // 소득 기타 조건 문장이 너무 길면 자름
     private static final int ETC_TEXT_LIMIT = 80;
 
@@ -368,7 +365,8 @@ public class RecommendReasonBuilder {
             return false;
         }
 
-        return codes.split(",").length <= NATIONWIDE_REGION_CODE_COUNT;
+        // 전국 대상은 지역 조건으로 치지 않음 (판정·점수 계산과 같은 기준: Region.isNationwide)
+        return !Region.isNationwide(codes);
     }
 
     // 정책 코드 중에 "제한없음"·"알 수 없음"이 아닌 실제 조건이 하나라도 있는지

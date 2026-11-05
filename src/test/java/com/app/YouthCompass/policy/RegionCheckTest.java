@@ -42,6 +42,19 @@ class RegionCheckTest {
         }
     }
 
+    // 전국 정책 = sigungu.csv의 시군구 코드 전부 (sidoPrefixes가 있으면 그 시·도만)
+    private String codesOf(String... sidoPrefixes) throws Exception {
+        java.util.Set<String> only = java.util.Set.of(sidoPrefixes);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                getClass().getResourceAsStream("/sigungu.csv"), StandardCharsets.UTF_8))) {
+            return reader.lines().skip(1)
+                    .map(line -> line.split(",", -1))
+                    .filter(c -> only.isEmpty() || only.contains(c[1]))
+                    .map(c -> c[0])
+                    .collect(Collectors.joining(","));
+        }
+    }
+
     // ===== 핵심: 시 구분 =====
     @Test
     void 평택_사용자에게_안양_정책은_NOT_MATCH() {
@@ -117,6 +130,26 @@ class RegionCheckTest {
     void 평택_사용자에게_서울_정책은_NOT_MATCH() {
         assertThat(check(Region.GYEONGGI, "41220", "11680"))
                 .isEqualTo(EligibilityStatus.NOT_MATCH);
+    }
+
+    // ===== 전국 정책 =====
+    @Test
+    void 지역정보_없어도_전국_정책은_MATCH() throws Exception {
+        assertThat(check(null, null, codesOf()))
+                .isEqualTo(EligibilityStatus.MATCH);
+    }
+
+    @Test
+    void 지역정보_없으면_여러_시도_정책은_UNKNOWN() throws Exception {
+        // 경기·서울·인천 시군구 전부 = 코드는 많지만 전국은 아님
+        assertThat(check(null, null, codesOf("41", "11", "28")))
+                .isEqualTo(EligibilityStatus.UNKNOWN);
+    }
+
+    @Test
+    void 전국_정책은_지역을_알면_그대로_MATCH() throws Exception {
+        assertThat(check(Region.GYEONGGI, "41220", codesOf()))
+                .isEqualTo(EligibilityStatus.MATCH);
     }
 
     @Test

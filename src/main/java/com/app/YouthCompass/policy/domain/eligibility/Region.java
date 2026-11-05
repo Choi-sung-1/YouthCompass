@@ -3,8 +3,10 @@ package com.app.YouthCompass.policy.domain.eligibility;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Getter
 public enum Region {
@@ -50,5 +52,20 @@ public enum Region {
                                 .anyMatch(normalizedCode::startsWith)
                 )
                 .findFirst();
+    }
+
+    // 정책 지역 코드가 모든 시·도를 포함하면 전국 대상
+    // (온통청년은 전국 정책도 시군구 코드를 전부 나열해서 내려줌, 코드 개수로 판단하면 여러 도 대상 정책까지 전국으로 오해)
+    public static boolean isNationwide(String regionCodes) {
+
+        if (regionCodes == null || regionCodes.isBlank()) {
+            return false;
+        }
+
+        Set<Region> regions = EnumSet.noneOf(Region.class);
+        for (String code : regionCodes.split(",")) {
+            fromCode(code).ifPresent(regions::add);
+        }
+        return regions.size() == values().length;
     }
 }
