@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 // 추천 화면에 필요한 결과를 만드는 서비스
 // AI 조건 추출(openAiService) → 회원정보로 빈칸 채움 → 규칙 기반 자격 판정·정렬(PolicyRecommendationService)
@@ -100,15 +101,17 @@ public class RecommendResultService {
             unchecked.put(id, reasonBuilder.unknownReasons(result, profile));
         }
 
-        // 3. AI 개인 맞춤 재정렬 + 추천 이유 + 기대 효과 (실패하면 빈 목록)
+        // 3. AI 개인 맞춤 재정렬 + 추천 이유 + 기대 효과 (실패하면 empty, 맞는 정책이 없으면 빈 목록)
         long aiStart = System.currentTimeMillis();
-        List<PolicyInsightService.Insight> insights =
+        Optional<List<PolicyInsightService.Insight>> aiResult =
                 insightService.pick(memberName, sentence, profile, intent, candidates, matched, unchecked, TOP_N);
-        log.info("[추천 시간] AI 맞춤 재정렬·이유 생성: {}ms (선택 {}개)",
-                System.currentTimeMillis() - aiStart, insights.size());
+        List<PolicyInsightService.Insight> insights = aiResult.orElse(List.of());
+        log.info("[추천 시간] AI 맞춤 재정렬·이유 생성: {}ms (선택 {}개{})",
+                System.currentTimeMillis() - aiStart, insights.size(), aiResult.isEmpty() ? ", 실패" : "");
 
 
-        // 4. 최종 목록: AI가 고른 정책을 점수 높은 순(규칙 기반 정렬 순서)으로 → AI 결과가 없으면 규칙 기반 상위 N개
+        // 4. 최종 목록: AI가 고른 정책을 점수 높은 순(규칙 기반 정렬 순서)으로 → AI 호출이 실패했을 때만 규칙 기반 상위 N개
+        //    AI가 "맞는 정책 없음"이라고 하면 0건 그대로 (개수를 채우려고 관계없는 정책을 넣지 않음)
         //    AI는 고르기·설명만 담당, 순위는 점수로 정해서 같은 조건이면 같은 순서
         List<RecommendedPolicyDTO> policies = new ArrayList<>();
 
@@ -123,7 +126,7 @@ public class RecommendResultService {
             }
         }
 
-        if (policies.isEmpty()) {
+        if (aiResult.isEmpty()) {
             for (PolicyEvaluationResult result : candidates) {
                 if (policies.size() >= TOP_N) {
                     break;
@@ -133,7 +136,7 @@ public class RecommendResultService {
         }
 
         RecommendResponseDTO response =
-                new RecommendResponseDTO(profile, intent, policies, memberFilled, !insights.isEmpty());
+                new RecommendResponseDTO(profile, intent, policies, memberFilled, aiResult.isPresent());
         fillSummary(response);
         // 조건 하나 차이로 놓친 정책 (최대 3개)
         response.setMissedPolicies(missedPolicyFinder.find(profile, intent, 3));
