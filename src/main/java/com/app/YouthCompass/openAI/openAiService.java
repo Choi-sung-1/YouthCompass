@@ -61,7 +61,7 @@ public class openAiService {
         if (data == null) {
             data = client.prompt()
                     .system(instructions)
-                    .user(text)
+                    .user(noBraces(text))
                     .options(OpenAiChatOptions.builder()
                             .model(EXTRACT_MODEL)
                             .temperature(0.0)
@@ -379,6 +379,12 @@ public class openAiService {
         }
         log.info("찾는 지원을 말하지 않아 추측한 분야를 버림: {}", category);
         return null;
+    }
+
+    // Spring AI는 user 문자열을 템플릿으로 처리해서 { } 를 변수 자리로 읽음
+    // → 사용자가 중괄호를 입력하면 호출이 실패하므로 소괄호로 바꿔서 보냄 (템플릿 인젝션 방지)
+    static String noBraces(String text) {
+        return text == null ? null : text.replace('{', '(').replace('}', ')');
     }
 
     // AI는 원 단위로 추출 → 정책 데이터(만원 단위)에 맞춰 변환
