@@ -5,6 +5,7 @@ import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.eligibility.PolicyEligibilityService;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -83,9 +84,7 @@ public class PolicyRecommendationService {
         // =========================
         // 1. 대분류
         // =========================
-        if (category != null
-                && policy.getPolicyLargeCategory() != null
-                && policy.getPolicyLargeCategory().contains(category)) {
+        if (PolicyCategories.matches(category, policy.getPolicyLargeCategory())) {
 
             score += 3;
         }

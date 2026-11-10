@@ -46,7 +46,32 @@ public final class PolicyCategories {
             "참여권리", List.of("참여", "권리")
     );
 
+    // 대분류 → DB에 실제로 들어 있는 이름들
+    // 온통청년 API가 분류 이름을 바꿔서 예전 이름과 새 이름이 섞여 있음 (복지문화 / 금융･복지･문화, 참여권리 / 참여･기반)
+    // 교육 / 교육･직업훈련은 "교육"을 포함하므로 하나로 충분
+    private static final Map<String, List<String>> DB_NAMES = Map.of(
+            "일자리", List.of("일자리"),
+            "주거", List.of("주거"),
+            "교육", List.of("교육"),
+            "복지문화", List.of("복지문화", "금융･복지･문화"),
+            "참여권리", List.of("참여권리", "참여･기반")
+    );
+
     private PolicyCategories() {
+    }
+
+    // 정책의 대분류(여러 개가 쉼표로 들어 있을 수 있음)가 이 분야인지
+    public static boolean matches(String category, String policyLargeCategory) {
+
+        if (category == null || policyLargeCategory == null) {
+            return false;
+        }
+        return dbNames(category).stream().anyMatch(policyLargeCategory::contains);
+    }
+
+    // 이 분야로 볼 DB 대분류 이름들 (목록 검색 SQL에서 LIKE로 사용). 모르는 값은 그대로
+    public static List<String> dbNames(String category) {
+        return DB_NAMES.getOrDefault(category, List.of(category));
     }
 
     // 문장에 이 분야 이름을 직접 썼는지 ex) "교육 관련 정책 있어?" → 교육 true, "대학교 3학년" → 교육 false

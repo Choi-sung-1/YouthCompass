@@ -204,9 +204,12 @@
             AND (POLICY_APPLY_END_DATE IS NULL OR POLICY_APPLY_END_DATE &gt;= CURRENT_DATE)
         </if>
 
-        <!-- 대분류 (여러 개가 들어 있을 수 있어 포함 검색) -->
-        <if test="category != null">
-            AND POLICY_LARGE_CATEGORY LIKE CONCAT('%', #{category}, '%')
+        <!-- 대분류 (여러 개가 들어 있을 수 있어 포함 검색, 예전·새 분류 이름 모두) -->
+        <if test="categoryNames != null">
+            AND
+            <foreach collection="categoryNames" item="name" open="(" separator=" OR " close=")">
+                POLICY_LARGE_CATEGORY LIKE CONCAT('%', #{name}, '%')
+            </foreach>
         </if>
 
         <!-- 검색어: 정책명·키워드·설명 -->
