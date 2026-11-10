@@ -6,9 +6,13 @@ import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -20,8 +24,23 @@ import java.util.stream.Collectors;
 @Service
 public class openAiService {
 
+    // 조건 추출은 매번 같은 결과가 나와야 함 (결과가 흔들리면 후보·순위가 전부 흔들림)
+    // → 추론 모델(gpt-5-mini, temperature 고정 1) 대신 temperature 0 + seed 고정 모델을 이 호출에만 사용
+    private static final String EXTRACT_MODEL = "gpt-4.1-mini";
+    private static final int EXTRACT_SEED = 42;
+
+    // 같은 문장 → 같은 추출 결과 (AI 응답 원본만 저장, 회원정보 채우기는 매번 새로)
+    private static final int CACHE_SIZE = 500;
+
     private final ChatClient client;
     private final String instructions;
+    private final Map<String, ProfileData> cache = Collections.synchronizedMap(
+            new LinkedHashMap<>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, ProfileData> eldest) {
+                    return size() > CACHE_SIZE;
+                }
+            });
 
     public openAiService(ChatClient.Builder builder) {
         client = builder.build();
@@ -35,15 +54,26 @@ public class openAiService {
                     "문장을 1~4000자로 입력해주세요.");
         }
 
-        ProfileData data = client.prompt()
-                .system(instructions)
-                .user(text)
-                .call()
-                .entity(ProfileData.class);
+        // 공백 차이는 같은 문장으로 봄
+        String key = text.trim().replaceAll("\\s+", " ");
+        ProfileData data = cache.get(key);
 
-        // AI가 실제로 어떤 값을 반환했는지 확인 (개인정보 포함 → debug 레벨에서만 출력)
-        log.debug("AI 추출 결과: {}", data);
-        validate(data);
+        if (data == null) {
+            data = client.prompt()
+                    .system(instructions)
+                    .user(text)
+                    .options(OpenAiChatOptions.builder()
+                            .model(EXTRACT_MODEL)
+                            .temperature(0.0)
+                            .seed(EXTRACT_SEED))
+                    .call()
+                    .entity(ProfileData.class);
+
+            // AI가 실제로 어떤 값을 반환했는지 확인 (개인정보 포함 → debug 레벨에서만 출력)
+            log.debug("AI 추출 결과: {}", data);
+            validate(data);
+            cache.put(key, data);
+        }
 
         // 시·군 이름 → 시·군 코드 (시·도도 함께 정리)
         Region region = normalize(data.region());
@@ -146,6 +176,9 @@ public class openAiService {
                 아래 한글 값 중 하나를 글자 그대로 반환하세요:
                 일자리, 주거, 교육, 복지문화, 참여권리
                 예: 장학금·학자금·교육비 → 교육, 월세·전세 → 주거, 취업·창업 → 일자리
+                역량 강화, 직무·기술 교육, 교육 프로그램·훈련 과정 참여, 자격증 준비 → 교육
+                (훗날 취업에 도움이 되는 교육이어도 교육입니다)
+                일자리는 구직·채용·취업 지원금·창업·재직자 지원을 직접 찾을 때만 쓰세요.
                 사용자가 찾는 지원을 직접 말한 경우에만 분야를 정하세요.
                 학력·취업 상태·신분(대학생, 취준생, 직장인 등)만으로 분야를 추측하지 마세요.
                 예: "대학생 받을만한 정책" → null, "대학생인데 장학금 있어?" → 교육
@@ -155,6 +188,9 @@ public class openAiService {
                 사용자가 찾는 구체적인 지원 내용을 짧은 핵심어로 추출하세요.
                 예: 월세 지원을 찾는 경우 "월세".
                 문장에 나온 단어로만 만드세요. 문장에 없는 지원 이름을 만들지 마세요.
+                특정 프로그램·기관 이름보다 사용자가 원하는 지원 내용을 나타내는 단어를 우선하세요.
+                예: "화이트햇 스쿨 지원하는데 역량을 높이고 싶어" → "역량"
+                지원 내용을 나타내는 단어가 없으면 프로그램 이름을 그대로 쓰세요.
                 나이·거주지·전공·학력·취업 상태·신분만으로 검색 목적을 추측하지 마세요.
                 예: "대학생 받을만한 정책" → null
                 검색 목적이 없으면 null로 두세요.
