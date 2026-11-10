@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,7 +37,8 @@ import java.util.stream.Collectors;
 //   (순위에 안 뽑힌 후보의 설명은 버림 → 그만큼 비용이 더 듦)
 //
 // - 자격 판정(NOT_MATCH 제외)은 규칙이 이미 끝냈으므로 AI는 순서와 설명만 담당한다.
-// - 순위 호출이 실패하면 빈 목록 → 호출한 쪽(RecommendResultService)이 규칙 기반 결과로 대신 보여준다.
+// - 순위 호출이 실패하면 Optional.empty() → 호출한 쪽(RecommendResultService)이 규칙 기반 결과로 대신 보여준다.
+//   AI가 정상적으로 "맞는 정책 없음"([])을 주면 빈 목록 → 추천 0건 (개수를 채우려고 다른 정책을 넣지 않음)
 // - 설명 호출 하나가 실패하면 그 카드만 문장 없이 → 규칙 문장으로 대신 (toDto)
 //
 // 주의: Spring AI는 system/user 문자열을 템플릿으로 처리해서 { } 를 변수 자리로 읽는다.
@@ -89,8 +91,9 @@ public class PolicyInsightService {
 
     // candidates: 규칙 기반 정렬 순서의 후보들 / topN: 최종 개수
     // memberName: 문장에 넣을 이름 (없으면 "회원"), AI에는 보내지 않음
-    // 반환: AI가 고른 순서대로의 Insight (순위 검증 통과한 것만). 순위 호출이 실패하면 빈 목록
-    public List<Insight> pick(
+    // 반환: AI가 고른 순서대로의 Insight (순위 검증 통과한 것만, 맞는 정책이 없으면 빈 목록)
+    //       순위 호출이 실패하면 Optional.empty() → 규칙 기반 결과로 대체
+    public Optional<List<Insight>> pick(
             String memberName,
             String sentence,
             UserPolicyProfileVO profile,
@@ -102,7 +105,7 @@ public class PolicyInsightService {
     ) {
 
         if (candidates == null || candidates.isEmpty()) {
-            return List.of();
+            return Optional.of(List.of());
         }
 
         Map<Long, PolicyEvaluationResult> byId = new LinkedHashMap<>();
@@ -136,19 +139,27 @@ public class PolicyInsightService {
                             .collect(Collectors.joining()))
                     .call()
                     .entity(RankResponse.class);
-            ranked = validateRank(response, byId, topN);
+            Optional<List<Long>> validated = validateRank(response, byId, topN);
+            if (validated.isEmpty()) {
+                log.warn("AI 맞춤 순위 응답이 올바르지 않음 → 규칙 기반 결과로 대체: {}", response);
+                return Optional.empty();
+            }
+            ranked = validated.get();
+            if (ranked.isEmpty()) {
+                log.info("AI가 목적에 맞는 정책이 없다고 판단 → 추천 0건");
+            }
             log.info("[추천 시간]  ├ AI 순위: {}ms ({}개)", System.currentTimeMillis() - start, ranked.size());
 
         } catch (RuntimeException e) {
             // AI 실패해도 추천 자체는 보여줘야 하므로 여기서 삼키고 규칙 기반으로 넘김
             log.warn("AI 맞춤 순위 실패 → 규칙 기반 결과로 대체: {} {}", e.getClass().getSimpleName(), e.getMessage());
-            return List.of();
+            return Optional.empty();
         }
 
         // 순위에 뽑힌 카드의 설명만 기다림 (나머지는 버림)
         List<Insight> insights = ranked.stream().map(id -> explaining.get(id).join()).toList();
         logExplainTimes(ranked, elapsed, System.currentTimeMillis() - start);
-        return insights;
+        return Optional.of(insights);
     }
 
     // 카드별 시간: 최소/평균/최대 + 시간 초과로 규칙 문장이 된 카드 수
@@ -314,11 +325,13 @@ public class PolicyInsightService {
     // =========================
     // AI 순위 검증
     // - 후보에 없는 id, 중복 id 제거, 최대 topN개
+    // - 빈 배열([]) = 맞는 정책 없음 → 빈 목록 (정상)
+    // - 응답·배열이 없거나, id를 줬는데 하나도 후보에 없음 → Optional.empty() (응답 오류, 규칙 기반으로 대체)
     // =========================
-    static List<Long> validateRank(RankResponse response, Map<Long, ?> candidatesById, int topN) {
+    static Optional<List<Long>> validateRank(RankResponse response, Map<Long, ?> candidatesById, int topN) {
 
         if (response == null || response.policyIds() == null) {
-            return List.of();
+            return Optional.empty();
         }
 
         Set<Long> picked = new LinkedHashSet<>();
@@ -335,7 +348,10 @@ public class PolicyInsightService {
                 break;
             }
         }
-        return new ArrayList<>(picked);
+        if (picked.isEmpty() && !response.policyIds().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new ArrayList<>(picked));
     }
 
     // =========================
