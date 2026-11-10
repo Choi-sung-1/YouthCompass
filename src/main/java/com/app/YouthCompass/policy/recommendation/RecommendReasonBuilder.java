@@ -12,6 +12,7 @@ import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import org.springframework.stereotype.Component;
 
@@ -57,7 +58,7 @@ public class RecommendReasonBuilder {
         if (intent != null) {
 
             String category = intent.getCategory();
-            if (category != null && contains(policy.getPolicyLargeCategory(), category)) {
+            if (PolicyCategories.matches(category, policy.getPolicyLargeCategory())) {
                 reasons.add("찾는 분야(" + category + ") 정책이에요");
             }
 

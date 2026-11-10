@@ -11,6 +11,7 @@ import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.MissedPolicyDTO;
 import lombok.RequiredArgsConstructor;
@@ -253,7 +254,7 @@ public class MissedPolicyFinder {
         String category = intent.getCategory();
         String keyword = intent.getKeyword();
 
-        if (notBlank(category) && contains(p.getPolicyLargeCategory(), category)) {
+        if (notBlank(category) && PolicyCategories.matches(category, p.getPolicyLargeCategory())) {
             score += 3;
         }
         if (notBlank(keyword)) {

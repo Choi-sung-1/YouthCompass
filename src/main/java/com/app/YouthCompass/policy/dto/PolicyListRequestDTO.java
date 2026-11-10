@@ -1,7 +1,10 @@
 package com.app.YouthCompass.policy.dto;
 
 import com.app.YouthCompass.policy.domain.eligibility.Region;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import lombok.Data;
+
+import java.util.List;
 
 // 정책 목록 검색 조건 (GET /policies 쿼리 파라미터가 그대로 바인딩됨)
 @Data
@@ -41,6 +44,12 @@ public class PolicyListRequestDTO {
     // 빈 문자열은 조건 없음으로
     public String getCategory() {
         return category == null || category.isBlank() ? null : category.trim();
+    }
+
+    // 목록 SQL에서 쓰는 DB 대분류 이름들 (예전·새 이름이 섞여 있음)
+    public List<String> getCategoryNames() {
+        String c = getCategory();
+        return c == null ? null : PolicyCategories.dbNames(c);
     }
 
     public String getKeyword() {
