@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,11 +93,9 @@ public class RecommendResultService {
         // 2. 후보마다 충족 조건 / 확인 필요 조건 문장 (화면에도 쓰고 AI에도 근거로 넘김)
         Map<Long, List<String>> matched = new HashMap<>();
         Map<Long, List<String>> unchecked = new HashMap<>();
-        Map<Long, PolicyEvaluationResult> byId = new LinkedHashMap<>();
 
         for (PolicyEvaluationResult result : candidates) {
             Long id = result.getPolicy().getPolicyId();
-            byId.put(id, result);
             matched.put(id, reasonBuilder.reasons(result, profile, intent));
             unchecked.put(id, reasonBuilder.unknownReasons(result, profile));
         }
@@ -111,12 +108,19 @@ public class RecommendResultService {
                 System.currentTimeMillis() - aiStart, insights.size());
 
 
-        // 4. 최종 목록: AI가 고른 순서 → AI 결과가 없으면 규칙 기반 순서
+        // 4. 최종 목록: AI가 고른 정책을 점수 높은 순(규칙 기반 정렬 순서)으로 → AI 결과가 없으면 규칙 기반 상위 N개
+        //    AI는 고르기·설명만 담당, 순위는 점수로 정해서 같은 조건이면 같은 순서
         List<RecommendedPolicyDTO> policies = new ArrayList<>();
 
+        Map<Long, PolicyInsightService.Insight> picked = new HashMap<>();
         for (PolicyInsightService.Insight insight : insights) {
-            PolicyEvaluationResult result = byId.get(insight.policyId());
-            policies.add(toDto(result, matched, unchecked, insight.reason(), insight.effect(), true));
+            picked.put(insight.policyId(), insight);
+        }
+        for (PolicyEvaluationResult result : candidates) {
+            PolicyInsightService.Insight insight = picked.get(result.getPolicy().getPolicyId());
+            if (insight != null) {
+                policies.add(toDto(result, matched, unchecked, insight.reason(), insight.effect(), true));
+            }
         }
 
         if (policies.isEmpty()) {
