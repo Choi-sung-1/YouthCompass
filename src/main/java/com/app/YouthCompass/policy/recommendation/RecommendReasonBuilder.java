@@ -13,6 +13,7 @@ import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyKeywords;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import org.springframework.stereotype.Component;
 
@@ -66,7 +67,8 @@ public class RecommendReasonBuilder {
             if (keyword != null
                     && (contains(policy.getPolicyName(), keyword)
                     || contains(policy.getPolicyKeywords(), keyword)
-                    || contains(policy.getPolicyMediumCategory(), keyword))) {
+                    || contains(policy.getPolicyMediumCategory(), keyword)
+                    || PolicyKeywords.mentionedInText(policy, keyword))) {
                 reasons.add("'" + keyword + "' 관련 정책이에요");
             }
         }
