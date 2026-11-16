@@ -23,7 +23,9 @@ import java.util.Optional;
 //  - 생년월일 → 만 나이
 //  - 마이페이지 조건 프로필 → 시·군, 학력, 취업, 혼인, 전공, 연소득
 //  - 프로필에 시·군이 없으면 가입 지역 → 시·도
-//  - 채운 항목 이름을 돌려줘서 화면에 "회원정보에서 가져왔어요" 안내
+//  - 채운 항목 이름 + 출처를 돌려줘서 화면에 "회원정보에서 가져왔어요" 안내
+//    ex) ["나이(생년월일)", "지역(가입 정보)", "학력(마이페이지)"]
+//    (그냥 "지역"이면 마이페이지에서 지역을 저장 안 한 회원이 어디서 온 값인지 헷갈림)
 //  - 시그니처는 팀 약속(정책 상세에서도 호출)이라 바꾸지 않음
 // ============================================================
 @Component
@@ -31,6 +33,11 @@ import java.util.Optional;
 public class MemberProfileDefaults {
 
     private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
+
+    // 화면에 보이는 출처 이름
+    private static final String FROM_BIRTH = "(생년월일)";
+    private static final String FROM_JOIN = "(가입 정보)";
+    private static final String FROM_MYPAGE = "(마이페이지)";
 
     private final MemberProfileService memberProfileService;
 
@@ -47,7 +54,7 @@ public class MemberProfileDefaults {
             int age = Period.between(member.getMemberBirth(), LocalDate.now(KOREA)).getYears();
             if (age > 0 && age <= 120) {
                 profile.setAge(age);
-                filled.add("나이");
+                filled.add("나이" + FROM_BIRTH);
             }
         }
 
@@ -63,25 +70,25 @@ public class MemberProfileDefaults {
         // 학력·취업·혼인·전공: 문장에서 못 찾은 것만 (UNKNOWN도 못 찾은 것으로 봄)
         if (isBlank(profile.getSchool()) && saved.getSchool() != null) {
             profile.setSchool(saved.getSchool());
-            filled.add("학력");
+            filled.add("학력" + FROM_MYPAGE);
         }
         if (isBlank(profile.getJob()) && saved.getJob() != null) {
             profile.setJob(saved.getJob());
-            filled.add("취업 상태");
+            filled.add("취업 상태" + FROM_MYPAGE);
         }
         if (isBlank(profile.getMarriage()) && saved.getMarriage() != null) {
             profile.setMarriage(saved.getMarriage());
-            filled.add("혼인 상태");
+            filled.add("혼인 상태" + FROM_MYPAGE);
         }
         if (isBlank(profile.getMajor()) && saved.getMajor() != null) {
             profile.setMajor(saved.getMajor());
-            filled.add("전공");
+            filled.add("전공" + FROM_MYPAGE);
         }
 
         // 연소득 (만원)
         if (profile.getAnnualIncome() == null && saved.getAnnualIncome() != null) {
             profile.setAnnualIncome(saved.getAnnualIncome());
-            filled.add("연소득");
+            filled.add("연소득" + FROM_MYPAGE);
         }
 
         return filled;
@@ -107,13 +114,13 @@ public class MemberProfileDefaults {
                 SigunguRegistry.Unit unit = savedUnit.get();
                 profile.setSigunguCode(unit.unitCode());
                 Region.fromCode(unit.sidoCode()).ifPresent(profile::setRegion);
-                filled.add("지역");
+                filled.add("지역" + FROM_MYPAGE);
                 return;
             }
 
             toRegion(member.getMemberRegion()).ifPresent(region -> {
                 profile.setRegion(region);
-                filled.add("지역");
+                filled.add("지역" + FROM_JOIN);
             });
             return;
         }
@@ -125,7 +132,7 @@ public class MemberProfileDefaults {
                         .orElse(false))
                 .ifPresent(unit -> {
                     profile.setSigunguCode(unit.unitCode());
-                    filled.add("시·군");
+                    filled.add("시·군" + FROM_MYPAGE);
                 });
     }
 

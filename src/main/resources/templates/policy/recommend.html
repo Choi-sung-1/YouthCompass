@@ -421,6 +421,9 @@
                th:if="${result.memberFilled != null and !#lists.isEmpty(result.memberFilled)}">
                 <b th:text="${#strings.listJoin(result.memberFilled, '·')}"></b>은(는) 문장에 없어서 회원정보에서 가져왔어요.
                 다르면 아래에서 고쳐 주세요.
+                <span th:if="${result.memberFilled.contains('지역(가입 정보)')}">
+                    마이페이지에서 사는 시·군을 저장하면 가입 때 고른 지역 대신 그 지역으로 채워요.
+                </span>
             </p>
         </div>
     </th:block>
