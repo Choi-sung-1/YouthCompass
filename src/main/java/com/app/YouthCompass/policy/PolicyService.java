@@ -10,7 +10,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +33,50 @@ public class PolicyService {
     }
 
     //    모집 중인 정책만 조회 (추천용)
+    //    온통청년에 같은 사업이 해마다 새 번호로 다시 등록되고 옛 번호도 모집 중으로 남아 있어서
+    //    중복은 가장 최근 등록 하나만 남김 (같은 정책이 추천 칸을 두 번 차지하지 않게)
     public List<PolicyVO> findOpenPolicies() {
-        return policyMapper.findOpenPolicies();
+        return withoutDuplicates(policyMapper.findOpenPolicies());
+    }
+
+    //    같은 사업 = 정책명 + 지역이 같음
+    //    (이름만 보면 지자체마다 따로 하는 같은 이름 사업이 합쳐지고, URL은 다시 등록할 때마다 바뀌기도 함)
+    static List<PolicyVO> withoutDuplicates(List<PolicyVO> policies) {
+
+        Map<String, PolicyVO> latest = new LinkedHashMap<>();
+
+        for (PolicyVO policy : policies) {
+            latest.merge(sameProgramKey(policy), policy,
+                    (kept, other) -> isNewer(other, kept) ? other : kept);
+        }
+        return new ArrayList<>(latest.values());
+    }
+
+    private static String sameProgramKey(PolicyVO p) {
+
+        String name = p.getPolicyName() == null ? "" : p.getPolicyName().replaceAll("\\s+", "");
+        if (name.isEmpty()) {
+            return "id:" + p.getPolicyId();   // 이름이 없으면 같은 사업인지 알 수 없으니 합치지 않음
+        }
+
+        // 지역 코드는 순서만 다르게 저장되기도 해서 정렬해서 비교
+        String regions = p.getPolicyRegionCodes() == null ? "" : Arrays.stream(p.getPolicyRegionCodes().split(","))
+                .map(String::trim)
+                .filter(code -> !code.isEmpty())
+                .sorted()
+                .collect(Collectors.joining(","));
+
+        return name + "|" + regions;
+    }
+
+    //    외부 ID 앞 8자리가 등록일(yyyyMMdd)이라 문자열로 비교하면 최근 등록이 더 큼
+    private static boolean isNewer(PolicyVO a, PolicyVO b) {
+
+        Comparator<PolicyVO> registered = Comparator
+                .comparing(PolicyVO::getPolicyExternalId, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(PolicyVO::getPolicyId, Comparator.nullsFirst(Comparator.naturalOrder()));
+
+        return registered.compare(a, b) > 0;
     }
 
     //    정책 목록 검색 (필터 + 페이징)
