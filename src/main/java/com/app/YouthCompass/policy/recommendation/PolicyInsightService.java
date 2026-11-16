@@ -9,6 +9,7 @@ import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -69,6 +70,10 @@ public class PolicyInsightService {
     // 카드 설명을 기다리는 최대 시간 (시작부터, 넘기면 그 카드만 규칙 문장)
     // 로그의 카드별 시간(최소/평균/최대)을 보고 조정
     private static final long EXPLAIN_TIMEOUT_SECONDS = 20;
+
+    // 카드 설명 추론 강도: 기본값(medium)은 응답이 들쭉날쭉해 20초를 자주 넘김 → 짧은 문장 쓰기라 low로 충분
+    // 전역 설정(spring.ai.openai.chat.options.reasoning-effort)으로 두면 문장 분석(gpt-4.1-mini)이 400 오류 → 이 호출에만 지정
+    private static final String EXPLAIN_REASONING_EFFORT = "low";
 
     private final ChatClient client;
     private final ExecutorService executor = Executors.newFixedThreadPool(PARALLEL);
@@ -186,6 +191,8 @@ public class PolicyInsightService {
             ExplainResponse r = client.prompt()
                     .system(instructions)
                     .user(user + "\n[정책]\n" + policy)
+                    .options(OpenAiChatOptions.builder()
+                            .reasoningEffort(EXPLAIN_REASONING_EFFORT))
                     .call()
                     .entity(ExplainResponse.class);
             elapsed.put(policyId, System.currentTimeMillis() - start);
