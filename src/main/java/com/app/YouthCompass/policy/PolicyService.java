@@ -1,5 +1,6 @@
 package com.app.YouthCompass.policy;
 
+import com.app.YouthCompass.policy.domain.eligibility.SigunguRegistry;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.dto.HomeWidgetDTO;
 import com.app.YouthCompass.policy.dto.PolicyListItemDTO;
@@ -59,10 +60,13 @@ public class PolicyService {
             return "id:" + p.getPolicyId();   // 이름이 없으면 같은 사업인지 알 수 없으니 합치지 않음
         }
 
-        // 지역 코드는 순서만 다르게 저장되기도 해서 정렬해서 비교
+        // 지역은 자격 판정과 같은 시·군 단위로 비교 (순서 차이 무시)
+        // 행정구역 개편으로 코드가 바뀌어도 같은 곳이면 같은 지역 (예: 화성시 41590 → 화성시 동탄구 41597, 인천 신설 구)
         String regions = p.getPolicyRegionCodes() == null ? "" : Arrays.stream(p.getPolicyRegionCodes().split(","))
                 .map(String::trim)
                 .filter(code -> !code.isEmpty())
+                .map(code -> SigunguRegistry.fromCode(code).map(SigunguRegistry.Unit::unitCode).orElse(code))
+                .distinct()
                 .sorted()
                 .collect(Collectors.joining(","));
 
