@@ -6,6 +6,7 @@ import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.eligibility.PolicyEligibilityService;
 import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyKeywords;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -117,6 +118,17 @@ public class PolicyRecommendationService {
                 && policy.getPolicyName().contains(keyword)) {
 
             score += 3;
+        }
+
+        // =========================
+        // 5. 정책 설명·지원 내용 (비슷한 말 포함)
+        // =========================
+        // 없으면 같은 분야 정책이 전부 동점이라 찾는 지원과 관계없는 정책이 앞에 옴
+        // ex) "목돈" → 분야 점수만 같은 상담·예술 지원이 저축 정책보다 앞에 옴
+        // 가장 약한 근거라 1점 — 같은 분야 정책 사이 순서를 정하는 정도
+        if (PolicyKeywords.mentionedInText(policy, keyword)) {
+
+            score += 1;
         }
 
         return score;

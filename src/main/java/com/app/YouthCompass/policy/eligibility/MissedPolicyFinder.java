@@ -12,6 +12,7 @@ import com.app.YouthCompass.policy.domain.eligibility.SpecialTargetRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
+import com.app.YouthCompass.policy.domain.recommendation.PolicyKeywords;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.MissedPolicyDTO;
 import lombok.RequiredArgsConstructor;
@@ -261,6 +262,7 @@ public class MissedPolicyFinder {
             if (contains(p.getPolicyMediumCategory(), keyword)) score += 2;
             if (contains(p.getPolicyKeywords(), keyword)) score += 2;
             if (contains(p.getPolicyName(), keyword)) score += 3;
+            if (PolicyKeywords.mentionedInText(p, keyword)) score += 1;
         }
         return score;
     }
