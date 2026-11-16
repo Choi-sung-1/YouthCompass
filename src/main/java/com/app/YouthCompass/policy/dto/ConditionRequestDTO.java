@@ -11,6 +11,7 @@ import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
 import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import lombok.Data;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -113,6 +114,40 @@ public class ConditionRequestDTO {
                 .major(major)
                 .specialTargets(specialTargets == null || specialTargets.isEmpty() ? null : specialTargets)
                 .build();
+    }
+
+    // =========================
+    // 추천 화면 → 정책 상세 링크에 붙이는 조건 ("?from=recommend&age=31&region=INCHEON…")
+    // 상세에서도 추천 때와 같은 조건으로 판정하기 위함 (없으면 상세는 회원정보로 판정해서 추천 카드와 결과가 달라짐)
+    // 문장·분야·키워드는 자격 판정에 쓰지 않아서 뺌, 빈 칸(모름)도 뺌
+    // =========================
+    public String toDetailQuery() {
+
+        UriComponentsBuilder query = UriComponentsBuilder.newInstance()
+                .queryParam("from", "recommend");
+
+        addParam(query, "age", age);
+        addParam(query, "region", region);
+        addParam(query, "sigungu", blankToNull(sigungu));
+        addParam(query, "school", school);
+        addParam(query, "job", job);
+        addParam(query, "marriage", marriage);
+        addParam(query, "annualIncome", annualIncome);
+        addParam(query, "major", major);
+        if (specialTargets != null) {
+            specialTargets.stream()
+                    .map(Enum::name)
+                    .sorted()
+                    .forEach(target -> query.queryParam("specialTargets", target));
+        }
+
+        return query.encode().build().toUriString();
+    }
+
+    private static void addParam(UriComponentsBuilder query, String name, Object value) {
+        if (value != null) {
+            query.queryParam(name, value instanceof Enum<?> e ? e.name() : value);
+        }
     }
 
     public PolicySearchIntent toIntent() {

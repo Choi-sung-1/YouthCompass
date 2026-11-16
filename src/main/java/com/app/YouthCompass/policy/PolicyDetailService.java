@@ -32,6 +32,11 @@ public class PolicyDetailService {
 
     // member: 로그인 회원 (비로그인이면 null → 판정 없이 정책 정보만)
     public Optional<PolicyDetailResponseDTO> getDetail(Long policyId, MemberVO member) {
+        return getDetail(policyId, member, null);
+    }
+
+    // recommendProfile: 추천 화면에서 온 경우 추천 때 조건 (없으면 null → 회원정보로 판정)
+    public Optional<PolicyDetailResponseDTO> getDetail(Long policyId, MemberVO member, UserPolicyProfileVO recommendProfile) {
 
         PolicyVO policy = policyMapper.findPolicyById(policyId);
         if (policy == null) {
@@ -45,7 +50,10 @@ public class PolicyDetailService {
         dto.setBusinessPeriodText(businessPeriodText(policy));
         dto.setInactive("INACTIVE".equals(policy.getPolicyStatus()));
 
-        if (member != null) {
+        if (recommendProfile != null) {
+            evaluate(dto, policy, recommendProfile);
+            dto.setFromRecommend(true);
+        } else if (member != null) {
             evaluate(dto, policy, member);
         }
         cleanForDisplay(policy);
@@ -74,6 +82,11 @@ public class PolicyDetailService {
         // 회원정보로 채울 수 있는 만큼 채운 프로필 (B가 fill()을 확장하면 자동으로 더 정확해짐)
         UserPolicyProfileVO profile = new UserPolicyProfileVO();
         dto.setFilledFromMember(memberProfileDefaults.fill(profile, member));
+        evaluate(dto, policy, profile);
+    }
+
+    // 프로필로 조건별 판정 (회원정보로 채운 것이든, 추천 때 조건이든 같은 판정·문장)
+    private void evaluate(PolicyDetailResponseDTO dto, PolicyVO policy, UserPolicyProfileVO profile) {
 
         PolicyEvaluationResult result = eligibilityService.evaluate(profile, policy);
 

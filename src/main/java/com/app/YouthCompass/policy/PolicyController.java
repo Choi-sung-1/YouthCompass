@@ -188,6 +188,8 @@ public class PolicyController {
     private void addConditionForm(Model model, ConditionRequestDTO conditions) {
 
         model.addAttribute("conditions", conditions);
+        // 카드·놓친 정책의 상세 링크에 붙일 조건 → 상세도 추천과 같은 조건으로 판정
+        model.addAttribute("detailQuery", conditions.toDetailQuery());
 
         model.addAttribute("regionOptions", Region.values());
         model.addAttribute("schoolOptions", userChoices(SchoolRequirement.values()));
