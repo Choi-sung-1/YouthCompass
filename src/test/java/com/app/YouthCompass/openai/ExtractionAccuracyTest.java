@@ -148,7 +148,18 @@ class ExtractionAccuracyTest {
 
             // 16. 신분만 말하고 찾는 지원은 없음 → 분야를 교육·일자리로 추측하면 안 됨
             c("대학교 3학년인데 받을 수 있는 정책 있어?",
-                    "school", SchoolRequirement.UNIVERSITY_STUDENT)
+                    "school", SchoolRequirement.UNIVERSITY_STUDENT),
+
+            // 17. 실제로 넣어 본 문장: 목돈 마련 = 복지문화 (직장인이라는 신분만 보고 일자리로 정하면 안 됨)
+            c("경기도 평택에 사는 29살 직장인이고 연봉 3000인데 목돈 모으는 정책 알려줘",
+                    "age", 29, "region", Region.GYEONGGI, "sigungu", "평택시",
+                    "job", JobRequirement.EMPLOYEE, "income", 3000L,
+                    "category", "복지문화", "keyword", "목돈"),
+
+            // 18. 저축·적금도 복지문화 (DB에서 청년도약계좌·자산형성 정책이 금융･복지･문화 분야)
+            c("26살인데 적금처럼 매달 돈 모을 수 있는 청년 정책 있어?",
+                    "age", 26,
+                    "category", "복지문화", "keyword", "적금")
     );
 
     @Test
