@@ -4,17 +4,21 @@ import com.app.YouthCompass.bookmark.BookmarkService;
 import com.app.YouthCompass.member.MemberService;
 import com.app.YouthCompass.member.domain.MemberVO;
 import com.app.YouthCompass.policy.domain.eligibility.Region;
+import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.recommendation.PolicyCategories;
+import com.app.YouthCompass.policy.dto.ConditionRequestDTO;
 import com.app.YouthCompass.policy.dto.PolicyDetailResponseDTO;
 import com.app.YouthCompass.policy.dto.PolicyListRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
@@ -48,12 +52,22 @@ public class PolicyBrowseController {
         return "policy/list";
     }
     // GET /policies/{id} — 정책 상세 (로그인 회원이면 조건별 판정까지)
+    // 추천 화면에서 온 링크(?from=recommend&age=…)면 추천 때 조건으로 판정 → 추천 카드와 같은 결과
     @GetMapping("/{id}")
-    public String detail(@PathVariable Long id, Principal principal, Model model) {
+    public String detail(@PathVariable Long id,
+                         @RequestParam(required = false) String from,
+                         @ModelAttribute("recommendConditions") ConditionRequestDTO conditions,
+                         BindingResult bindingResult,
+                         Principal principal,
+                         Model model) {
 
         MemberVO member = loginMember(principal);
 
-        PolicyDetailResponseDTO detail = policyDetailService.getDetail(id, member)
+        // 값이 잘못된 링크(없는 지역 이름 등)면 추천 조건을 버리고 회원정보로 판정
+        UserPolicyProfileVO recommendProfile =
+                "recommend".equals(from) && !bindingResult.hasErrors() ? conditions.toProfile() : null;
+
+        PolicyDetailResponseDTO detail = policyDetailService.getDetail(id, member, recommendProfile)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "정책을 찾을 수 없습니다."));
 
         model.addAttribute("detail", detail);

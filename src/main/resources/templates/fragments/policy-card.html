@@ -7,15 +7,17 @@
     사용: <div th:replace="~{fragments/policy-card :: card(${policy}, ${순위}, ${안내 문장 또는 null}, ${다시 판정 버튼 여부})}"></div>
     - policy: RecommendedPolicyDTO
     - 찜 버튼 상태는 화면 모델의 bookmarkedIds 를 씀
+    - 상세 링크에는 화면 모델의 detailQuery(추천 때 조건)를 붙임 → 상세도 추천과 같은 조건으로 판정 (없으면 회원정보로 판정)
     - AI 추천 결과(policy/recommend.html), 추천 기록 상세(mypage/history-detail.html)
 -->
-<div class="box policy" th:fragment="card(policy, rank, notice, recheck)">
+<div class="box policy" th:fragment="card(policy, rank, notice, recheck)"
+     th:with="detailUrl=@{${'/policies/' + policy.policyId + (detailQuery ?: '')}}">
 
     <div class="policy-head">
         <span class="rank" th:text="${rank}"></span>
         <div>
             <!-- 추천 결과는 POST로 그려져서 같은 탭으로 가면 뒤로 가기 때 결과가 사라짐 → 상세는 새 탭 -->
-            <a class="policy-name" th:href="@{/policies/{id}(id=${policy.policyId})}"
+            <a class="policy-name" th:href="${detailUrl}"
                target="_blank" rel="noopener" th:text="${policy.policyName}"></a>
             <p class="org" th:if="${policy.organizationName}" th:text="${policy.organizationName}"></p>
         </div>
@@ -93,7 +95,7 @@
            th:href="${policy.applicationUrl}"
            target="_blank" rel="noopener noreferrer">신청하러 가기</a>
         <p class="no-link" th:unless="${policy.applicationUrl}">신청 링크가 등록되지 않은 정책이에요.</p>
-        <a class="btn" th:href="@{/policies/{id}(id=${policy.policyId})}"
+        <a class="btn" th:href="${detailUrl}"
            target="_blank" rel="noopener">상세 보기</a>
 
         <!-- 찜 버튼 (fragments/bookmark.html) — 이 화면에서는 아래 스크립트가 페이지 이동 없이 처리 -->

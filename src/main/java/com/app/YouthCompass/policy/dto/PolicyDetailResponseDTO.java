@@ -19,12 +19,13 @@ public class PolicyDetailResponseDTO {
     private String businessPeriodText;       // "2026.01.01 ~ 2026.12.31" / "연중 계속" / null
     private boolean inactive;                // API에서 사라진 정책
 
-    // 나에게 맞는지 (로그인 회원만, 비로그인이면 evaluated = false)
+    // 나에게 맞는지 (로그인 회원 또는 추천 화면에서 온 링크만, 아니면 evaluated = false)
     private boolean evaluated;
     private List<ConditionRow> conditions = List.of();
     private List<String> matchedReasons = List.of();   // "나이 조건(만 19~34세)에 맞아요"
     private List<String> unknownReasons = List.of();   // "학력을 알려주시면 …"
     private List<String> filledFromMember = List.of(); // 회원정보에서 가져온 항목 (나이·지역)
+    private boolean fromRecommend;                     // 추천 화면에서 온 링크 → 추천 때 조건으로 판정
     private int notMatchCount;
     private int unknownCount;
 
