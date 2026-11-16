@@ -24,7 +24,7 @@ public class PolicyDetailResponseDTO {
     private List<ConditionRow> conditions = List.of();
     private List<String> matchedReasons = List.of();   // "나이 조건(만 19~34세)에 맞아요"
     private List<String> unknownReasons = List.of();   // "학력을 알려주시면 …"
-    private List<String> filledFromMember = List.of(); // 회원정보에서 가져온 항목 (나이·지역)
+    private List<String> filledFromMember = List.of(); // 회원정보에서 가져온 항목 + 출처 ex) 나이(생년월일)·지역(가입 정보)
     private boolean fromRecommend;                     // 추천 화면에서 온 링크 → 추천 때 조건으로 판정
     private int notMatchCount;
     private int unknownCount;
