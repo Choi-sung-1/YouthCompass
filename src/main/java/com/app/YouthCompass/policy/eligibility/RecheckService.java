@@ -90,6 +90,12 @@ public class RecheckService {
         ));
     }
 
+    // 추천 카드에 "답하고 다시 확인" 버튼을 보일지: 답하면 풀리는 확인 필요 조건이 있을 때만
+    // (공고 문장 조건만 남은 카드는 물어볼 게 없어서 버튼을 눌러도 막다른 길이 됨)
+    public boolean hasQuestions(PolicyEvaluationResult result, UserPolicyProfileVO profile) {
+        return !questions(result, profile).isEmpty();
+    }
+
     // 조건 수정 폼과 같은 규칙으로 프로필 만들기 (시·군 이름 → 코드 포함)
     private UserPolicyProfileVO toProfile(RecheckRequestDTO request) {
 

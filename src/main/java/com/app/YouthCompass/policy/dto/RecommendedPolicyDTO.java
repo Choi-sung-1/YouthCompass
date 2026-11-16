@@ -57,6 +57,9 @@ public class RecommendedPolicyDTO {
     @Builder.Default
     private List<String> unknownReasons = new ArrayList<>();
 
+    // 확인 필요 조건 중 답하면 풀리는 게 있는지 ("답하고 다시 확인" 버튼 표시용)
+    private boolean recheckable;
+
     // 마감 표시는 정책 목록·찜 목록·추천 기록과 같은 계산(PolicyListItemDTO.from())을 재사용
     private LocalDate applyEndDate;      // 신청 마감일 (상시면 null)
     private String deadlineLabel;        // "D-3", "오늘 마감", "상시", "마감", "기간 확인 필요"

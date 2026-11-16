@@ -1,6 +1,8 @@
 package com.app.YouthCompass.policy;
 
 import com.app.YouthCompass.policy.domain.eligibility.EligibilityStatus;
+import com.app.YouthCompass.policy.domain.eligibility.IncomeConditionType;
+import com.app.YouthCompass.policy.domain.eligibility.PolicyEvaluationResult;
 import com.app.YouthCompass.policy.domain.eligibility.SchoolRequirement;
 import com.app.YouthCompass.policy.domain.eligibility.UserPolicyProfileVO;
 import com.app.YouthCompass.policy.domain.model.PolicyVO;
@@ -86,6 +88,34 @@ class RecheckServiceTest {
 
         assertThat(response.questions()).extracting(RecheckQuestionDTO::field).doesNotContain("school");
         assertThat(response.unknownReasons()).noneMatch(reason -> reason.contains("학력"));
+    }
+
+    @Test
+    void 학력을_모르면_다시_확인_버튼이_보인다() {
+
+        PolicyVO policy = policyWithSchoolCondition();
+        UserPolicyProfileVO empty = new UserPolicyProfileVO();
+
+        assertThat(recheckService.hasQuestions(eligibilityService.evaluate(empty, policy), empty)).isTrue();
+    }
+
+    @Test
+    void 소득_문장_조건만_남으면_다시_확인_버튼이_숨는다() {
+
+        // 소득 말고는 다 아는 사용자 → 소득 기타(문장) 조건 정책은 확인 필요만 남고 물어볼 게 없음
+        UserPolicyProfileVO profile = new UserPolicyProfileVO();
+        profile.setAge(25);
+        profile.setAnnualIncome(2400L);
+
+        PolicyEvaluationResult result = policyService.findOpenPolicies().stream()
+                .filter(p -> IncomeConditionType.fromCode(p.getPolicyIncomeConditionCode()) == IncomeConditionType.ETC)
+                .map(p -> eligibilityService.evaluate(profile, p))
+                .filter(r -> r.getNotMatchCount() == 0 && r.getIncomeResult() == EligibilityStatus.UNKNOWN)
+                .filter(r -> r.getUnknownCount() == 1)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("소득 문장 조건만 남는 정책이 없어요. 동기화 후 실행하세요."));
+
+        assertThat(recheckService.hasQuestions(result, profile)).isFalse();
     }
 
     @Test
