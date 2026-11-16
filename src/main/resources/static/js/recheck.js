@@ -124,6 +124,10 @@
         }
 
         if (!data.questions || !data.questions.length) {
+            // 남은 확인 필요 조건이 공고 문장 조건뿐이면 여기서 더 물어볼 게 없음
+            if (data.status === "NEED_CHECK") {
+                body.appendChild(text("p", "남은 조건은 여기서 답할 수 없어요. 공고 원문에서 확인해 주세요."));
+            }
             return;
         }
 

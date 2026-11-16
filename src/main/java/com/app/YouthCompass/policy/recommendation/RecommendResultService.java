@@ -10,15 +10,18 @@ import com.app.YouthCompass.policy.domain.recommendation.PolicySearchIntent;
 import com.app.YouthCompass.policy.dto.RecommendResponseDTO;
 import com.app.YouthCompass.policy.dto.RecommendedPolicyDTO;
 import com.app.YouthCompass.policy.eligibility.MissedPolicyFinder;
+import com.app.YouthCompass.policy.eligibility.RecheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 // 추천 화면에 필요한 결과를 만드는 서비스
 // AI 조건 추출(openAiService) → 회원정보로 빈칸 채움 → 규칙 기반 자격 판정·정렬(PolicyRecommendationService)
@@ -43,6 +46,7 @@ public class RecommendResultService {
     private final PolicyInsightService insightService;
     private final MemberProfileDefaults memberProfileDefaults;
     private final MissedPolicyFinder missedPolicyFinder;   // A 담당 — 호출만
+    private final RecheckService recheckService;           // A 담당 — 호출만
     // 사용자 문장으로 추천 (AI 호출 O)
     // member: 로그인 회원 (없으면 null) → 문장에 없는 나이·지역을 회원정보로 채움
     public RecommendResponseDTO recommendFromSentence(String sentence, MemberVO member) {
@@ -94,11 +98,20 @@ public class RecommendResultService {
         // 2. 후보마다 충족 조건 / 확인 필요 조건 문장 (화면에도 쓰고 AI에도 근거로 넘김)
         Map<Long, List<String>> matched = new HashMap<>();
         Map<Long, List<String>> unchecked = new HashMap<>();
+        // AI 문장이 없을 때 대신 쓸 추천 이유: 찾는 분야·키워드 문장은 빼고 실제로 맞은 조건만
+        // (분야·키워드는 사용자가 직접 고른 것이라 카드마다 같은 말이 반복됨)
+        Map<Long, List<String>> conditions = new HashMap<>();
+        // 확인 필요 조건 중 답하면 풀리는 게 있는 정책 (카드의 "답하고 다시 확인" 버튼 표시용)
+        Set<Long> recheckable = new HashSet<>();
 
         for (PolicyEvaluationResult result : candidates) {
             Long id = result.getPolicy().getPolicyId();
             matched.put(id, reasonBuilder.reasons(result, profile, intent));
             unchecked.put(id, reasonBuilder.unknownReasons(result, profile));
+            conditions.put(id, reasonBuilder.reasons(result, profile, null));
+            if (recheckService.hasQuestions(result, profile)) {
+                recheckable.add(id);
+            }
         }
 
         // 3. AI 개인 맞춤 재정렬 + 추천 이유 + 기대 효과 (실패하면 empty, 맞는 정책이 없으면 빈 목록)
@@ -122,7 +135,7 @@ public class RecommendResultService {
         for (PolicyEvaluationResult result : candidates) {
             PolicyInsightService.Insight insight = picked.get(result.getPolicy().getPolicyId());
             if (insight != null) {
-                policies.add(toDto(result, matched, unchecked, insight.reason(), insight.effect(), true));
+                policies.add(toDto(result, matched, unchecked, conditions, insight.reason(), insight.effect(), true));
             }
         }
 
@@ -131,9 +144,11 @@ public class RecommendResultService {
                 if (policies.size() >= TOP_N) {
                     break;
                 }
-                policies.add(toDto(result, matched, unchecked, null, null, false));
+                policies.add(toDto(result, matched, unchecked, conditions, null, null, false));
             }
         }
+
+        policies.forEach(p -> p.setRecheckable(recheckable.contains(p.getPolicyId())));
 
         RecommendResponseDTO response =
                 new RecommendResponseDTO(profile, intent, policies, memberFilled, aiResult.isPresent());
@@ -172,6 +187,7 @@ public class RecommendResultService {
             PolicyEvaluationResult result,
             Map<Long, List<String>> matched,
             Map<Long, List<String>> unchecked,
+            Map<Long, List<String>> conditions,
             String aiReason,
             String aiEffect,
             boolean personalized
@@ -185,20 +201,30 @@ public class RecommendResultService {
         // AI가 빈 문장("")을 돌려줘도 규칙 문장으로 (빈 칸이 화면에 보이지 않게)
         aiReason = PolicyText.text(aiReason);
         aiEffect = PolicyText.text(aiEffect);
-        dto.setRecommendReason(aiReason != null ? aiReason : fallbackReason(dto.getReasons()));
+        dto.setRecommendReason(aiReason != null ? aiReason : fallbackReason(conditions.getOrDefault(id, List.of()), result.getPolicy()));
         dto.setExpectedEffect(aiEffect != null ? aiEffect : fallbackEffect(result.getPolicy()));
         dto.setPersonalized(personalized);
 
         return dto;
     }
 
-    // AI 없이 만드는 추천 이유: 규칙 문장 앞의 두 개를 이어 붙임
-    private String fallbackReason(List<String> reasons) {
+    // AI 없이 만드는 추천 이유: 맞은 조건 앞의 두 개 → 없으면 정책 설명 앞부분
+    private String fallbackReason(List<String> conditions, PolicyVO policy) {
 
-        if (reasons == null || reasons.isEmpty()) {
+        if (!conditions.isEmpty()) {
+            return String.join(" · ", conditions.subList(0, Math.min(2, conditions.size())));
+        }
+
+        String description = PolicyText.text(policy.getPolicyDescription());
+
+        if (description == null) {
             return "입력한 조건으로 신청 자격에서 걸리는 부분이 없는 정책이에요.";
         }
-        return String.join(" · ", reasons.subList(0, Math.min(2, reasons.size())));
+
+        String oneLine = description.replaceAll("\\s+", " ").trim();
+        return oneLine.length() <= FALLBACK_EFFECT_LIMIT
+                ? oneLine
+                : oneLine.substring(0, FALLBACK_EFFECT_LIMIT) + "…";
     }
 
     // AI 없이 만드는 기대 효과: 지원내용 앞부분
